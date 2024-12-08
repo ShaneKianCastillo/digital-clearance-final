@@ -6,7 +6,7 @@
     $password = "";
     $errorArray = [];
 
-    //addUser();
+    addUser();
 
     if (isset($_POST['loginButton'])) {
 

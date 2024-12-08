@@ -69,9 +69,9 @@
     function addUser() {
         $con = openCon();
         if ($con) {
-            $userID = '100236527';
-            $hashedPassword = md5('Library0001'); 
-            $name = 'Library';
+            $userID = '300908645';
+            $hashedPassword = md5('Dean0005'); 
+            $name = 'Dean';
             $sql = "INSERT INTO users (user_id, password, name) VALUES ('$userID', '$hashedPassword', '$name')";
             if (mysqli_query($con, $sql)) {
                 echo "New record created successfully";
