@@ -1,7 +1,7 @@
 <?php 
     include 'functions.php'; 
-    $checkFaculty = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
-    $facultyName = $_SESSION['userID'];
+    $checkStudent = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Student';
+    $studentName = $_SESSION['userID'];
 ?>
 
 
@@ -17,13 +17,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-    <title>Faculty Dashboard</title>
+    <title>Student Dashboard</title>
 </head>
 
 <body style="background-color: whitesmoke;">
     <header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
         <div class="head">
-            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $facultyName. " - Dashboard"; ?></a>
+            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $studentName. " - Dashboard"; ?></a>
         </div>
     </header>
 

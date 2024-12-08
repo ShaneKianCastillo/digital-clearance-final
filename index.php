@@ -1,3 +1,35 @@
+<?php 
+
+    include 'functions.php';
+
+    $userID = "";
+    $password = "";
+    $errorArray = [];
+
+    //addUser();
+
+    if (isset($_POST['loginButton'])) {
+
+        $userID = $_POST['userID'];
+        $password = $_POST['password'];
+        $errorArray = validateLoginCredentials($userID, $password);
+
+        if (empty($errorArray)) {
+            session_start();  
+            $userName = getUserNameById($userID); 
+            $_SESSION['userID'] = $userName;  
+            if (strlen($userID) == 10) {
+                header('Location: student-dashboard.php');
+                exit();
+            } else {
+                header('Location: faculty-dashboard.php');
+                exit();
+            }
+        }
+    }
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,34 +47,33 @@
 </head>
 <body>
     <div class="z-3">
-        
+        <?php echo displayErrors($errorArray); ?>
     </div>
     <div class="container glass z-0">
         <img src="img/logo.png" alt="Logo" height="120px">
         <h1>Systems Plus</h1>
         <div class="form">
             <form method="post">
-            <div class="input-box">
-                <span class="icon">
-                    <ion-icon name="mail"></ion-icon>
-                </span>
-                <input type="number" placeholder=" " step="1" name="userID" value="<?php echo isset($idNumber) ? $idNumber : ''; ?>" required>
-                <label>ID Number</label>
-            </div>
-
-            <div class="input-box">
-                <span class="icon">
-                    <ion-icon name="lock-closed"></ion-icon>
-                </span>
-                <input id="password" type="password" placeholder=" " name="password" value="<?php echo isset($password) ? $password : ''; ?>" required>
-                <label>Password</label>
-                <i class="fa-solid fa-eye position-absolute" style="right: 10px; top: 16px; cursor:pointer" id="togglePassword"></i>
-            </div>
+                <div class="input-box">
+                    <span class="icon">
+                        <ion-icon name="mail"></ion-icon>
+                    </span>
+                    <input type="number" placeholder=" " step="1" name="userID" value="<?php echo htmlspecialchars($userID); ?>" required>
+                    <label>ID Number</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon">
+                        <ion-icon name="lock-closed"></ion-icon>
+                    </span>
+                    <input id="password" type="password" placeholder=" " name="password" value="<?php echo htmlspecialchars($password); ?>" required>
+                    <label>Password</label>
+                    <i class="fa-solid fa-eye position-absolute" style="right: 10px; top: 16px; cursor:pointer" id="togglePassword"></i>
                 </div>
                 <button type="submit" name="loginButton">Login</button>
             </form>
         </div>
     </div>
+
     <script>
         const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
