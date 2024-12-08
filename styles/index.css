@@ -1,0 +1,161 @@
+* {
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align items to the top of the viewport */
+    background-color: white;
+    background-image: url(../img/systemsbg.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh; 
+    
+}
+
+
+
+.container {
+    height: 530px;
+    width: 350px !important;
+    justify-content: center; 
+    align-items: center;  
+    
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    
+    text-align: center;
+}
+.glass {
+    background: linear-gradient(135deg,rgba(209, 192, 192, 0.1),rgba(87, 80, 80, 0));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0px 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.container h1{
+    margin-top: 130px;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.container button:hover {
+    background-color: whitesmoke;
+}
+
+
+img {
+    position: absolute;
+    left: 34%;
+    top: 3%;
+}
+
+form {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+}
+.input-box {
+    position: relative;
+    width: 80%;
+    height: 50px;
+    border-bottom: 2px solid #929090;
+    margin: 10px 0;
+}
+
+.input-box input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    font-size: 1em;
+    color: #ffffff;
+    padding: 0 35px 0 5px;
+    background-color: transparent;
+}
+.input-box label {
+    position: absolute !important;
+    top: 50% !important;
+    left: 5px !important;
+    transform: translateY(-50%) !important;
+    font-size: 1em !important;
+    color: #ffffff;
+    font-weight: 500;
+    pointer-events: none;
+    transition: .5s;
+}
+
+.input-box input:focus ~ label,
+.input-box input:valid ~ label,
+.input-box input:not(:placeholder-shown) ~ label {
+    top: -5px !important;
+}
+.input-box input:not(:focus):not([value]):not(:placeholder-shown) ~ label {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #929090;
+}
+.login-select { 
+    display: flex;
+    align-items: center !important;
+    text-align: center;
+    align-content: space-evenly;
+    color: #ffffff;
+    margin-top: 5px !important;
+    margin-left: -20px;
+}
+
+.radio {
+    margin-top: 28px;
+    margin-left: -10px;
+    color: #ffffff;
+    display: flex;
+    row-gap: 10px !important;
+}
+
+.radio input[type="radio"]:nth-of-type(2) {
+    margin-left: 20px; /* Adjust value as needed */
+}
+.radio label {
+    padding-left: 5px;
+}
+
+
+input[type="number"] {
+    -moz-appearance: textfield; 
+    -webkit-appearance: none; 
+    appearance: none; 
+}
+
+/* Optional: Remove additional browser-specific padding */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+button {
+    width: 80%;
+    height: 50px;
+    padding: 10px;
+    margin-top: 40px !important;
+    background-color: white;
+    color: black;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px !important;
+    cursor: pointer;
+    font-size: 16px;
+}
