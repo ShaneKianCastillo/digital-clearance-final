@@ -1,9 +1,13 @@
 <?php 
-    include 'functions.php'; 
-    $checkFaculty = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
-    $facultyName = $_SESSION['userID'];
-?>
 
+    include 'functions.php'; 
+    
+    $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
+    $facultyID = $_SESSION['userID'];
+
+    $facultyData = getFacultyData($facultyID);
+
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -26,7 +30,7 @@
             <img src="img/logo.png" alt="" height="80px" class="ps-3">
         </div>
         <div class="head">
-            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $facultyName. " - Dashboard"; ?></a>
+            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $facultyData['dept_name'] . " - Dashboard"; ?></a>
         </div>
     </header>
     
@@ -37,8 +41,8 @@
                     <i class="fa-regular fa-user" style="font-size: 50px; color:gray"></i>
                 </div>
                 <div class="ps-3">
-                    <p class="fs-5" style="font-weight: 500;">Irene M. Mungcal</p>
-                    <p class="position-absolute" style="top: 52px;">Librarian</p>
+                    <p class="fs-5" style="font-weight: 500;"><?php echo $facultyData['employee_name']; ?></p>
+                    <p class="position-absolute" style="top: 52px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
                 </div>
             </div>
             <br>
@@ -55,7 +59,7 @@
     </div>
     
     <div class="container text-center pt-4">
-        <p class="fs-1 fw-bold">Welcome Librarian!</p>
+        <p class="fs-1 fw-bold"><?php echo "Welcome " . $facultyData['dept_name'] . " Employee!"; ?></p>
     </div>
 
     <div class="container text-center mt-5 custom-search-shadow position-relative z-1   bg-light" style="width: 700px;">

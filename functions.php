@@ -111,27 +111,55 @@
         }
     }
 
-
-    function getUserNameById($idNumber) {
+    function getFacultyData($facultyID) {
         $con = openCon();
 
-        $query = "
-            SELECT name FROM students_cred WHERE stud_id = '$idNumber'
-            UNION ALL
-            SELECT employee_name AS name FROM deptartments_cred WHERE dept_id = '$idNumber'
-            UNION ALL
-            SELECT dean_name AS name FROM dean_cred WHERE dean_id = '$idNumber'";
-            
-        $result = mysqli_query($con, $query);
+        $facultyID = mysqli_real_escape_string($con, $facultyID);
+        $sql = "SELECT * FROM deptartments_cred WHERE dept_id = '$facultyID'";
+        $result = mysqli_query($con, $sql);
     
         if ($result && mysqli_num_rows($result) > 0) {
-            $row = mysqli_fetch_assoc($result);
+            $facultyData = mysqli_fetch_assoc($result);
             closeCon($con);
-            return $row['name']; 
+            return $facultyData;
+        } else {
+            closeCon($con);
+            return null;
         }
+    }
+
+    function getStudentData($studentID) {
+        $con = openCon();
+
+        $studentID = mysqli_real_escape_string($con, $studentID);
+        $sql = "SELECT * FROM students_cred WHERE stud_id = '$studentID'";
+        $result = mysqli_query($con, $sql);
     
-        closeCon($con);
-        return null; 
+        if ($result && mysqli_num_rows($result) > 0) {
+            $facultyData = mysqli_fetch_assoc($result);
+            closeCon($con);
+            return $facultyData;
+        } else {
+            closeCon($con);
+            return null;
+        }
+    }
+
+    function getDeanData($deanID) {
+        $con = openCon();
+
+        $deanID = mysqli_real_escape_string($con, $deanID);
+        $sql = "SELECT * FROM dean_cred WHERE dean_id = '$deanID'";
+        $result = mysqli_query($con, $sql);
+    
+        if ($result && mysqli_num_rows($result) > 0) {
+            $facultyData = mysqli_fetch_assoc($result);
+            closeCon($con);
+            return $facultyData;
+        } else {
+            closeCon($con);
+            return null;
+        }
     }
 
 ?>
