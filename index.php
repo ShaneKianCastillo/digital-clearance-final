@@ -1,34 +1,35 @@
 <?php 
-
     include 'functions.php';
 
     $userID = "";
     $password = "";
     $errorArray = [];
-
-    // addUser();
+    $users = [];
 
     if (isset($_POST['loginButton'])) {
 
         $userID = $_POST['userID'];
         $password = $_POST['password'];
-        $errorArray = validateLoginCredentials($userID, $password);
+
+        list($errorArray, $users) = validateLoginCredentials($userID, $password);  
 
         if (empty($errorArray)) {
-            session_start();  
-            $userName = getUserNameById($userID); 
-            $_SESSION['userID'] = $userName;  
-            if (strlen($userID) == 10) {
-                header('Location: student-dashboard.php');
+            session_start();
+            if (isset($users[$userID])) {
+                $role = $users[$userID]['role']; 
+                $_SESSION['userID'] = $userID;
+                if ($role === 'student') {
+                    header('Location: student-dashboard.php');
+                } elseif ($role === 'department') {
+                    header('Location: faculty-dashboard.php');
+                } elseif ($role === 'dean') {
+                    header('Location: dean-dashboard.php');
+                }
                 exit();
-            } else {
-                header('Location: faculty-dashboard.php');
-                exit();
-            }
+            } 
         }
     }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">

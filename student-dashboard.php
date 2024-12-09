@@ -1,7 +1,9 @@
 <?php 
     include 'functions.php'; 
-    $checkStudent = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Student';
-    $studentName = $_SESSION['userID'];
+    $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Student';
+    $studentID = $_SESSION['userID'];
+
+    $studentData = getStudentData($studentID);
 ?>
 
 
@@ -23,7 +25,7 @@
 <body style="background-color: whitesmoke;">
     <header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
         <div class="head">
-            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $studentName. " - Dashboard"; ?></a>
+            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $studentData['name'] . " - Dashboard"; ?></a>
         </div>
     </header>
 

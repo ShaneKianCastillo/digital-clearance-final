@@ -1,3 +1,15 @@
+<?php 
+
+    include 'functions.php';
+
+    $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
+    $deanID = $_SESSION['userID'];
+
+    $deanData = getDeanData($deanID);
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,7 +39,7 @@
                     <i class="fa-regular fa-user" style="font-size: 50px; color:gray"></i>
                 </div>
                 <div class="ps-3">
-                    <p class="fs-6" style="font-weight: 500;">George M. Granados</p>
+                    <p class="fs-6" style="font-weight: 500;"><?php echo $deanData['dean_name']; ?></p>
                     <p class="position-absolute" style="top: 52px;">CCIS - Dean</p>
                 </div>
             </div>

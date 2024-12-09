@@ -21,51 +21,78 @@
     }
 
     function getUsers() {
-        $con = openCon();       
-        $sql = "SELECT user_id, password FROM users";
+        $con = openCon();
+
+        $sql = "
+            SELECT 'student' AS role, stud_id AS user_id, password 
+            FROM students_cred
+            UNION ALL
+            SELECT 'department' AS role, dept_id AS user_id, password 
+            FROM deptartments_cred
+            UNION ALL
+            SELECT 'dean' AS role, dean_id AS user_id, password 
+            FROM dean_cred";
+    
         $result = mysqli_query($con, $sql);    
-        $users = [];   
+        $users = [];
+    
         if (mysqli_num_rows($result) > 0) {
             while ($row = mysqli_fetch_assoc($result)) {
-                $users[$row['user_id']] = $row['password'];
+                $users[$row['user_id']] = [
+                    'password' => $row['password'],
+                    'role' => $row['role']
+                ];
             }
-        }    
+        }
+
         closeCon($con);     
         return $users;
     }
-
+    
     function checkLoginCredentials($userID, $password, $users) {
-        return isset($users[$userID]) && $users[$userID] === md5($password);  
+        return isset($users[$userID]) && $users[$userID]['password'] === md5($password);
     }
-
+    
     function validateLoginCredentials($userID, $password) {
         $errorArray = [];
-        $users = getUsers();  
-        if (empty($errorArray)) {
-            if (!checkLoginCredentials($userID, $password, $users)) {
-                $errorArray['credentials'] = 'Incorrect email or password!';
-            }
-        } 
-        return $errorArray;
+        $users = getUsers();
+    
+        if (!isset($users[$userID]) || $users[$userID]['password'] !== md5($password)) {
+            $errorArray['credentials'] = 'Incorrect ID or password!';
+        }
+
+        return [$errorArray, $users];
     }
 
     function displayErrors($errors) {
         if (empty($errors)) {
             return ''; 
-        } 
+        }
         $output = '
         <div class="alert alert-danger alert-dismissible fade show mx-auto my-3" style="margin-bottom: 20px;" role="alert">
             <strong>System Errors:</strong> Please correct the following errors.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             <hr>
             <ul>';
-        foreach ($errors as $error) {
-            $output .= '<li>' . htmlspecialchars($error) . '</li>';
+    
+        foreach ($errors as $key => $error) {
+            if (is_array($error)) {
+                foreach ($error as $nestedError) {
+                    if (is_array($nestedError)) {
+                        $output .= '<li>' . htmlspecialchars(json_encode($nestedError)) . '</li>';
+                    } else {
+                        $output .= '<li>' . htmlspecialchars((string)$nestedError) . '</li>';
+                    }
+                }
+            } else {
+                $output .= '<li>' . htmlspecialchars((string)$error) . '</li>';
+            }
         }
+    
         $output .= '</ul></div>';
         return $output;
     }
-
+    
     function addUser() {
         $con = openCon();
         if ($con) {
@@ -84,21 +111,55 @@
         }
     }
 
-    function getUserNameById($idNumber) {
+    function getFacultyData($facultyID) {
         $con = openCon();
-        $query = "SELECT name FROM users WHERE user_id = '$idNumber'";
-        $result = mysqli_query($con, $query);
+
+        $facultyID = mysqli_real_escape_string($con, $facultyID);
+        $sql = "SELECT * FROM deptartments_cred WHERE dept_id = '$facultyID'";
+        $result = mysqli_query($con, $sql);
+    
         if ($result && mysqli_num_rows($result) > 0) {
-            $row = mysqli_fetch_assoc($result);
+            $facultyData = mysqli_fetch_assoc($result);
             closeCon($con);
-            return $row['name']; 
+            return $facultyData;
+        } else {
+            closeCon($con);
+            return null;
         }
-        closeCon($con);
-        return null; 
     }
 
+    function getStudentData($studentID) {
+        $con = openCon();
 
+        $studentID = mysqli_real_escape_string($con, $studentID);
+        $sql = "SELECT * FROM students_cred WHERE stud_id = '$studentID'";
+        $result = mysqli_query($con, $sql);
+    
+        if ($result && mysqli_num_rows($result) > 0) {
+            $facultyData = mysqli_fetch_assoc($result);
+            closeCon($con);
+            return $facultyData;
+        } else {
+            closeCon($con);
+            return null;
+        }
+    }
 
+    function getDeanData($deanID) {
+        $con = openCon();
 
+        $deanID = mysqli_real_escape_string($con, $deanID);
+        $sql = "SELECT * FROM dean_cred WHERE dean_id = '$deanID'";
+        $result = mysqli_query($con, $sql);
+    
+        if ($result && mysqli_num_rows($result) > 0) {
+            $facultyData = mysqli_fetch_assoc($result);
+            closeCon($con);
+            return $facultyData;
+        } else {
+            closeCon($con);
+            return null;
+        }
+    }
 
 ?>
