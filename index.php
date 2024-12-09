@@ -1,29 +1,41 @@
 <?php 
-
     include 'functions.php';
 
     $userID = "";
     $password = "";
     $errorArray = [];
+    $users = [];  // Initialize the $users array here
 
-    // addUser();
-
+    // Process login when form is submitted
     if (isset($_POST['loginButton'])) {
 
         $userID = $_POST['userID'];
         $password = $_POST['password'];
-        $errorArray = validateLoginCredentials($userID, $password);
+
+        // Validate credentials and get user data
+        list($errorArray, $users) = validateLoginCredentials($userID, $password);  // Capture both errors and users
 
         if (empty($errorArray)) {
-            session_start();  
-            $userName = getUserNameById($userID); 
-            $_SESSION['userID'] = $userName;  
-            if (strlen($userID) == 10) {
-                header('Location: student-dashboard.php');
+            session_start();
+
+            $userName = getUserNameById($userID);
+
+            // Ensure we check the role from the $users array
+            if (isset($users[$userID])) {
+                $role = $users[$userID]['role']; 
+                // Store session and redirect based on role
+                $_SESSION['userID'] = $userName;
+                if ($role === 'student') {
+                    header('Location: student-dashboard.php');
+                } elseif ($role === 'department') {
+                    header('Location: faculty-dashboard.php');
+                } elseif ($role === 'dean') {
+                    header('Location: dean-dashboard.php');
+                }
                 exit();
             } else {
-                header('Location: faculty-dashboard.php');
-                exit();
+                // If no role is found, you can add a relevant error message
+                $errorArray['role'] = 'Invalid role assigned to the user!';
             }
         }
     }
