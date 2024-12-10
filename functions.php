@@ -168,42 +168,6 @@
         }
     }
 
-    function addDepartmentUser($deptID, $password, $employeeName, $deptName) {
-        $con = openCon(); // Open the database connection
-    
-        if ($con) {
-            // Hash the password using MD5
-            $hashedPassword = md5($password); 
-    
-            // Prepare the SQL statement with placeholders
-            $sql = "INSERT INTO deptartments_cred (dept_id, password, employee_name, dept_name) VALUES (?, ?, ?, ?)";
-    
-            // Use a prepared statement to prevent SQL injection
-            $stmt = mysqli_prepare($con, $sql);
-            if ($stmt) {
-                // Bind the parameters to the placeholders
-                mysqli_stmt_bind_param($stmt, "ssss", $deptID, $hashedPassword, $employeeName, $deptName);
-    
-                // Execute the prepared statement
-                if (mysqli_stmt_execute($stmt)) {
-                    echo "New department user created successfully.";
-                } else {
-                    echo "Error executing query: " . mysqli_stmt_error($stmt);
-                }
-    
-                // Close the statement
-                mysqli_stmt_close($stmt);
-            } else {
-                echo "Error preparing statement: " . mysqli_error($con);
-            }
-    
-            // Close the database connection
-            closeCon($con);
-        } else {
-            echo "Failed to connect to the database.";
-        }
-    }
-
     function fetchDepartments() {
         $con = openCon(); 
     
@@ -235,13 +199,201 @@
         $sql = "UPDATE deptartments_cred SET dept_name = '$deptName', employee_name = '$deptEmp' WHERE dept_id = '$deptID'";
     
         if (mysqli_query($con, $sql)) {
-            closeCon($con);  // Close the connection
-            return true;  // Return true if the update was successful
+            closeCon($con);  
+            return true;  
         } else {
-            closeCon($con);  // Close the connection
-            return false;  // Return false if the update failed
+            closeCon($con);  
+            return false; 
         }
     }
+
+    function addStudentInfo($studID, $studName, $course, $contactNumber, $yearLevel) {
+        $con = openCon();
+    
+        $studID = mysqli_real_escape_string($con, $studID);
+        $studName = mysqli_real_escape_string($con, $studName);
+        $course = mysqli_real_escape_string($con, $course);
+        $contactNumber = mysqli_real_escape_string($con, $contactNumber);
+        $yearLevel = mysqli_real_escape_string($con, $yearLevel);
+    
+        $sql = "INSERT INTO student_info (stud_id, stud_name, course, contact_number, year_level) 
+                VALUES ('$studID', '$studName', '$course', '$contactNumber', '$yearLevel')";
+    
+        $result = mysqli_query($con, $sql);
+    
+        if ($result) {
+            closeCon($con);
+            return true; 
+        } else {
+            closeCon($con);
+            return false; 
+        }
+    }
+
+    function fetchStudentInfo($studID) {
+        $con = openCon();
+    
+        // Sanitize the input to prevent SQL injection
+        $studID = mysqli_real_escape_string($con, $studID);
+    
+        // Query to fetch the student record
+        $sql = "SELECT * FROM student_info WHERE stud_id = '$studID'";
+        $result = mysqli_query($con, $sql);
+    
+        if ($result && mysqli_num_rows($result) > 0) {
+            $student = mysqli_fetch_assoc($result); // Fetch the student record as an associative array
+            closeCon($con);
+            return $student; // Return the student record
+        } else {
+            closeCon($con);
+            return null; // Return null if no record is found
+        }
+    }
+
+    function addStudentClearance($studID) {
+        $con = openCon();
+        
+        // Escape input to prevent SQL injection
+        $studID = mysqli_real_escape_string($con, $studID);
+        
+        // Prepare the SQL query
+        $sql = "INSERT INTO student_clearance (stud_id, Library, OSA, Guidance, `Foreign Affairs`, `Computer Lab`, `Program Chair`, Registrar, `Vice President`, Accounting, Dean) 
+                VALUES ('$studID', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)";
+        
+        // Execute the query and check if successful
+        if (mysqli_query($con, $sql)) {
+            echo "New clearance record added successfully for student ID: $studID";
+        } else {
+            echo "Error: " . mysqli_error($con);
+        }
+        
+        closeCon($con);
+    }
+
+    function addStudentComment($studID) {
+        $con = openCon();
+    
+        // Escape the input to prevent SQL injection
+        $studID = mysqli_real_escape_string($con, $studID);
+    
+        // Prepare the SQL query
+        $sql = "INSERT INTO student_comment (stud_id, Library, OSA, Guidance, `Foreign Affairs`, `Computer Lab`, `Program Chair`, Registrar, `Vice President`, Accounting, Dean)
+                VALUES ('$studID', '', '', '', '', '', '', '', '', '', '')";
+    
+        // Execute the query and check if successful
+        if (mysqli_query($con, $sql)) {
+            echo "New comment record added successfully for student ID: $studID";
+        } else {
+            echo "Error: " . mysqli_error($con);
+        }
+    
+        closeCon($con);
+    }
+
+    function addStudentDate($studID) {
+        $con = openCon();
+    
+        // Escape the input to prevent SQL injection
+        $studID = mysqli_real_escape_string($con, $studID);
+    
+        // Prepare the SQL query
+        $sql = "INSERT INTO student_date (stud_id, Library, OSA, Guidance, `Foreign Affairs`, `Computer Lab`, `Program Chair`, Registrar, `Vice President`, Accounting, Dean)
+                VALUES ('$studID', '', '', '', '', '', '', '', '', '', '')";
+    
+        // Execute the query and check if successful
+        if (mysqli_query($con, $sql)) {
+            echo "New date record added successfully for student ID: $studID";
+        } else {
+            echo "Error: " . mysqli_error($con);
+        }
+    
+        closeCon($con);
+    }
+
+  
+    function getStudentClearanceData($studID) {
+        $con = openCon();
+
+        // Initialize an array to hold the department data
+        $clearanceData = [];
+
+        // Fetch department info (dept_id, dept_name, employee_name) from departments_cred table
+        $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred";
+        $resultDept = mysqli_query($con, $queryDept);
+
+        if (!$resultDept) {
+            die("Error fetching departments: " . mysqli_error($con));
+        }
+
+        // Fetch clearance status, date, and remarks for each department
+        while ($rowDept = mysqli_fetch_assoc($resultDept)) {
+            $deptID = $rowDept['dept_id'];
+            $deptName = $rowDept['dept_name'];
+            $signatory = $rowDept['employee_name'];
+
+            // Fetch status from student_clearance
+            $queryStatus = "SELECT `$deptName` AS status FROM student_clearance WHERE stud_id = '$studID'";
+            $resultStatus = mysqli_query($con, $queryStatus);
+            $statusRow = mysqli_fetch_assoc($resultStatus);
+            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
+
+            // Fetch date from student_date
+            $queryDate = "SELECT `$deptName` AS date FROM student_date WHERE stud_id = '$studID'";
+            $resultDate = mysqli_query($con, $queryDate);
+            $dateRow = mysqli_fetch_assoc($resultDate);
+            $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
+
+            // Fetch remarks from student_comment
+            $queryRemarks = "SELECT `$deptName` AS remarks FROM student_comment WHERE stud_id = '$studID'";
+            $resultRemarks = mysqli_query($con, $queryRemarks);
+            $remarksRow = mysqli_fetch_assoc($resultRemarks);
+            $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
+
+            // Store data in the array
+            $clearanceData[] = [
+                'dept_name' => $deptName,
+                'signatory' => $signatory,
+                'status' => $status,
+                'date' => $date,
+                'remarks' => $remarks
+            ];
+        }
+
+        closeCon($con);
+        return $clearanceData;
+    }
+
+    function countApprovals($studID) {
+        $con = openCon();
+    
+        // Initialize count
+        $approvalCount = 0;
+    
+        // Fetch the department columns (Library to Dean) for the student
+        $query = "SELECT Library, OSA, Guidance, `Foreign Affairs`, `Computer Lab`, `Program Chair`, Registrar, `Vice President`, Accounting, Dean FROM student_clearance WHERE stud_id = '$studID'";
+        $result = mysqli_query($con, $query);
+    
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            
+            // Iterate over each department column and count the ones (approved statuses)
+            foreach ($row as $deptID => $status) {
+                if ($status == 1) { // Only count `1` values (approved)
+                    $approvalCount++;
+                }
+            }
+        }
+    
+        closeCon($con);
+        return $approvalCount;
+    }
+
+
+    
+    
+    
+    
+    
     
 
 ?>

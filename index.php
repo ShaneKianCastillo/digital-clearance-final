@@ -8,9 +8,16 @@
 
     /*$userID = '0122303926';
     $password = 'Beltran0122303926';
-    $name = 'John Andre Beltran';
+    $name = 'Karl John Nucum';
+    $course = 'BSIT';
+    $contact = '09326614570';
+    $year = '4';
 
-    addStudentUser($userID, $password, $name);*/
+    addStudentClearance($userID);
+    addStudentComment($userID);
+    addStudentDate($userID);
+    addStudentUser($userID, $password, $name);
+    addStudentInfo($userID, $name, $course, $contact, $year);*/
 
     if (isset($_POST['loginButton'])) {
 
