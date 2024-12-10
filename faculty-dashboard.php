@@ -7,6 +7,25 @@
 
     $facultyData = getFacultyData($facultyID);
 
+    $studID = "";
+    $studName = "";
+    $studCourse = "";
+    $studentFound = false;
+
+    if (isset($_POST['searchButton'])) {
+
+        $studID = $_POST['userID'];
+        $student = fetchStudentInfo($studID);
+
+        if ($student) {
+            $studName = $student['stud_name'];
+            $studCourse = $student['course'];
+            $studentFound = true;
+        } else {
+            $studentFound = false;
+        }
+    }
+
 ?>
 
 <!DOCTYPE html>
@@ -45,8 +64,7 @@
                     <p class="position-absolute" style="top: 52px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
                 </div>
             </div>
-            <br>
-            
+            <br>  
             <hr>
             <div class="ps-3 pt-3">
                 <a href="logout.php" class="text-danger">               
@@ -62,19 +80,21 @@
         <p class="fs-1 fw-bold"><?php echo "Welcome " . $facultyData['dept_name'] . " Employee!"; ?></p>
     </div>
 
-    <div class="container text-center mt-5 custom-search-shadow position-relative z-1   bg-light" style="width: 700px;">
-        <div class="d-flex justify-content-center align-items-center py-4" >
-            <div>
-                <label for="studentID" class="form-label fs-5">Enter Student ID:</label>
-            </div>
-            <div class="ps-4" style="width: 300px;">
-                <input type="number" step="1" placeholder="" class="form-control">
-            </div>
-            <div class="ps-4">
-                <button class="btn btn-info fs-5"> Search</button>
+    <form method="post">
+        <div class="container text-center mt-5 custom-search-shadow position-relative z-1   bg-light" style="width: 700px;">
+            <div class="d-flex justify-content-center align-items-center py-4">
+                <div>
+                    <label for="studentID" class="form-label fs-5">Enter Student ID:</label>
+                </div>
+                <div class="ps-4" style="width: 300px;">
+                    <input type="number" step="1" name="userID" placeholder="" class="form-control" value="<?php echo $studID ?>" required>
+                </div>
+                <div class="ps-4">
+                    <button class="btn btn-info fs-5" name="searchButton">Search</button>
+                </div>
             </div>
         </div>
-    </div>
+    </form>
     
     <div class="container pt-4 col-lg-6">
         <table class="table col-lg-12">
@@ -85,12 +105,18 @@
                     <th>Course</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <th>200999888</th>
-                    <th>Ram m Mungcal</th>
-                    <th>CCIS</th>
-                </tr>
+                <tbody>
+                <?php if ($studentFound && isset($_POST['searchButton'])): ?>
+                    <tr>
+                        <th><?php echo $studID ?></th>
+                        <th><?php echo $studName ?></th>
+                        <th><?php echo $studCourse ?></th>
+                    </tr>
+                <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
+                    <tr>
+                        <td colspan="3" class="text-center">No student found with ID: <?php echo $studID ?></td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -102,15 +128,13 @@
                         
                     </textarea>
             <div class="pt-4">       
-                <button class="btn btn-danger fs-5">Decline</button>      
+                <button class="btn btn-danger fs-5" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
             </div>   
         </div>
         <div class="col-lg-4">
-            <button class="btn btn-success fs-5">Approve</button>
+            <button class="btn btn-success fs-5" <?php echo $studentFound ? '' : 'disabled'; ?>>Approve</button>
         </div>
-        
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>
