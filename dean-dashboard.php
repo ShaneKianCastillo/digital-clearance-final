@@ -89,7 +89,7 @@
         </div>
     </div>
 
-    <div class="container col-lg-9 shadow mt-4 p-4 " id="clearanceContainer">
+    <div class="container col-lg-6 shadow mt-4 p-4 " id="clearanceContainer">
         <div>
             <p class="fs-4 fw-medium">Add Clearance Requirement</p>
         </div>
@@ -114,7 +114,7 @@
         </div>
     </div>
 
-    <div class="container mt-4 shadow" id="tableContainer">
+    <div class="container mt-4 shadow col-lg-6" id="tableContainer">
         <table class="table table-striped">
             <thead>
                 <tr class="table-dark">
@@ -129,25 +129,25 @@
                     <th>2009078</th>
                     <th>Library</th>
                     <th>Irene M. Mungcal</th>
-                    <th></th>
+                    <th><button class="btn btn-outline-info">Select</button></th>   
                 </tr>
                 <tr>
                     <th>2009078</th>
                     <th>Osa</th>
                     <th>Angelo A. Baltazar</th>
-                    <th></th>
+                    <th><button class="btn btn-outline-info">Select</button></th>                
                 </tr>
                 <tr>
                     <th>2009078</th>
                     <th>Guidance</th>
                     <th>Abigail B. Wong</th>
-                    <th></th>
+                    <th><button class="btn btn-outline-info">Select</button></th>
                 </tr>
                 <tr>
                     <th>2009078</th>
                     <th>Foreign Affairs</th>
                     <th>Imelda C. Stevenson</th>
-                    <th></th>
+                    <th><button class="btn btn-outline-info">Select</button></th>                
                 </tr>
             </tbody>
         </table>
@@ -159,21 +159,27 @@
         const customizeOption = document.getElementById("customizeOption");
         const clearanceContainer = document.getElementById("clearanceContainer");
         const tableContainer = document.getElementById("tableContainer");
+        const selectButtons = document.querySelectorAll("table tbody tr button");
 
         function toggleVisibility() {
             if (standardOption.checked) {
                 clearanceContainer.style.display = "none";
-                tableContainer.style.marginTop = "0"; 
-
+                tableContainer.style.marginTop = "0";
+                
+                selectButtons.forEach(button => button.style.display = "none");
             } else if (customizeOption.checked) {
                 clearanceContainer.style.display = "block";
-                tableContainer.style.marginTop = "16px"; 
+                tableContainer.style.marginTop = "16px";
+               
+                selectButtons.forEach(button => button.style.display = "inline-block");
             }
         }
+
         standardOption.addEventListener("change", toggleVisibility);
         customizeOption.addEventListener("change", toggleVisibility);
         toggleVisibility();
     });
+
 
 
     </script>
