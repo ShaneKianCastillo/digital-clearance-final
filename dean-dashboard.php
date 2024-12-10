@@ -15,7 +15,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/dean-dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://kit.fontawesome.com/a082745512.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.min.css">
@@ -25,7 +25,7 @@
 <body>
     <header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
         <div>
-            <img src="img/logo.jpg" alt="" height="80px" class="ps-3">
+            <img src="img/logo.png" alt="" height="80px" class="ps-3">
         </div>
         <div class="head">
             <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#">Dean - Dashboard</a>
@@ -43,7 +43,15 @@
                     <p class="position-absolute" style="top: 52px;">CCIS - Dean</p>
                 </div>
             </div>
-            <div class="pt-5 text-center ps-2">
+            <div class="d-flex pt-5 ps-2">
+                <div>
+                    <a href="dean-dashboard.php" style="text-decoration: none;" class="text-dark"><i class="fa-solid fa-house" style="font-size: 25px;"></i></a>
+                </div>
+                <div class="ps-2">
+                    <a href="dean-dashboard.php" style="text-decoration: none;" class="text-dark"><p class="fs-6 fw-medium">Dashboard</p></a>
+                </div>
+            </div>
+            <div class="pt-3 text-center ps-2">
                 <div class="d-flex gy-1">
                     <div>
                         <a href="dean-clearance.php" style="text-decoration: none;" class="text-dark"><i class="fa-regular fa-file" style="font-size: 25px;"></i></a>
@@ -81,7 +89,7 @@
         </div>
     </div>
 
-    <div class="container col-lg-9 shadow mt-4 p-4" id="clearanceContainer">
+    <div class="container col-lg-9 shadow mt-4 p-4 " id="clearanceContainer">
         <div>
             <p class="fs-4 fw-medium">Add Clearance Requirement</p>
         </div>
