@@ -10,20 +10,53 @@
     $studID = "";
     $studName = "";
     $studCourse = "";
+    $commentAreaValue = '';
     $studentFound = false;
 
     if (isset($_POST['searchButton'])) {
-
         $studID = $_POST['userID'];
         $student = fetchStudentInfo($studID);
-
+    
         if ($student) {
             $studName = $student['stud_name'];
             $studCourse = $student['course'];
             $studentFound = true;
+    
+            $con = openCon();
+            $deptName = $facultyData['dept_name'];
+            $commentQuery = "SELECT `$deptName` AS comment FROM student_comment WHERE stud_id = ?";
+            $stmt = $con->prepare($commentQuery);
+            $stmt->bind_param("i", $studID);
+            $stmt->execute();
+            $stmt->bind_result($existingComment);
+            $stmt->fetch();
+            $stmt->close();
+            closeCon($con);
+    
+            $commentAreaValue = $existingComment ?? '';
         } else {
             $studentFound = false;
+            $commentAreaValue = '';
         }
+    }
+
+    if (isset($_POST['approveButton']) && isset($_POST['userID'])) {
+        $studID = $_POST['userID'];
+        $deptName = $facultyData['dept_name'];
+        $currentDate = date('M d, Y');
+        approveStudent($studID, $deptName);
+        approveDate($studID, $deptName, $currentDate);
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+
+    if (isset($_POST['declineButton']) && isset($_POST['userID'])) {
+        $studID = $_POST['userID'];
+        $deptName = $facultyData['dept_name'];
+        $comment = $_POST['commentArea'];
+        storeCommentAndReset($studID, $deptName, $comment);
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
     }
 
 ?>
@@ -70,7 +103,6 @@
                 <a href="logout.php" class="text-danger">               
                     <i class="fa-solid fa-right-from-bracket">Logout</i>               
                 </a>
-            
             </div>
         </div>
         </div>
@@ -81,7 +113,7 @@
     </div>
 
     <form method="post">
-        <div class="container text-center mt-5 custom-search-shadow position-relative z-1   bg-light" style="width: 700px;">
+        <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
             <div class="d-flex justify-content-center align-items-center py-4">
                 <div>
                     <label for="studentID" class="form-label fs-5">Enter Student ID:</label>
@@ -94,47 +126,66 @@
                 </div>
             </div>
         </div>
-    </form>
-    
-    <div class="container pt-4 col-lg-6">
-        <table class="table col-lg-12">
-            <thead>
-                <tr class="table-dark">
-                    <th>Student ID</th>
-                    <th>Name</th>
-                    <th>Course</th>
-                </tr>
-            </thead>
-                <tbody>
-                <?php if ($studentFound && isset($_POST['searchButton'])): ?>
-                    <tr>
-                        <th><?php echo $studID ?></th>
-                        <th><?php echo $studName ?></th>
-                        <th><?php echo $studCourse ?></th>
-                    </tr>
-                <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
-                    <tr>
-                        <td colspan="3" class="text-center">No student found with ID: <?php echo $studID ?></td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
 
-    <div class="container d-flex justify-content-center align-items-center pt-5 mt-5 custom-status pb-4" style="width: 1000px;">
-        <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
-            <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined student:</label>
-                    <textarea class="form-control align-center" style="width: 400px;" name="commentArea" id="commentArea" rows="3" onclick="this.setSelectionRange(0, 0)">
-                        
-                    </textarea>
-            <div class="pt-4">       
-                <button class="btn btn-danger fs-5" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
-            </div>   
+        <div class="container pt-4 col-lg-6">
+            <table class="table table-striped col-lg-12">
+                <thead>
+                    <tr class="table-dark">
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Course</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($studentFound && isset($_POST['searchButton'])): ?>
+                        <tr>
+                            <th><?php echo $studID ?></th>
+                            <th><?php echo $studName ?></th>
+                            <th><?php echo $studCourse ?></th>
+                        </tr>
+                    <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
+                        <tr>
+                            <td colspan="3" class="text-center">No student found with ID: <?php echo $studID ?></td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
-        <div class="col-lg-4">
-            <button class="btn btn-success fs-5" <?php echo $studentFound ? '' : 'disabled'; ?>>Approve</button>
+
+        <div class="container d-flex justify-content-center align-items-center pt-5 mt-5 custom-status pb-4" style="width: 1000px;">
+            <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
+                <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined student:</label>
+                <textarea 
+                    class="form-control align-center" 
+                    style="width: 400px;" 
+                    name="commentArea" 
+                    id="commentArea" 
+                    rows="3" 
+                    onclick="this.setSelectionRange(0, 0)" 
+                    oninput="checkTextareaContent()" 
+                    <?php echo !$studentFound ? 'disabled' : ''; ?>>
+                    <?php echo htmlspecialchars($commentAreaValue); ?>
+                </textarea>                
+                <div class="pt-4">       
+                    <button class="btn btn-danger fs-5" name="declineButton" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
+                </div>   
+            </div>
+            <div class="col-lg-4">
+                <button class="btn btn-success fs-5" name="approveButton" id="approveButton" <?php echo !$studentFound ? 'disabled' : ''; ?>>Approve</button>
+            </div>
         </div>
-    </div>
+    </form>
+    <script>
+        function checkTextareaContent() {
+            var commentArea = document.getElementById('commentArea');
+            var approveButton = document.getElementById('approveButton');
+            if (commentArea.value.trim() !== '') {
+                approveButton.disabled = true;
+            } else {
+                approveButton.disabled = false;
+            }
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>
