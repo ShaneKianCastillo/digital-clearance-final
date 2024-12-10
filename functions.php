@@ -314,10 +314,7 @@
     function getStudentClearanceData($studID) {
         $con = openCon();
 
-        // Initialize an array to hold the department data
         $clearanceData = [];
-
-        // Fetch department info (dept_id, dept_name, employee_name) from departments_cred table
         $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred";
         $resultDept = mysqli_query($con, $queryDept);
 
@@ -325,31 +322,26 @@
             die("Error fetching departments: " . mysqli_error($con));
         }
 
-        // Fetch clearance status, date, and remarks for each department
         while ($rowDept = mysqli_fetch_assoc($resultDept)) {
             $deptID = $rowDept['dept_id'];
             $deptName = $rowDept['dept_name'];
             $signatory = $rowDept['employee_name'];
 
-            // Fetch status from student_clearance
             $queryStatus = "SELECT `$deptName` AS status FROM student_clearance WHERE stud_id = '$studID'";
             $resultStatus = mysqli_query($con, $queryStatus);
             $statusRow = mysqli_fetch_assoc($resultStatus);
             $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
 
-            // Fetch date from student_date
             $queryDate = "SELECT `$deptName` AS date FROM student_date WHERE stud_id = '$studID'";
             $resultDate = mysqli_query($con, $queryDate);
             $dateRow = mysqli_fetch_assoc($resultDate);
             $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
 
-            // Fetch remarks from student_comment
             $queryRemarks = "SELECT `$deptName` AS remarks FROM student_comment WHERE stud_id = '$studID'";
             $resultRemarks = mysqli_query($con, $queryRemarks);
             $remarksRow = mysqli_fetch_assoc($resultRemarks);
             $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
 
-            // Store data in the array
             $clearanceData[] = [
                 'dept_name' => $deptName,
                 'signatory' => $signatory,
@@ -366,19 +358,14 @@
     function countApprovals($studID) {
         $con = openCon();
     
-        // Initialize count
         $approvalCount = 0;
-    
-        // Fetch the department columns (Library to Dean) for the student
         $query = "SELECT Library, OSA, Guidance, `Foreign Affairs`, `Computer Lab`, `Program Chair`, Registrar, `Vice President`, Accounting, Dean FROM student_clearance WHERE stud_id = '$studID'";
         $result = mysqli_query($con, $query);
     
         if ($result) {
             $row = mysqli_fetch_assoc($result);
-            
-            // Iterate over each department column and count the ones (approved statuses)
             foreach ($row as $deptID => $status) {
-                if ($status == 1) { // Only count `1` values (approved)
+                if ($status == 1) { 
                     $approvalCount++;
                 }
             }
@@ -388,7 +375,80 @@
         return $approvalCount;
     }
 
+    function approveStudent($studID, $deptName) {
+        $con = openCon();
 
+        $query = "UPDATE student_clearance SET `$deptName` = 1 WHERE stud_id = ?";
+        $stmt = $con->prepare($query);
+        $stmt->bind_param("s", $studID);
+        $stmt->execute();
+
+        $stmt->close();
+        $con->close();
+    }
+
+    function approveDate($studID, $deptName, $date) {
+        $con = openCon();
+    
+        $query = "UPDATE student_date SET $deptName = ? WHERE stud_id = ?";
+        $stmt = $con->prepare($query);
+        $stmt->bind_param("si", $date, $studID);
+        $stmt->execute();
+    
+        $stmt->close();
+        $con->close();
+    }
+
+    function storeCommentAndReset($studID, $deptName, $comment) {
+        $con = openCon();
+    
+        // Start a transaction to ensure atomicity
+        $con->begin_transaction();
+    
+        try {
+            // Update the comment for the specific department in student_comment
+            $query1 = "UPDATE student_comment SET `$deptName` = ? WHERE stud_id = ?";
+            $stmt1 = $con->prepare($query1);
+            $stmt1->bind_param("si", $comment, $studID);
+            $stmt1->execute();
+    
+            // Clear the date for the specific department in student_date
+            $query2 = "UPDATE student_date SET `$deptName` = '' WHERE stud_id = ?";
+            $stmt2 = $con->prepare($query2);
+            $stmt2->bind_param("i", $studID);
+            $stmt2->execute();
+    
+            // Reset the clearance status to 0 for the specific department in student_clearance
+            $query3 = "UPDATE student_clearance SET `$deptName` = 0 WHERE stud_id = ?";
+            $stmt3 = $con->prepare($query3);
+            $stmt3->bind_param("i", $studID);
+            $stmt3->execute();
+    
+            // Commit the transaction
+            $con->commit();
+    
+            // Close statements
+            $stmt1->close();
+            $stmt2->close();
+            $stmt3->close();
+    
+        } catch (Exception $e) {
+            // Rollback transaction in case of error
+            $con->rollback();
+            throw $e;
+        }
+    
+        // Close connection
+        $con->close();
+    }
+    
+    
+    
+    
+    
+    
+
+    
     
     
     
