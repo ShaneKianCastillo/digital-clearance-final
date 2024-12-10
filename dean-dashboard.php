@@ -4,11 +4,42 @@
 
     $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
     $deanID = $_SESSION['userID'];
-
     $deanData = getDeanData($deanID);
+    $departments = fetchDepartments();
+
+    $deptID = "";
+    $deptName = "";
+    $deptEmp = "";
+
+    $selectedOption = isset($_POST['option']) ? $_POST['option'] : 'standard';
+
+    if (isset($_POST['selectButton'])) {
+        $selectedDeptID = $_POST['deptID'];
+        $selectedOption = "customize";
+        foreach ($departments as $department) {
+            if ($department['dept_id'] === $selectedDeptID) {
+                $deptID = $department['dept_id'];
+                $deptName = $department['dept_name'];
+                $deptEmp = $department['employee_name'];
+                break;
+            }
+        }
+    }
+
+    if (isset($_POST['updateInfoButton'])) {
+
+        $deptID = $_POST['deptID'];
+        $deptName = $_POST['deptName'];   
+        $deptEmp = $_POST['deptEmp'];     
+
+        updateDepartment($deptID, $deptName, $deptEmp);
+
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+
+    }
 
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -31,7 +62,6 @@
             <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#">Dean - Dashboard</a>
         </div>
     </header>
-
     <div class="sidebar position-relative">
         <div class="container position-fixed start-0 sidebar-shadow z-1 bg-light" style="height: 100vh; width:250px;">
             <div class="pt-4 d-flex gy-1 " >
@@ -60,14 +90,12 @@
                         <a href="dean-clearance.php" style="text-decoration: none;" class="text-dark"><p class="fs-6 fw-medium">Student Clearance</p></a>
                     </div>  
                 </div>  
-            </div>
-            
+            </div>   
             <hr>
             <div class="ps-3 pt-3">
                 <a href="logout.php" class="text-danger">               
                     <i class="fa-solid fa-right-from-bracket">Logout</i>               
                 </a>
-            
             </div>
         </div>
         </div>
@@ -75,16 +103,17 @@
     <div class="container text-center mt-5">
         <p class="fs-1 fw-bold">Welcome Dean!</p>
     </div>
-
     <div class="container col-lg-2 mt-4 p-3 shadow-sm bg-body-tertiary rounded">
         <div>
             <div>
-                <input type="radio" name="option" class="form-check-input" id="customizeOption">
+                <input type="radio" name="option" class="form-check-input" id="customizeOption" value="customize" 
+                <?php echo ($selectedOption === 'customize') ? 'checked' : ''; ?>>
                 <label for="customize" class="form-label fw-medium">Customize</label>
             </div>
             <div>
-                <input type="radio" class="form-check-input" name="option" id="standardOption" checked>
-                <label for="standart" class="form-label fw-medium">Standard</label>
+                <input type="radio" class="form-check-input" name="option" id="standardOption" value="standard" 
+                <?php echo ($selectedOption === 'standard') ? 'checked' : ''; ?>>
+                <label for="standard" class="form-label fw-medium">Standard</label>
             </div>
         </div>
     </div>
@@ -94,30 +123,25 @@
             <p class="fs-4 fw-medium">Update Department Information</p>
         </div>
         <div class="">
-            <form action="" >
+            <form method="post" >
                 <div class="input-group">
                     <label for="clearanceName" class="input-group-text">Department ID </label>
-                    <input type="number" name="" id=""  class="form-control">
+                    <input type="text" name="deptID" class="form-control" value="<?php echo htmlspecialchars($deptID); ?>" readonly>
                 </div>
                 <div class="input-group pt-3">
                     <label for="clearanceName" class="input-group-text">Office/Department </label>
-                    <input type="text" name="" id=""  class="form-control">
+                    <input type="text" name="deptName" class="form-control" value="<?php echo htmlspecialchars($deptName); ?>">
                 </div>
                 <div class="input-group pt-3">
                     <label for="clearanceName" class="input-group-text">Signatory Name </label>
-                    <input type="text" name="" id="" class="form-control">
+                    <input type="text" name="deptEmp" class="form-control" value="<?php echo htmlspecialchars($deptEmp); ?>">
                 </div>
                 <div class="pt-3">
-                    <button class="btn btn-info">Update Info</button>
+                    <button class="btn btn-info" name="updateInfoButton" <?php if ($deptID == "") echo 'disabled'; ?>>Update Info</button>
                 </div>
             </form>
         </div>
     </div>
-
-    <?php
-        $departments = fetchDepartments();
-    ?>
-
     <div class="container mt-4 shadow col-lg-6" id="tableContainer">
         <table class="table table-striped">
             <thead>
@@ -132,10 +156,16 @@
                 <?php if (!empty($departments)): ?>
                     <?php foreach ($departments as $department): ?>
                         <tr>
-                            <th><?php echo htmlspecialchars($department['dept_id']); ?></th>
-                            <th><?php echo htmlspecialchars($department['dept_name']); ?></th>
-                            <th><?php echo htmlspecialchars($department['employee_name']); ?></th>
-                            <th><button class="btn btn-outline-info">Select</button></th>
+                            <form method="post">
+                                <th><?php echo htmlspecialchars($department['dept_id']); ?></th>
+                                <th><?php echo htmlspecialchars($department['dept_name']); ?></th>
+                                <th><?php echo htmlspecialchars($department['employee_name']); ?></th>
+                                <th>
+                                    <input type="hidden" name="option" value="<?php echo htmlspecialchars($selectedOption); ?>">
+                                    <input type="hidden" name="deptID" value="<?php echo htmlspecialchars($department['dept_id']); ?>">
+                                    <button class="btn btn-outline-info" name="selectButton">Select</button>
+                                </th>
+                            </form>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -173,8 +203,6 @@
         customizeOption.addEventListener("change", toggleVisibility);
         toggleVisibility();
     });
-
-
 
     </script>
 
