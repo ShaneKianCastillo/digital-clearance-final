@@ -204,4 +204,44 @@
         }
     }
 
+    function fetchDepartments() {
+        $con = openCon(); 
+    
+        if ($con) {
+            $sql = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred";
+            $result = mysqli_query($con, $sql);
+    
+            $departments = [];
+            if ($result && mysqli_num_rows($result) > 0) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $departments[] = $row;
+                }
+            }
+            closeCon($con); 
+            return $departments;
+        } else {
+            echo "Failed to connect to the database.";
+            return [];
+        }
+    }
+
+    function updateDepartment($deptID, $deptName, $deptEmp) {
+        $con = openCon();
+    
+        $deptID = mysqli_real_escape_string($con, $deptID);
+        $deptName = mysqli_real_escape_string($con, $deptName);
+        $deptEmp = mysqli_real_escape_string($con, $deptEmp);
+    
+        $sql = "UPDATE deptartments_cred SET dept_name = '$deptName', employee_name = '$deptEmp' WHERE dept_id = '$deptID'";
+    
+        if (mysqli_query($con, $sql)) {
+            closeCon($con);  // Close the connection
+            return true;  // Return true if the update was successful
+        } else {
+            closeCon($con);  // Close the connection
+            return false;  // Return false if the update failed
+        }
+    }
+    
+
 ?>
