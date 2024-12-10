@@ -91,7 +91,7 @@
 
     <div class="container col-lg-6 shadow mt-4 p-4 " id="clearanceContainer">
         <div>
-            <p class="fs-4 fw-medium">Add Clearance Requirement</p>
+            <p class="fs-4 fw-medium">Update Department Information</p>
         </div>
         <div class="">
             <form action="" >
@@ -105,7 +105,7 @@
                 </div>
                 <div class="input-group pt-3">
                     <label for="clearanceName" class="input-group-text">Signatory Name </label>
-                    <input type="text" name="" id=""     class="form-control">
+                    <input type="text" name="" id="" class="form-control">
                 </div>
                 <div class="pt-3">
                     <button class="btn btn-info">Update Info</button>
@@ -113,6 +113,10 @@
             </form>
         </div>
     </div>
+
+    <?php
+        $departments = fetchDepartments();
+    ?>
 
     <div class="container mt-4 shadow col-lg-6" id="tableContainer">
         <table class="table table-striped">
@@ -125,30 +129,20 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <th>2009078</th>
-                    <th>Library</th>
-                    <th>Irene M. Mungcal</th>
-                    <th><button class="btn btn-outline-info">Select</button></th>   
-                </tr>
-                <tr>
-                    <th>2009078</th>
-                    <th>Osa</th>
-                    <th>Angelo A. Baltazar</th>
-                    <th><button class="btn btn-outline-info">Select</button></th>                
-                </tr>
-                <tr>
-                    <th>2009078</th>
-                    <th>Guidance</th>
-                    <th>Abigail B. Wong</th>
-                    <th><button class="btn btn-outline-info">Select</button></th>
-                </tr>
-                <tr>
-                    <th>2009078</th>
-                    <th>Foreign Affairs</th>
-                    <th>Imelda C. Stevenson</th>
-                    <th><button class="btn btn-outline-info">Select</button></th>                
-                </tr>
+                <?php if (!empty($departments)): ?>
+                    <?php foreach ($departments as $department): ?>
+                        <tr>
+                            <th><?php echo htmlspecialchars($department['dept_id']); ?></th>
+                            <th><?php echo htmlspecialchars($department['dept_name']); ?></th>
+                            <th><?php echo htmlspecialchars($department['employee_name']); ?></th>
+                            <th><button class="btn btn-outline-info">Select</button></th>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" class="text-center">No departments found.</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>

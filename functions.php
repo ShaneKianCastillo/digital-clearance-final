@@ -204,4 +204,26 @@
         }
     }
 
+    function fetchDepartments() {
+        $con = openCon(); 
+    
+        if ($con) {
+            $sql = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred";
+            $result = mysqli_query($con, $sql);
+    
+            $departments = [];
+            if ($result && mysqli_num_rows($result) > 0) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $departments[] = $row;
+                }
+            }
+            closeCon($con); 
+            return $departments;
+        } else {
+            echo "Failed to connect to the database.";
+            return [];
+        }
+    }
+    
+
 ?>
