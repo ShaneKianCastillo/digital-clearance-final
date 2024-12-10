@@ -92,24 +92,6 @@
         $output .= '</ul></div>';
         return $output;
     }
-    
-    function addUser() {
-        $con = openCon();
-        if ($con) {
-            $userID = '300908645';
-            $hashedPassword = md5('Dean0005'); 
-            $name = 'Dean';
-            $sql = "INSERT INTO users (user_id, password, name) VALUES ('$userID', '$hashedPassword', '$name')";
-            if (mysqli_query($con, $sql)) {
-                echo "New record created successfully";
-            } else {
-                echo "Error: " . $sql . "<br>" . mysqli_error($con);
-            }
-            closeCon($con);
-        } else {
-            echo "Failed to connect to the database.";
-        }
-    }
 
     function getFacultyData($facultyID) {
         $con = openCon();
@@ -159,6 +141,66 @@
         } else {
             closeCon($con);
             return null;
+        }
+    }
+
+    function addStudentUser($userID, $password, $name) {
+        $con = openCon(); 
+    
+        if ($con) {
+            $hashedPassword = md5($password); 
+            $sql = "INSERT INTO students_cred (stud_id, password, name) VALUES (?, ?, ?)";
+            $stmt = mysqli_prepare($con, $sql);
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "sss", $userID, $hashedPassword, $name);
+                if (mysqli_stmt_execute($stmt)) {
+                    echo "New record created successfully.";
+                } else {
+                    echo "Error executing query: " . mysqli_stmt_error($stmt);
+                }
+                mysqli_stmt_close($stmt);
+            } else {
+                echo "Error preparing statement: " . mysqli_error($con);
+            }
+            closeCon($con);
+        } else {
+            echo "Failed to connect to the database.";
+        }
+    }
+
+    function addDepartmentUser($deptID, $password, $employeeName, $deptName) {
+        $con = openCon(); // Open the database connection
+    
+        if ($con) {
+            // Hash the password using MD5
+            $hashedPassword = md5($password); 
+    
+            // Prepare the SQL statement with placeholders
+            $sql = "INSERT INTO deptartments_cred (dept_id, password, employee_name, dept_name) VALUES (?, ?, ?, ?)";
+    
+            // Use a prepared statement to prevent SQL injection
+            $stmt = mysqli_prepare($con, $sql);
+            if ($stmt) {
+                // Bind the parameters to the placeholders
+                mysqli_stmt_bind_param($stmt, "ssss", $deptID, $hashedPassword, $employeeName, $deptName);
+    
+                // Execute the prepared statement
+                if (mysqli_stmt_execute($stmt)) {
+                    echo "New department user created successfully.";
+                } else {
+                    echo "Error executing query: " . mysqli_stmt_error($stmt);
+                }
+    
+                // Close the statement
+                mysqli_stmt_close($stmt);
+            } else {
+                echo "Error preparing statement: " . mysqli_error($con);
+            }
+    
+            // Close the database connection
+            closeCon($con);
+        } else {
+            echo "Failed to connect to the database.";
         }
     }
 
