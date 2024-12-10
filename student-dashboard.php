@@ -4,6 +4,9 @@
     $studentID = $_SESSION['userID'];
 
     $studentData = getStudentData($studentID);
+    $students = fetchStudentInfo($studentID);
+    $approvalCount = countApprovals($studentID);
+
 ?>
 
 
@@ -39,7 +42,7 @@
                     <i class="fa-regular fa-user" style="font-size: 50px; color:gray"></i>
                 </div>
                 <div class="ps-3">
-                    <p class="fs-6" style="font-weight: 500;">Ram Yturralde</p>
+                    <p class="fs-6" style="font-weight: 500;"><?php echo $studentData['name']; ?></p>
                     <p class="position-absolute" style="top: 52px;">CCIS - Student</p>
                 </div>
             </div>  
@@ -59,52 +62,51 @@
                 <a href="logout.php" class="text-danger">               
                     <i class="fa-solid fa-right-from-bracket">Logout</i>               
                 </a>
-            
             </div>
         </div>
         </div>
     </div>  
 
-    <div class="container col-lg-6 pt-4 welcome">
+    <!--<div class="container col-lg-6 pt-4 welcome">
         <p class="fs-2 fw-semibold">Welcome Ram Yturralde!</p>
-    </div>
+    </div>-->
 
     <div class="container pt-3 ps-5 mt-4 custom-shadow position-relative col-lg-6">
         <p class="" style="font-size: 40px;">
             Student Information
         </p>
         <div class="d-flex justify-content-between custom-info">
-        <div class="col-md-3">   
-        <div style="display: flex; gap:10px;">
-            <p class="fw-bold">Name:</p>
-            <p></p>
-        </div>
-        <div style="display: flex; gap:10px;">
-            <p class="fw-bold">Course:</p>
-            <p></p>
-        </div>
-        <div style="display: flex; gap:10px;">
-            <p class="fw-bold">Contact Number:</p>
-            <p></p>
-        </div>
-        </div> 
-        <div class="col-md-5">
-        <div style="display: flex; gap:10px;">
-            <p class="fw-bold">Student Number:</p>
-            <p></p>
-        </div>
-        <div style="display: flex; gap:10px;">
-            <p class="fw-bold">Year Level:</p>
-            <p></p>
-        </div>
-        <div style="display: flex; gap:10px;">
-            <p class="fw-bold">1st Semester:</p>
-            <p> S.Y. 2024 - 2025</p>
-        </div>
-        </div>
-        <div class="position-absolute end-0 me-5  top-0 mt-4">
-            <img src="img/user-stud.png" alt="" height="170px">
-        </div>
+            <div class="col-md-3">   
+                <div style="display: flex; gap:10px;">
+                    <p class="fw-bold">Name:</p>
+                    <p><?php echo $students['stud_name']; ?></p>
+                </div>
+            <div style="display: flex; gap:10px;">
+                <p class="fw-bold">Course:</p>
+                <p><?php echo $students['course']; ?></p>
+            </div>
+            <div style="display: flex; gap:10px;">
+                <p class="fw-bold">Contact Number:</p>
+                <p><?php echo $students['contact_number']; ?></p>
+            </div>
+            </div> 
+            <div class="col-md-5">
+            <div style="display: flex; gap:10px;">
+                <p class="fw-bold">Student Number:</p>
+                <p><?php echo $students['stud_id']; ?></p>
+            </div>
+            <div style="display: flex; gap:10px;">
+                <p class="fw-bold">Year Level:</p>
+                <p><?php echo $students['year_level']; ?></p>
+            </div>
+            <div style="display: flex; gap:10px;">
+                <p class="fw-bold">1st Semester:</p>
+                <p> S.Y. 2024 - 2025</p>
+            </div>
+            </div>
+            <div class="position-absolute end-0 me-5  top-0 mt-4">
+                <img src="img/user-stud.png" alt="" height="170px">
+            </div>
         </div>
     </div>
 
@@ -132,8 +134,10 @@
                 </svg>
             </div>
         </div>
+
+        <?php $clearanceData = getStudentClearanceData($studentID); ?>
         <div class="container">
-            <table class="table">
+            <table class="table table-striped">
                 <thead>
                     <tr class="table-dark">
                         <th>Office/Dept</th>
@@ -144,13 +148,17 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <?php foreach ($clearanceData as $data): ?>
                     <tr>
-                        <th>Library</th>
-                        <th>Irene M. Mungcal</th>
-                        <th class="text-danger">Declined</th>
-                        <th>Kunwari Date</th>
-                        <th>Balik mo muna libro</th>
+                        <th><?php echo htmlspecialchars($data['dept_name']); ?></th>
+                        <th><?php echo htmlspecialchars($data['signatory']); ?></th>
+                        <th class="<?php echo $data['status'] == 'Approved' ? 'text-success' : 'text-danger'; ?>">
+                            <?php echo htmlspecialchars($data['status']); ?>
+                        </th>
+                        <th><?php echo htmlspecialchars($data['date']); ?></th>
+                        <th><?php echo htmlspecialchars($data['remarks']); ?></th>
                     </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
@@ -165,7 +173,7 @@
         let progressCircle = document.getElementById("progress-circle");
 
         let counter =0; // Start from 0 or any initial value
-        let targetValue = 100; // Desired end value
+        let targetValue = <?php echo ($approvalCount * 10) ?>; // Desired end value
         let maxCounter = 100; // Maximum percentage (100%)
         let maxDashOffset = 472; // Full circle dasharray value (circumference of the circle)
 
