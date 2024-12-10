@@ -310,7 +310,7 @@
         closeCon($con);
     }
 
-  
+
     function getStudentClearanceData($studID) {
         $con = openCon();
 
@@ -345,6 +345,39 @@
             $clearanceData[] = [
                 'dept_name' => $deptName,
                 'signatory' => $signatory,
+                'status' => $status,
+                'date' => $date,
+                'remarks' => $remarks
+            ];
+        }
+
+        // Query for dean credentials
+        $queryDean = "SELECT dean_name FROM dean_cred LIMIT 1";
+        $resultDean = mysqli_query($con, $queryDean);
+
+        if ($resultDean) {
+            $rowDean = mysqli_fetch_assoc($resultDean);
+            $deanName = $rowDean['dean_name'];
+
+            // Fetch dean's clearance data
+            $queryStatus = "SELECT Dean AS status FROM student_clearance WHERE stud_id = '$studID'";
+            $resultStatus = mysqli_query($con, $queryStatus);
+            $statusRow = mysqli_fetch_assoc($resultStatus);
+            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
+
+            $queryDate = "SELECT Dean AS date FROM student_date WHERE stud_id = '$studID'";
+            $resultDate = mysqli_query($con, $queryDate);
+            $dateRow = mysqli_fetch_assoc($resultDate);
+            $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
+
+            $queryRemarks = "SELECT Dean AS remarks FROM student_comment WHERE stud_id = '$studID'";
+            $resultRemarks = mysqli_query($con, $queryRemarks);
+            $remarksRow = mysqli_fetch_assoc($resultRemarks);
+            $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
+
+            $clearanceData[] = [
+                'dept_name' => 'Dean',
+                'signatory' => $deanName,
                 'status' => $status,
                 'date' => $date,
                 'remarks' => $remarks
