@@ -6,6 +6,12 @@
     $errorArray = [];
     $users = [];
 
+    /*$userID = '0122303926';
+    $password = 'Beltran0122303926';
+    $name = 'John Andre Beltran';
+
+    addStudentUser($userID, $password, $name);*/
+
     if (isset($_POST['loginButton'])) {
 
         $userID = $_POST['userID'];
