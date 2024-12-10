@@ -16,14 +16,39 @@
     if (isset($_POST['searchButton'])) {
         $studID = $_POST['userID'];
         $student = fetchStudentInfo($studID);
+
+        $con = openCon();
     
-        if ($student) {
+        // Check if the student is approved by previous departments in the list
+        $approvedDepartments = ['Library', 'OSA', 'Guidance', 'Foreign Affairs', 'Computer Lab', 'Program Chair', 'Registrar', 'Vice President', 'Accounting'];
+        $deptName = $facultyData['dept_name'];
+        
+        // Check if the student is approved by any previous department
+        $studentApproved = false;
+        
+        foreach ($approvedDepartments as $department) {
+            $queryApprovalStatus = "SELECT `$department` AS status FROM student_clearance WHERE stud_id = ?";
+            $stmt = $con->prepare($queryApprovalStatus);
+            $stmt->bind_param("i", $studID);
+            $stmt->execute();
+            $stmt->bind_result($status);
+            $stmt->fetch();
+            $stmt->close();
+    
+            // If the student is approved by any department, set $studentApproved to true
+            if ($status == 1) {
+                $studentApproved = true;
+                break; // Exit the loop since we found an approval
+            }
+        }
+    
+        // If student is found and approved by at least one department
+        if ($student && $studentApproved) {
             $studName = $student['stud_name'];
             $studCourse = $student['course'];
             $studentFound = true;
     
             $con = openCon();
-            $deptName = $facultyData['dept_name'];
             $commentQuery = "SELECT `$deptName` AS comment FROM student_comment WHERE stud_id = ?";
             $stmt = $con->prepare($commentQuery);
             $stmt->bind_param("i", $studID);
@@ -35,6 +60,7 @@
     
             $commentAreaValue = $existingComment ?? '';
         } else {
+            // If student is not found or not approved by any department
             $studentFound = false;
             $commentAreaValue = '';
         }
