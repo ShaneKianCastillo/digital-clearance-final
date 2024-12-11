@@ -292,7 +292,6 @@
         closeCon($con);
     }
     
-
     function addStudentComment($studID) {
         $con = openCon();
     
@@ -313,10 +312,8 @@
 
         $columns = implode(", ", $departments);
         $emptyValues = implode(", ", array_fill(0, count($departments), "''"));
-
         $columns .= ", `Dean`";
         $emptyValues .= ", ''";
-    
         $sql = "INSERT INTO student_comment (stud_id, $columns) 
                 VALUES ('$studID', $emptyValues)";
     
@@ -349,7 +346,6 @@
 
         $columns = implode(", ", $departments);
         $emptyValues = implode(", ", array_fill(0, count($departments), "''"));
-
         $columns .= ", `Dean`";
         $emptyValues .= ", ''";
 
@@ -365,8 +361,6 @@
         closeCon($con);
     }
     
-
-
     function getStudentClearanceData($studID) {
         $con = openCon();
 
@@ -446,7 +440,7 @@
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
-        $deptQuery = "SELECT dept_name FROM deptartments_cred";
+        $deptQuery = "SELECT dept_name FROM deptartments_cred"; 
         $result = mysqli_query($con, $deptQuery);
     
         if (!$result) {
@@ -454,12 +448,13 @@
             closeCon($con);
             return 0; 
         }
-    
+
         $departments = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $departments[] = "`" . mysqli_real_escape_string($con, $row['dept_name']) . "`";
         }
-
+        
+        $departments[] = "`Dean`";
         $columns = implode(", ", $departments);
         $query = "SELECT $columns FROM student_clearance WHERE stud_id = '$studID'";
         $result = mysqli_query($con, $query);
@@ -475,13 +470,10 @@
         } else {
             echo "Error fetching student clearance: " . mysqli_error($con);
         }
-    
         closeCon($con);
-    
         return $approvalCount;
     }
     
-
     function approveStudent($studID, $deptName) {
         $con = openCon();
 
@@ -489,7 +481,6 @@
         $stmt = $con->prepare($query);
         $stmt->bind_param("s", $studID);
         $stmt->execute();
-
         $stmt->close();
         $con->close();
     }
@@ -501,7 +492,6 @@
         $stmt = $con->prepare($query);
         $stmt->bind_param("si", $date, $studID);
         $stmt->execute();
-    
         $stmt->close();
         $con->close();
     }
@@ -510,7 +500,6 @@
         $con = openCon();
 
         $con->begin_transaction();
-    
         try {
             $query1 = "UPDATE student_comment SET `$deptName` = ? WHERE stud_id = ?";
             $stmt1 = $con->prepare($query1);
@@ -580,10 +569,44 @@
         $stmt->execute();
         $stmt->bind_result($existingComment);
         $stmt->fetch();
-    
         $stmt->close();
         closeCon($con);
         return $existingComment ?? '';
+    }
+
+    function checkIfAllPreviousDepartmentsApproved($studID) {
+        $con = openCon();
+
+        $query = "SHOW COLUMNS FROM student_clearance";
+        $result = mysqli_query($con, $query);
+        $departmentColumns = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $column = $row['Field'];
+            if ($column != 'stud_id' && $column != 'Dean') {
+                $departmentColumns[] = $column;
+            }
+        }
+
+        $query = "SELECT * FROM student_clearance WHERE stud_id = '$studID'";
+        $result = mysqli_query($con, $query);
+        $data = mysqli_fetch_assoc($result);
+        if (!$data) {
+            closeCon($con);
+            return false; 
+        }
+    
+        closeCon($con);
+        $allApproved = true;
+        foreach ($departmentColumns as $department) {
+            if ($data[$department] != 1) {
+                $allApproved = false;
+                break;
+            }
+        }
+        if ($allApproved || ($data['Dean'] == 0 && count(array_filter($data, fn($value) => $value == 1)) == count($departmentColumns))) {
+            return true;
+        }
+        return false;
     }
 
 ?>

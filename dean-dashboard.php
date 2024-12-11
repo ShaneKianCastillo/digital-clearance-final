@@ -30,10 +30,8 @@
 
         $deptID = $_POST['deptID'];
         $deptName = $_POST['deptName'];   
-        $deptEmp = $_POST['deptEmp'];     
-
+        $deptEmp = $_POST['deptEmp'];    
         updateDepartment($deptID, $deptName, $deptEmp);
-
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
 
