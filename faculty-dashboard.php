@@ -154,7 +154,7 @@
                         </tr>
                     <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
                         <tr>
-                            <td colspan="3" class="text-center">No student found with ID: <?php echo $studID ?></td>
+                        <td colspan="3" class="text-center"><?php echo $student['stud_name']; ?> is not yet approved by previous departments.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -165,17 +165,16 @@
             <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
                 <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined student:</label>
                 <textarea 
-                class="form-control align-center" 
-                style="width: 400px;" 
-                name="commentArea" 
-                id="commentArea" 
-                rows="3" 
-                onclick="this.setSelectionRange(0, 0)" 
-                oninput="checkTextareaContent()" 
-                <?php echo !$studentFound ? 'disabled' : ''; ?>>
-                <?php echo htmlspecialchars($commentAreaValue); ?>
-            </textarea>                
-
+                    class="form-control align-center" 
+                    style="width: 400px;" 
+                    name="commentArea" 
+                    id="commentArea" 
+                    rows="3" 
+                    onclick="this.setSelectionRange(0, 0)" 
+                    oninput="checkTextareaContent()" 
+                    <?php echo !$studentFound ? 'disabled' : ''; ?>>
+                    <?php echo htmlspecialchars($commentAreaValue); ?>
+                </textarea>                
             <div class="pt-4">       
                 <button class="btn btn-danger fs-5" name="declineButton" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
             </div>   
