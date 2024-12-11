@@ -189,33 +189,45 @@
         }
     }
 
-    function updateDepartment($deptID, $deptName, $deptEmp) {
+    function updateDepartment($deptID, $newDeptName, $deptEmp) {
         $con = openCon();
     
         $deptID = mysqli_real_escape_string($con, $deptID);
-        $deptName = mysqli_real_escape_string($con, $deptName);
+        $newDeptName = mysqli_real_escape_string($con, $newDeptName);
         $deptEmp = mysqli_real_escape_string($con, $deptEmp);
+        $currentDeptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_id = '$deptID'";
+        $result = mysqli_query($con, $currentDeptQuery);
     
-        $sql1 = "UPDATE deptartments_cred SET dept_name = '$deptName', employee_name = '$deptEmp' WHERE dept_id = '$deptID'";
-        $sql2 = "ALTER TABLE student_clearance CHANGE `Library` `$deptName` VARCHAR(255)";
-        $sql3 = "ALTER TABLE student_comment CHANGE `Library` `$deptName` VARCHAR(255)";
-        $sql4 = "ALTER TABLE student_date CHANGE `Library` `$deptName` VARCHAR(255)";
-
+        if (!$result || mysqli_num_rows($result) === 0) {
+            echo "Error: Department not found or query failed: " . mysqli_error($con);
+            closeCon($con);
+            return false;
+        }
+    
+        $row = mysqli_fetch_assoc($result);
+        $currentDeptName = $row['dept_name'];
+    
+        $sql1 = "UPDATE deptartments_cred SET dept_name = '$newDeptName', employee_name = '$deptEmp' WHERE dept_id = '$deptID'";
+        $sql2 = "ALTER TABLE student_clearance CHANGE `$currentDeptName` `$newDeptName` VARCHAR(255)";
+        $sql3 = "ALTER TABLE student_comment CHANGE `$currentDeptName` `$newDeptName` VARCHAR(255)";
+        $sql4 = "ALTER TABLE student_date CHANGE `$currentDeptName` `$newDeptName` VARCHAR(255)";
+    
         if (mysqli_query($con, $sql1)) {
             if (mysqli_query($con, $sql2) && mysqli_query($con, $sql3) && mysqli_query($con, $sql4)) {
                 closeCon($con);  
                 return true;  
             } else {
+                echo "Error updating related tables: " . mysqli_error($con);
                 closeCon($con);  
                 return false;
             }
         } else {
+            echo "Error updating department credentials: " . mysqli_error($con);
             closeCon($con);  
-            return false; 
+            return false;
         }
     }
       
-
     function addStudentInfo($studID, $studName, $course, $contactNumber, $yearLevel) {
         $con = openCon();
     
