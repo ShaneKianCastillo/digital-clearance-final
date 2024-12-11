@@ -18,52 +18,35 @@
         $student = fetchStudentInfo($studID);
 
         $con = openCon();
+        $orderedDepartments = [];
+        $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC";
+        $result = mysqli_query($con, $deptQuery);
     
-        // Check if the student is approved by previous departments in the list
-        $approvedDepartments = ['Library', 'OSA', 'Guidance', 'Foreign Affairs', 'Computer Lab', 'Program Chair', 'Registrar', 'Vice President', 'Accounting'];
-        $deptName = $facultyData['dept_name'];
-        
-        // Check if the student is approved by any previous department
-        $studentApproved = false;
-        
-        foreach ($approvedDepartments as $department) {
-            $queryApprovalStatus = "SELECT `$department` AS status FROM student_clearance WHERE stud_id = ?";
-            $stmt = $con->prepare($queryApprovalStatus);
-            $stmt->bind_param("i", $studID);
-            $stmt->execute();
-            $stmt->bind_result($status);
-            $stmt->fetch();
-            $stmt->close();
-    
-            // If the student is approved by any department, set $studentApproved to true
-            if ($status == 1) {
-                $studentApproved = true;
-                break; // Exit the loop since we found an approval
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $orderedDepartments[] = $row['dept_name'];
             }
+        } else {
+            echo "Error fetching departments: " . mysqli_error($con);
+            $studentFound = false;
+            $commentAreaValue = '';
+            return;
         }
     
-        // If student is found and approved by at least one department
+        $deptName = $facultyData['dept_name'];
+        $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $orderedDepartments);
+    
         if ($student && $studentApproved) {
             $studName = $student['stud_name'];
             $studCourse = $student['course'];
             $studentFound = true;
     
-            $con = openCon();
-            $commentQuery = "SELECT `$deptName` AS comment FROM student_comment WHERE stud_id = ?";
-            $stmt = $con->prepare($commentQuery);
-            $stmt->bind_param("i", $studID);
-            $stmt->execute();
-            $stmt->bind_result($existingComment);
-            $stmt->fetch();
-            $stmt->close();
-            closeCon($con);
-    
-            $commentAreaValue = $existingComment ?? '';
+            $commentAreaValue = fetchStudentComment($studID, $deptName);
         } else {
-            // If student is not found or not approved by any department
             $studentFound = false;
             $commentAreaValue = '';
         }
+        closeCon($con);
     }
 
     if (isset($_POST['approveButton']) && isset($_POST['userID'])) {
@@ -182,22 +165,28 @@
             <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
                 <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined student:</label>
                 <textarea 
-                    class="form-control align-center" 
-                    style="width: 400px;" 
-                    name="commentArea" 
-                    id="commentArea" 
-                    rows="3" 
-                    onclick="this.setSelectionRange(0, 0)" 
-                    oninput="checkTextareaContent()" 
-                    <?php echo !$studentFound ? 'disabled' : ''; ?>>
-                    <?php echo htmlspecialchars($commentAreaValue); ?>
-                </textarea>                
-                <div class="pt-4">       
-                    <button class="btn btn-danger fs-5" name="declineButton" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
-                </div>   
+                class="form-control align-center" 
+                style="width: 400px;" 
+                name="commentArea" 
+                id="commentArea" 
+                rows="3" 
+                onclick="this.setSelectionRange(0, 0)" 
+                oninput="checkTextareaContent()" 
+                <?php echo !$studentFound ? 'disabled' : ''; ?>>
+                <?php echo htmlspecialchars($commentAreaValue); ?>
+            </textarea>                
+
+            <div class="pt-4">       
+                <button class="btn btn-danger fs-5" name="declineButton" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
+            </div>   
             </div>
             <div class="col-lg-4">
-                <button class="btn btn-success fs-5" name="approveButton" id="approveButton" <?php echo !$studentFound ? 'disabled' : ''; ?>>Approve</button>
+                <button 
+                    class="btn btn-success fs-5" 
+                    name="approveButton" 
+                    id="approveButton" 
+                    <?php echo (!$studentFound || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
+                </button>
             </div>
         </div>
     </form>
