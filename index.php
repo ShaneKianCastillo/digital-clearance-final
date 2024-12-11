@@ -6,9 +6,9 @@
     $errorArray = [];
     $users = [];
 
-    /*$userID = '0122303926';
-    $password = 'Beltran0122303926';
-    $name = 'Karl John Nucum';
+    /*$userID = '200893651';
+    $password = 'Paul';
+    $name = 'Paul';
     $course = 'BSIT';
     $contact = '09326614570';
     $year = '4';
