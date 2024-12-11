@@ -192,28 +192,43 @@
     function updateDepartment($deptID, $deptName, $deptEmp) {
         $con = openCon();
     
+        // Escape inputs to prevent SQL injection
         $deptID = mysqli_real_escape_string($con, $deptID);
         $deptName = mysqli_real_escape_string($con, $deptName);
         $deptEmp = mysqli_real_escape_string($con, $deptEmp);
     
+        // Ensure $deptName is a valid SQL identifier for column renaming
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $deptName)) {
+            closeCon($con);
+            return false; // Invalid column name
+        }
+    
+        // Update the department details
         $sql1 = "UPDATE deptartments_cred SET dept_name = '$deptName', employee_name = '$deptEmp' WHERE dept_id = '$deptID'";
-        $sql2 = "ALTER TABLE student_clearance CHANGE `Library` `$deptName` VARCHAR(255)";
-        $sql3 = "ALTER TABLE student_comment CHANGE `Library` `$deptName` VARCHAR(255)";
-        $sql4 = "ALTER TABLE student_date CHANGE `Library` `$deptName` VARCHAR(255)";
-
-        if (mysqli_query($con, $sql1)) {
-            if (mysqli_query($con, $sql2) && mysqli_query($con, $sql3) && mysqli_query($con, $sql4)) {
-                closeCon($con);  
-                return true;  
+        // Alter tables to update column names
+        $sql2 = "ALTER TABLE student_clearance CHANGE COLUMN `$deptName` `$deptName` VARCHAR(255)";
+        $sql3 = "ALTER TABLE student_comment CHANGE COLUMN `$deptName` `$deptName` VARCHAR(255)";
+        $sql4 = "ALTER TABLE student_date CHANGE COLUMN `$deptName` `$deptName` VARCHAR(255)";
+    
+        try {
+            if (mysqli_query($con, $sql1)) {
+                if (mysqli_query($con, $sql2) && mysqli_query($con, $sql3) && mysqli_query($con, $sql4)) {
+                    closeCon($con);
+                    return true;
+                } else {
+                    throw new Exception("Error in altering table columns: " . mysqli_error($con));
+                }
             } else {
-                closeCon($con);  
-                return false;
+                throw new Exception("Error in updating department details: " . mysqli_error($con));
             }
-        } else {
-            closeCon($con);  
-            return false; 
+        } catch (Exception $e) {
+            // Log error message
+            error_log($e->getMessage());
+            closeCon($con);
+            return false;
         }
     }
+    
       
 
     function addStudentInfo($studID, $studName, $course, $contactNumber, $yearLevel) {
