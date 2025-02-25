@@ -100,6 +100,14 @@
                     </div>  
                 </div>  
             </div>
+            <div class="d-flex pt-3 ps-2">
+                <div>
+                    <a href="dean-dashboard.php" style="text-decoration: none;" class="text-dark"><i class="fa-solid fa-pen-to-square" style="font-size: 25px;"></i></a>
+                </div>
+                <div class="ps-2">
+                    <a href="semester.php" style="text-decoration: none;" class="text-dark"><p class="fs-6 fw-medium">Semester - S.Y.</p></a>
+                </div>
+            </div>
             <hr>
             <div class="ps-3 pt-3">
                 <a href="logout.php" class="text-danger">               
