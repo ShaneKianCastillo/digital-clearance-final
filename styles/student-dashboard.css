@@ -102,3 +102,23 @@ svg {
     right: 10px;
     left: 30%;
 }
+.sidebar-container .container.show {
+    display: block !important; /* Override Bootstrap styles */
+}
+.custom-container {
+    position: relative;
+    right: -130px; /* Adjust value as needed */
+}
+.student-img {
+    height: 170px; /* Default size */
+}
+
+@media (max-width: 768px) {
+    .custom-container {
+        padding: 10px; /* Reduce padding */
+        font-size: 14px; /* Decrease font size */
+    }
+    .student-img {
+        height: 100px; /* Make image smaller */
+    }
+}

@@ -26,96 +26,113 @@
 </head>
 
 <body style="background-color: whitesmoke;">
-    <header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
-        <div>
-            <img src="img/logo.png" alt="" height="80px" class="ps-3">
-        </div>
-        <div class="head">
-            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#">Student - Dashboard</a>
-        </div>
-    </header>
+<header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
+    <!-- Burger Menu for Mobile View -->
+    <button id="menu-toggle" class="btn btn-dark ms-3 d-md-none">
+        <i class="fa-solid fa-bars"></i>
+    </button>
 
-    <div class="sidebar position-relative">
-        <div class="container position-fixed start-0 sidebar-shadow z-1 bg-light" style="height: 100vh; width:250px;">
-            <div class="pt-4 d-flex gy-1 " >
+    <div>
+        <img src="img/logo.png" alt="" height="80px" class="ps-3">
+    </div>
+    <div class="head">
+        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white" href="#">Student - Dashboard</a>
+    </div>
+</header>
+
+
+
+    <!-- Sidebar -->
+<div class="sidebar-container">
+    <div id="sidebar" class="sidebar position-relative">
+        <div class="container position-fixed start-0 sidebar-shadow z-1 bg-light d-none d-md-block" 
+             style="height: 100vh; width:250px;">
+            <div class="pt-4 d-flex gy-1">
                 <div>
                     <i class="fa-regular fa-user" style="font-size: 50px; color:gray"></i>
                 </div>
                 <div class="ps-3">
-                    <p class="fs-6" style="font-weight: 500;"><?php echo $studentData['name']; ?></p>
+                    <p class="fs-6 fw-medium"><?php echo $studentData['name']; ?></p>
                     <p class="position-absolute" style="top: 52px;">CCIS - Student</p>
                 </div>
             </div>  
             <div class="pt-5 text-center ps-2">
                 <div class="d-flex gy-1">
                     <div>
-                        <a href="change-password.php" style="text-decoration: none;" class="text-dark"><i class="fa-solid fa-unlock" style="font-size: 20px;"></i></a>
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <i class="fa-solid fa-unlock" style="font-size: 20px;"></i>
+                        </a>
                     </div>
                     <div class="ps-2">
-                        <a href="change-password.php" style="text-decoration: none;" class="text-dark"><p class="fs-6 fw-medium">Change Password</p></a>
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <p class="fs-6 fw-medium">Change Password</p>
+                        </a>
                     </div>  
                 </div>  
             </div>
-            
             <hr>
             <div class="ps-3 pt-3">
                 <a href="logout.php" class="text-danger">               
-                    <i class="fa-solid fa-right-from-bracket">Logout</i>               
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </div>
         </div>
-        </div>
-    </div>  
+    </div>
+</div>
+
 
     <!--<div class="container col-lg-6 pt-4 welcome">
         <p class="fs-2 fw-semibold">Welcome Ram Yturralde!</p>
     </div>-->
 
-    <div class="container pt-3 ps-5 mt-4 custom-shadow position-relative col-lg-6">
-        <p class="" style="font-size: 40px;">
-            Student Information
-        </p>
-        <div class="d-flex justify-content-between custom-info">
-            <div class="col-md-3">   
-                <div style="display: flex; gap:10px;">
-                    <p class="fw-bold">Name:</p>
-                    <p><?php echo $students['stud_name']; ?></p>
-                </div>
-            <div style="display: flex; gap:10px;">
-                <p class="fw-bold">Course:</p>
-                <p><?php echo $students['course']; ?></p>
+    <div class="container custom-container pt-3 ps-4 mt-4 custom-shadow position-relative col-lg-8 col-md-10 col-sm-12">
+    <p class="fw-bold" style="font-size: 30px;">Student Information</p>
+    <div class="row">
+        <!-- First Column -->
+        <div class="col-md-6">
+            <div class="d-flex align-items-center gap-2 pb-3">
+                <p class="fw-bold mb-0">Name:</p>
+                <p class="mb-0"><?php echo $students['stud_name']; ?></p>
             </div>
-            <div style="display: flex; gap:10px;">
-                <p class="fw-bold">Contact Number:</p>
-                <p><?php echo $students['contact_number']; ?></p>
+            <div class="d-flex align-items-center gap-2 pb-3">
+                <p class="fw-bold mb-0">Course:</p>
+                <p class="mb-0"><?php echo $students['course']; ?></p>
             </div>
-            </div> 
-            <div class="col-md-5">
-            <div style="display: flex; gap:10px;">
-                <p class="fw-bold">Student Number:</p>
-                <p><?php echo $students['stud_id']; ?></p>
+            <div class="d-flex align-items-center gap-2 pb-3">
+                <p class="fw-bold mb-0">Contact Number:</p>
+                <p class="mb-0"><?php echo $students['contact_number']; ?></p>
             </div>
-            <div style="display: flex; gap:10px;">
-                <p class="fw-bold">Year Level:</p>
-                <p><?php echo $students['year_level']; ?></p>
+        </div>
+        <!-- Second Column -->
+        <div class="col-md-6">
+            <div class="d-flex align-items-center gap-2 pb-3">
+                <p class="fw-bold mb-0">Student Number:</p>
+                <p class="mb-0"><?php echo $students['stud_id']; ?></p>
             </div>
-            <div style="display: flex; gap:10px;">
-                <p class="fw-bold">1st Semester:</p>
-                <p> S.Y. 2024 - 2025</p>
+            <div class="d-flex align-items-center gap-2 pb-3">
+                <p class="fw-bold mb-0">Year Level:</p>
+                <p class="mb-0"><?php echo $students['year_level']; ?></p>
             </div>
-            </div>
-            <div class="position-absolute end-0 me-5  top-0 mt-4">
-                <img src="img/user-stud.png" alt="" height="170px">
+            <div class="d-flex align-items-center gap-2 pb-5">
+                <p class="fw-bold mb-0">1st Semester:</p>
+                <p class="mb-0">S.Y. 2024 - 2025</p>
             </div>
         </div>
     </div>
+    <!-- Make Image Smaller on Small Screens -->
+    <div class="position-absolute end-0 me-5 top-0 mt-4">
+        <img src="img/user-stud.png" alt="Student Image" class="img-fluid student-img">
+    </div>
+</div>
 
-    <div class="container d-flex mt-5 col-lg-8 text-center">
-    <div class="container custom-shadow pt-3 pb-5 ps-4" style="width: 30%;">
+
+
+    <div class="container custom-container d-flex mt-5 col-lg-8 text-center">
+    <div class="container custom-shadow pt-3 pb-5 ps-4" style="width: 35%;">
             <p class=" fw-semibold fs-5 text-center">
                 Progress Bar
             </p>
-            <div class="skill" style="padding-left:47px">
+            <div class="skill" style="padding-left:25px">
                 <div class="outer ">
                     <div class="inner">
                         <div id="number">
@@ -199,5 +216,16 @@
         
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+     document.addEventListener("DOMContentLoaded", function () {
+        const sidebar = document.querySelector(".sidebar .container");
+        const toggleButton = document.getElementById("menu-toggle");
+
+        toggleButton.addEventListener("click", function () {
+            sidebar.classList.toggle("show"); // Use CSS class to toggle visibility
+        });
+    });
+</script>
+
 </body>
 </html>
