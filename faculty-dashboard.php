@@ -94,7 +94,7 @@
             <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $facultyData['dept_name'] . " - Dashboard"; ?></a>
         </div>
     </header>
-    
+
     <div class="sidebar position-relative">
         <div class="container position-fixed start-0 sidebar-shadow z-1 bg-light" style="height: 100vh; width:250px;">
             <div class="pt-4 d-flex gy-1 " >
@@ -104,6 +104,24 @@
                 <div class="ps-3">
                     <p class="fs-5" style="font-weight: 500;"><?php echo $facultyData['employee_name']; ?></p>
                     <p class="position-absolute" style="top: 52px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
+                </div>
+            </div>
+            <div id="accountingLinks"> 
+                <div class="pt-4 ms-2 d-flex align-items-center">
+                    <div class="fs-2 ">
+                        <i class="fa-solid fa-house"></i>
+                    </div>
+                    <div class="ps-3 fs-5">
+                        <a href="generate-pdf.php" class="text-decoration-none text-dark">Dashboard</a>
+                    </div>
+                </div>
+                <div class="pt-4 ms-2 d-flex align-items-center">
+                    <div class="fs-2 ">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div class="ps-3 fs-5">
+                        <a href="generate-pdf.php" class="text-decoration-none text-dark">Print PDF File</a>
+                    </div>
                 </div>
             </div>
             <br>  
@@ -116,6 +134,7 @@
         </div>
         </div>
     </div>
+
     
     <div class="container text-center pt-4">
         <p class="fs-1 fw-bold"><?php echo "Welcome " . $facultyData['dept_name'] . " Employee!"; ?></p>
@@ -199,6 +218,22 @@
                 approveButton.disabled = false;
             }
         }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+        // Get the department name from PHP and store it in a JavaScript variable
+        var departmentName = "<?php echo $facultyData['dept_name']; ?>";
+
+        // Get the sidebar links container
+        var sidebarLinks = document.getElementById("accountingLinks");
+
+        // Show links only if the department is "Accounting"
+        if (departmentName !== "Accounting") {
+            sidebarLinks.style.display = "none"; // Hide if not Accounting
+        } else {
+            sidebarLinks.style.display = "block"; // Show if Accounting
+        }
+    });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
