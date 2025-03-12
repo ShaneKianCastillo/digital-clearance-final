@@ -10,13 +10,15 @@
     $studID = "";
     $studName = "";
     $studCourse = "";
+    $studYearLevel = "";
+    $studContactNumber = "";
     $commentAreaValue = '';
     $studentFound = false;
 
     if (isset($_POST['searchButton'])) {
         $studID = $_POST['userID'];
         $student = fetchStudentInfo($studID);
-
+    
         $con = openCon();
         $orderedDepartments = [];
         $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC";
@@ -33,14 +35,14 @@
             return;
         }
     
-        $deptName = $facultyData['dept_name'];
-        $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $orderedDepartments);
-    
-        if ($student && $studentApproved) {
+        if ($student) { // Removed clearance completion check
             $studName = $student['stud_name'];
             $studCourse = $student['course'];
+            $studYearLevel = $student['year_level'];
+            $studContactNumber = $student['contact_number'];
             $studentFound = true;
     
+            $deptName = $facultyData['dept_name'];
             $commentAreaValue = fetchStudentComment($studID, $deptName);
         } else {
             $studentFound = false;
@@ -183,7 +185,7 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <div class="ps-1">
-                    <p>FULL NAME: Ram Iturralde</p>
+                    <p>FULL NAME: <?php echo $studName ?></p>
                 </div>
             </div>
             <div class="d-flex pt-2">
@@ -191,7 +193,7 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <div class="ps-1">
-                    <p>STUDENT ID NUMBER: 09876</p>
+                    <p>STUDENT ID NUMBER: <?php echo $studID ?></p>
                 </div>
             </div>
         </div>
@@ -201,7 +203,7 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <div class="ps-1">
-                    <p>COURSE: CSS</p>
+                    <p>COURSE: <?php echo $studCourse ?></p>
                 </div>
             </div>
             <div class="d-flex pt-2 col-lg-4">
@@ -209,7 +211,7 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <div class="ps-1">
-                    <p>YEAR LEVEL: 4th year</p>
+                    <p>YEAR LEVEL: <?php echo !empty($studYearLevel) ? getOrdinal($studYearLevel) . " YEAR" : ""; ?></p>
                 </div>
             </div>
             <div class="d-flex pt-2 col-lg-4">
@@ -227,7 +229,7 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <div class="ps-1">
-                    <p>CONTACT NUMBER: 0919900909</p>
+                    <p>CONTACT NUMBER: <?php echo $studContactNumber ?></p>
                 </div>
             </div>
             
@@ -244,60 +246,70 @@
             <p class="fs-5 fw-bold">CLEARANCE FORM</p>
         </div>
         
-            <table class="table table-striped container border border-dark">
-                <thead>
-                    <tr class="text-center">
-                        <th>Office/Dept</th>
-                        <th>Signatory Name</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th>1. LIBRARY</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                    <tr>
-                        <th>2. OSA</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                    <tr>
-                        <th>3. GUIDANCE</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                    <tr>
-                        <th>4. FOREIN AFFAIRS</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                    <tr>
-                        <th>5. COMPUTER LAB</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                </tbody>
-            </table>
+        <table class="table table-striped container border border-dark">
+            <thead>
+                <tr class="text-center">
+                    <th>Office/Dept</th>
+                    <th>Signatory Name</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
+
+                function getFirstFiveDepartments($studID) {
+                    $departments = getStudentClearanceData($studID);
+                    
+                    // Ensure $departments is an array before slicing
+                    if (is_array($departments)) {
+                        return array_slice($departments, 0, 5); // Get only the first 5 departments
+                    } else {
+                        return []; // Return an empty array if no data found
+                    }
+                }
+
+                if (!empty($studID)) { // Instead of $_GET['studID']
+                    $departments = getFirstFiveDepartments($studID);
+
+                    if (!empty($departments)) {
+                        $count = 1;
+                        foreach ($departments as $dept) {
+                            if (is_array($dept)) { 
+                                // Check if status is "Approved" and set color accordingly
+                                $statusColor = (strtolower($dept['status']) === 'approved') ? 'green' : 'red';
+                                ?>
+                                <tr>
+                                    <td><strong><?php echo $count . ". " . strtoupper($dept['dept_name']); ?></strong></td>
+                                    <td class="text-center"><strong><?php echo htmlspecialchars($dept['signatory']); ?></strong></td>
+                                    <td class="text-center"><strong style="color: <?php echo $statusColor; ?>;"><?php echo htmlspecialchars($dept['status']); ?></strong></td>
+                                    <td class="text-center"><strong><?php echo htmlspecialchars($dept['date']); ?></strong></td>
+                                    <td class="text-center"><strong><?php echo htmlspecialchars($dept['remarks']); ?></strong></td>
+                                </tr>
+                                <?php 
+                            }
+                            $count++;
+                        }
+                    } else { ?>
+                        <tr><td colspan="5" class="text-center">No clearance data found for this student.</td></tr>
+                    <?php }
+                } else { ?>
+                    <tr><td colspan="5" class="text-center">Search for a student to display clearance data.</td></tr>
+                <?php } ?>            
+            </tbody>
+        </table>
         
             <div class="container">
                 <div>
                     <p>RECOMMENDING APPROVAL</p>
                 </div>
             </div>
+
+            <?php
+                $selectedClearanceData = getSelectedClearanceData($studID);
+                $selectedClearanceDataDate = getSelectedClearanceDataDate($studID);
+            ?>
 
             <div class="container border border-dark mb-5 d-flex">
                 <div class="border-end col-lg-2 border-dark">
@@ -320,7 +332,9 @@
                             <p style="line-height: 1;">STATUS:</p>
                         </div>  
                         <div class="ps-1">
-                            <p class="text-success" style="line-height: 1;">Approved</p>
+                        <p class=" fw-bold <?=  !empty($studID) && isset($selectedClearanceData['Program Chair']) ? getStatusClass($selectedClearanceData['Program Chair']) : '' ?>" style="line-height: 1;">
+                            <?= !empty($studID) && isset($selectedClearanceData['Program Chair']) ? getStatusText($selectedClearanceData['Program Chair']) : '' ?>
+                        </p>
                         </div>
                     </div>
                     <div class="d-flex">
@@ -328,7 +342,9 @@
                             <p style="line-height: 1;">DATE:</p>
                         </div>  
                         <div class="ps-1">
-                            <p style="line-height: 1;">01-31-02</p>
+                            <p class="fst-italic" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceDataDate['Program Chair']) ? formatDate($selectedClearanceDataDate['Program Chair']) : '' ?>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -353,7 +369,9 @@
                             <p style="line-height: 1;">STATUS:</p>
                         </div>  
                         <div class="ps-1">
-                            <p class="text-success" style="line-height: 1;">Approved</p>
+                            <p class=" fw-bold <?=  !empty($studID) && isset($selectedClearanceData['Dean']) ? getStatusClass($selectedClearanceData['Dean']) : '' ?>" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceData['Dean']) ? getStatusText($selectedClearanceData['Dean']) : '' ?>
+                            </p>
                         </div>
                     </div>
                     <div class="d-flex">
@@ -361,7 +379,9 @@
                             <p style="line-height: 1;">DATE:</p>
                         </div>  
                         <div class="ps-1">
-                            <p style="line-height: 1;">01-31-02</p>
+                        <p class="fst-italic" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceDataDate['Dean']) ? formatDate($selectedClearanceDataDate['Dean']) : '' ?>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -386,7 +406,9 @@
                             <p style="line-height: 1;">STATUS:</p>
                         </div>  
                         <div class="ps-1">
-                            <p class="text-success" style="line-height: 1;">Approved</p>
+                            <p class=" fw-bold <?=  !empty($studID) && isset($selectedClearanceData['Registrar']) ? getStatusClass($selectedClearanceData['Registrar']) : '' ?>" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceData['Registrar']) ? getStatusText($selectedClearanceData['Registrar']) : '' ?>
+                            </p>
                         </div>
                     </div>
                     <div class="d-flex">
@@ -394,7 +416,9 @@
                             <p style="line-height: 1;">DATE:</p>
                         </div>  
                         <div class="ps-1">
-                            <p style="line-height: 1;">01-31-02</p>
+                        <p class="fst-italic" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceDataDate['Registrar']) ? formatDate($selectedClearanceDataDate['Registrar']) : '' ?>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -419,7 +443,9 @@
                             <p style="line-height: 1;">STATUS:</p>
                         </div>  
                         <div class="ps-1">
-                            <p class="text-success" style="line-height: 1;">Approved</p>
+                            <p class=" fw-bold <?=  !empty($studID) && isset($selectedClearanceData['Vice President']) ? getStatusClass($selectedClearanceData['Vice President']) : '' ?>" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceData['Vice President']) ? getStatusText($selectedClearanceData['Vice President']) : '' ?>
+                            </p>
                         </div>
                     </div>
                     <div class="d-flex">
@@ -427,7 +453,9 @@
                             <p style="line-height: 1;">DATE:</p>
                         </div>  
                         <div class="ps-1">
-                            <p style="line-height: 1;">01-31-02</p>
+                            <p class="fst-italic" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceDataDate['Vice President']) ? formatDate($selectedClearanceDataDate['Vice President']) : '' ?>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -452,7 +480,9 @@
                             <p style="line-height: 1;">STATUS:</p>
                         </div>  
                         <div class="ps-1">
-                            <p class="text-success" style="line-height: 1;">Approved</p>
+                            <p class=" fw-bold <?=  !empty($studID) && isset($selectedClearanceData['Accounting']) ? getStatusClass($selectedClearanceData['Accounting']) : '' ?>" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceData['Accounting']) ? getStatusText($selectedClearanceData['Accounting']) : '' ?>
+                            </p>
                         </div>
                     </div>
                     <div class="d-flex">
@@ -460,16 +490,15 @@
                             <p style="line-height: 1;">DATE:</p>
                         </div>  
                         <div class="ps-1">
-                            <p style="line-height: 1;">01-31-02</p>
+                            <p class="fst-italic" style="line-height: 1;">
+                                <?= !empty($studID) && isset($selectedClearanceDataDate['Accounting']) ? formatDate($selectedClearanceDataDate['Accounting']) : '' ?>
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
             
     </div>
-    
-
-
     
     <script type="text/javascript">
     function downloadPDF() {
@@ -502,8 +531,6 @@
         });
     });
 </script>
-
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
