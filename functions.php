@@ -621,4 +621,63 @@
         return false;
     }
 
+    function getSelectedClearanceData($studID) {
+        $con = openCon();
+        $query = "SELECT `Program Chair`, `Dean`, `Registrar`, `Vice President`, `Accounting` FROM student_clearance WHERE stud_id = ?";
+        
+        $stmt = $con->prepare($query);
+        $stmt->bind_param("s", $studID);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $data = $result->fetch_assoc(); 
+        
+        $stmt->close(); 
+        closeCon($con); 
+    
+        return $data; 
+    }
+
+    function getSelectedClearanceDataDate($studID) {
+        $con = openCon();
+        $query = "SELECT `Program Chair`, `Dean`, `Registrar`, `Vice President`, `Accounting` FROM student_date WHERE stud_id = ?";
+        
+        $stmt = $con->prepare($query);
+        $stmt->bind_param("s", $studID);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $data = $result->fetch_assoc(); 
+        
+        $stmt->close(); 
+        closeCon($con); 
+    
+        return $data; 
+    }
+
+    function getOrdinal($number) {
+        if (!in_array(($number % 100), [11, 12, 13])) {
+            switch ($number % 10) {
+                case 1: return $number . "st";
+                case 2: return $number . "nd";
+                case 3: return $number . "rd";
+            }
+        }
+        return $number . "th";
+    }
+
+    function getStatusClass($status) {
+        return $status == 1 ? 'text-success' : 'text-danger';
+    }
+    
+    function getStatusText($status) {
+        return $status == 1 ? 'Approved' : 'Declined';
+    }
+
+    function formatDate($dateString) {
+        if (empty($dateString)) return ''; 
+    
+        $timestamp = strtotime($dateString); 
+        return date("m-d-y", $timestamp); 
+    }
 ?>
