@@ -655,6 +655,57 @@
         return $data; 
     }
 
+    function saveSemesterAndSchoolYear($semester, $school_year) {
+        $con = openCon(); 
+    
+        $query = "SELECT * FROM dean_cred LIMIT 1";
+        $stmt = $con->prepare($query);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    
+        if ($result->num_rows > 0) {
+            $query = "UPDATE dean_cred SET semester = ?, school_year = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("ss", $semester, $school_year);
+        } else {
+            $query = "INSERT INTO dean_cred (semester, school_year) VALUES (?, ?)";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("ss", $semester, $school_year);
+        }
+    
+        $success = $stmt->execute(); 
+    
+        $stmt->close();
+        closeCon($con); 
+    
+        return $success;
+    }
+
+    function getSemesterAndSchoolYear() {
+        $con = openCon(); 
+        $query = "SELECT semester, school_year FROM dean_cred LIMIT 1";
+    
+        $stmt = $con->prepare($query);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+    
+        $stmt->close();
+        closeCon($con); 
+    
+        if ($data) {
+            if ($data['semester'] === 'First Semester') {
+                $data['semester'] = '1st Semester';
+            } elseif ($data['semester'] === 'Second Semester') {
+                $data['semester'] = '2nd Semester';
+            }
+        } else {
+            $data = ['semester' => 'N/A', 'school_year' => 'N/A'];
+        }
+    
+        return $data;
+    }
+
     function getOrdinal($number) {
         if (!in_array(($number % 100), [11, 12, 13])) {
             switch ($number % 10) {
