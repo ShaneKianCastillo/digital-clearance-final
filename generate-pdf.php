@@ -218,8 +218,11 @@
                 <div>
                     <i class="fa-solid fa-check"></i>
                 </div>
+
+                <?php $semData = getSemesterAndSchoolYear(); ?>
+                
                 <div class="ps-1">
-                    <p>SEMESTER: 1st Semester S.Y. 2024-2025</p>
+                    <p>SEMESTER: <?= htmlspecialchars($semData['semester']) ?> S.Y. <?= htmlspecialchars($semData['school_year']) ?></p>
                 </div>
             </div>
         </div>

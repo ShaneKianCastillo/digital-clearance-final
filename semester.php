@@ -1,3 +1,22 @@
+<?php 
+
+    include 'functions.php';    
+
+
+    if (isset($_POST['saveButton'])) {
+
+        $semester = $_POST['semester'];
+        $school_year = $_POST['school_year'];
+
+        saveSemesterAndSchoolYear($semester, $school_year);
+
+        header("Location: dean-dashboard.php");
+        exit();
+
+        }
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,12 +37,12 @@
     </div>
     <hr>
     
-    <form action="save-semester-sy.php" method="POST">
+    <form method="POST">
         
         <div class="mb-3">
             <label class="fw-bold fs-5">Select Semester:</label>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="semester" id="firstSem" value="First Semester" required>
+                <input class="form-check-input" type="radio" name="semester" id="firstSem" value="First Semester" required checked>
                 <label class="form-check-label" for="firstSem">First Semester</label>
             </div>
             <div class="form-check">
@@ -39,11 +58,10 @@
                 
             </select>
         </div>
-
         
         <div class="pt-4 text-center">
             <a href="dean-dashboard.php" class="btn btn-danger fs-5">Cancel</a>
-            <button type="submit" class="btn btn-success fs-5">Save</button>
+            <button type="submit" name="saveButton" class="btn btn-success fs-5">Save</button>
         </div>
     </form>
 </div>
