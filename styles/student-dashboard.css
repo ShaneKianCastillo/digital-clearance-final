@@ -122,3 +122,74 @@ svg {
         height: 100px; /* Make image smaller */
     }
 }
+
+/* Add these to your existing CSS */
+
+/* Fix header width */
+header.navbar {
+    width: 100%;
+    margin: 0;
+    padding: 0 15px;
+}
+
+/* Center containers on mobile */
+@media (max-width: 768px) {
+    .custom-container {
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        width: 95%;
+    }
+    
+    /* Prevent horizontal scrolling */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    /* Adjust table container */
+    .container.custom-container.d-flex {
+        padding: 0;
+        width: 100%;
+    }
+    
+    /* Make table responsive */
+    table {
+        width: 100%;
+        display: block;
+        overflow-x: auto;
+    }
+    
+    /* Adjust sidebar positioning */
+    .sidebar-container .container {
+        position: fixed;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar-container .container.show {
+        transform: translateX(0);
+    }
+    
+    /* Adjust student image position */
+    .student-img {
+        position: relative !important;
+        margin: 0 auto;
+        display: block;
+        height: 100px;
+        right: 0 !important;
+        top: 0 !important;
+    }
+    
+    /* Center the student info */
+    .row {
+        margin: 0;
+    }
+}
+
+/* Ensure full width for table container */
+.container.custom-container.d-flex {
+    max-width: 100%;
+    padding: 0 15px;
+}
