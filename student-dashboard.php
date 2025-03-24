@@ -85,7 +85,7 @@
         <p class="fs-2 fw-semibold">Welcome Ram Yturralde!</p>
     </div>-->
 
-    <div class="container custom-container pt-3 ps-4 mt-4 custom-shadow position-relative col-lg-8 col-md-10 col-sm-12">
+    <div class="container custom-container pt-3  mt-4 custom-shadow position-relative col-lg-8 col-md-10 col-sm-12">
     <p class="fw-bold" style="font-size: 30px;">Student Information</p>
     <div class="row">
         <!-- First Column -->
@@ -125,33 +125,9 @@
     </div>
 </div>
 
+    
 
-
-    <div class="container custom-container d-flex mt-5 col-lg-8 text-center">
-    <div class="container custom-shadow pt-3 pb-5 ps-4" style="width: 35%;">
-            <p class=" fw-semibold fs-5 text-center">
-                Progress Bar
-            </p>
-            <div class="skill" style="padding-left:25px">
-                <div class="outer ">
-                    <div class="inner">
-                        <div id="number">
-                            
-                        </div>
-                    </div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
-                    <defs>
-                        <linearGradient id="GradientColor">
-                        <stop offset="0%" stop-color="#e91e63" />
-                        <stop offset="100%" stop-color="#673ab7" />
-                        </linearGradient>
-                    </defs>
-                    <circle cx="80" cy="80" r="70" stroke-linecap="round" id="progress-circle"/>
-                </svg>
-            </div>
-        </div>
-
+    <div class="container custom-container d-flex justify-content-center mt-5 col-lg-8 text-center">
         <?php $clearanceData = getStudentClearanceData($studentID); ?>
         <div class="container">
             <table class="table table-striped">
