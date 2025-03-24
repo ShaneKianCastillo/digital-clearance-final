@@ -46,6 +46,7 @@
                 margin: 0 auto 15px !important;
                 height: 120px;
                 width: auto;
+                display: none;
             }
             
             /* Prevent horizontal scroll */
