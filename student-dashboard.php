@@ -192,7 +192,7 @@
 
 <div class="container custom-container d-flex justify-content-center mt-5 col-lg-8 text-center">
     <?php $clearanceData = getStudentClearanceData($studentID); ?>
-    <div class="table-responsive">
+    <div class="table">
         <table class="table table-striped">
             <thead>
                 <tr class="table-dark">
