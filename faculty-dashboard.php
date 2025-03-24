@@ -95,7 +95,7 @@
         </div>
     </header>
 
-    <div class="sidebar position-relative">
+    <div class="sidebar pt-5 mt-4">
         <div class="container position-fixed start-0 sidebar-shadow z-1 bg-light" style="height: 100vh; width:250px;">
             <div class="pt-4 d-flex gy-1 " >
                 <div>
