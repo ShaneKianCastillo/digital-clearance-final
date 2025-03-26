@@ -1,3 +1,47 @@
+<?php 
+    include 'functions.php'; 
+    $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Student';
+    $studentID = $_SESSION['userID'];
+
+    $message = '';
+    $messageType = ''; // 'success' or 'danger'
+
+    if (isset($_POST['saveButton'])) {
+        // Get user info from session
+        $userID = $_SESSION['userID'] ?? null;
+        $role = $_SESSION['role'] ?? null; // This should be set during login
+        
+        if (!$userID || !$role) {
+            die("Session error: User not properly authenticated");
+        }
+        
+        $oldPass = $_POST['oldPass'];
+        $newPass = $_POST['newPass'];
+        $confirmNewPass = $_POST['confirmNewPass'];
+    
+        // Validate inputs
+        if (empty($oldPass) || empty($newPass) || empty($confirmNewPass)) {
+            $message = 'All fields are required!';
+            $messageType = 'danger';
+        } elseif ($newPass !== $confirmNewPass) {
+            $message = 'New passwords do not match!';
+            $messageType = 'danger';
+        } elseif (strlen($newPass) < 8) {
+            $message = 'Password must be at least 8 characters long!';
+            $messageType = 'danger';
+        } else {
+            // Call the changePassword function with role
+            if (changePassword($userID, $oldPass, $newPass, $role)) {
+                $message = 'Password changed successfully!';
+                $messageType = 'success';
+            } else {
+                $message = 'Failed to change password. Old password may be incorrect.';
+                $messageType = 'danger';
+            }
+        }
+    }
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,27 +58,33 @@
     <div>
         <p class="fs-4 fw-medium">Change Password</p>
     </div>
-        <form action="">
+    <?php if (!empty($message)): ?>
+        <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show" role="alert">
+            <?php echo $message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+        <form method="POST">
             <div class="input-group">
                 <label for="oldPass" class="input-group-text">Old Password</label>
-                <input type="password" name="" id="oldPassword" placeholder="Input Old Password" class="form-control" required>
+                <input type="password" name="oldPass" id="oldPassword" placeholder="Input Old Password" class="form-control" required>
                 <i class="fa-solid fa-eye position-absolute" style="left: 101%; top: 10px; cursor:pointer; font-size:20px" id="toggleOldPassword"></i>
             </div>
             <div class="input-group pt-5">
                 <label for="newPass" class="input-group-text">New Password</label>
-                <input type="password" name="" id="newPassword" placeholder="Input New Password" class="form-control" required>
+                <input type="password" name="newPass" id="newPassword" placeholder="Input New Password" class="form-control" required>
                 <i class="fa-solid fa-eye position-absolute" style="left: 101%; top:58px; cursor:pointer; font-size:20px" id="toggleNewPassword"></i>
             </div>
             <div class="input-group pt-5">
-                <label for="conNewPassword  " class="input-group-text">Confirm New Password</label>
-                <input type="password" name="" id="conNewPassword" placeholder="Confirm New Password" class="form-control" required>
+                <label for="conNewPassword" class="input-group-text">Confirm New Password</label>
+                <input type="password" name="confirmNewPass" id="conNewPassword" placeholder="Confirm New Password" class="form-control" required>
                 <i class="fa-solid fa-eye position-absolute" style="left: 101%; top:58px; cursor:pointer; font-size:20px" id="toggleConNewPassword"></i>
             </div>
+            <div class="pt-4 text-center">
+                <a href="student-dashboard.php" class="btn btn-danger fs-5">Cancel</a>
+                <button class="btn btn-success fs-5" type="submit" name="saveButton">Save</button>
+        </div>
         </form>
-        <div class="pt-4 text-center">
-                <a href="student-dashboard.php"><button class="btn btn-danger fs-5">Cancel</button></a>
-                <a href=""><button class="btn btn-success fs-5">Save</button></a>
-            </div>
    </div>
 
 

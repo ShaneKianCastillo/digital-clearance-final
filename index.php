@@ -20,17 +20,18 @@
     addStudentInfo($userID, $name, $course, $contact, $year);*/
 
     if (isset($_POST['loginButton'])) {
-
         $userID = $_POST['userID'];
         $password = $_POST['password'];
-
+    
         list($errorArray, $users) = validateLoginCredentials($userID, $password);  
-
+    
         if (empty($errorArray)) {
             session_start();
             if (isset($users[$userID])) {
                 $role = $users[$userID]['role']; 
                 $_SESSION['userID'] = $userID;
+                $_SESSION['role'] = $role; // Store the role in session
+                
                 if ($role === 'student') {
                     header('Location: student-dashboard.php');
                 } elseif ($role === 'department') {
