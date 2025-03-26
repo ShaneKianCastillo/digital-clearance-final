@@ -944,4 +944,88 @@
         return $isStudent;
     }
 
+    function processStudentSearch($studID, $facultyData) {
+        // Initialize result array with default values
+        $result = [
+            'studID' => $studID,
+            'studName' => '',
+            'studCourse' => '',
+            'commentAreaValue' => '',
+            'studentFound' => false,
+            'errorMessage' => '',
+            'orderedDepartments' => []
+        ];
+    
+        $student = fetchStudentInfo($studID);
+    
+        if (!$student) {
+            $result['errorMessage'] = "No student found with ID: " . htmlspecialchars($studID);
+            return $result;
+        }
+    
+        $con = openCon();
+        $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC LIMIT 9";
+        $queryResult = mysqli_query($con, $deptQuery);
+    
+        if (!$queryResult) {
+            $result['errorMessage'] = "Error fetching departments: " . mysqli_error($con);
+            closeCon($con);
+            return $result;
+        }
+    
+        while ($row = mysqli_fetch_assoc($queryResult)) {
+            $result['orderedDepartments'][] = $row['dept_name'];
+        }
+    
+        $deptName = $facultyData['dept_name'];
+        $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
+    
+        if ($studentApproved) {
+            $result['studName'] = $student['stud_name'];
+            $result['studCourse'] = $student['course'];
+            $result['studentFound'] = true;
+            $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+        } else {
+            $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+        }
+    
+        closeCon($con);
+        return $result;
+    }
+
+    function processEmployeeSearch($empID) {
+        // Initialize result array with default values
+
+        $con = openCon();
+
+        $result = [
+            'empID' => $empID,
+            'empName' => '',
+            'empDepartment' => '',
+            'empPosition' => '',
+            'empCategory' => '',
+            'empStatus' => '',
+            'employeeFound' => false,
+            'errorMessage' => ''
+        ];
+    
+        $employee = fetchEmployeeInfo($empID);
+    
+        if (!$employee) {
+            $result['errorMessage'] = "No employee found with ID: " . htmlspecialchars($empID);
+            return $result;
+        }
+    
+        // Return all employee data if found
+        $result['empName'] = $employee['name'];
+        $result['empDepartment'] = $employee['department'];
+        $result['empPosition'] = $employee['position'];
+        $result['empCategory'] = $employee['category'];
+        $result['empStatus'] = $employee['status'];
+        $result['employeeFound'] = true;
+        
+        closeCon($con);
+        return $result;
+    }
+
 ?>
