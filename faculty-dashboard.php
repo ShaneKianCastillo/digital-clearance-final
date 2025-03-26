@@ -95,15 +95,15 @@
         </div>
     </header>
 
-    <div class="sidebar pt-5 mt-4">
+    <div class="sidebar pt-5">
         <div class="container position-fixed start-0 sidebar-shadow z-1 bg-light" style="height: 100vh; width:250px;">
-            <div class="pt-4 d-flex gy-1 " >
+            <div class=" d-flex gy-1 " >
                 <div>
                     <i class="fa-regular fa-user" style="font-size: 50px; color:gray"></i>
                 </div>
                 <div class="ps-3">
                     <p class="fs-5" style="font-weight: 500;"><?php echo $facultyData['employee_name']; ?></p>
-                    <p class="position-absolute" style="top: 52px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
+                    <p class="position-absolute" style="top: 35px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
                 </div>
             </div>
             <div id="accountingLinks"> 
@@ -152,6 +152,16 @@
                 <div class="ps-4">
                     <button class="btn btn-info fs-5" name="searchButton">Search</button>
                 </div>
+            </div>
+        </div>
+        <div class="container border border-1 text-center d-flex align-items-center justify-content-center shadow p-3" style="gap: 20px; width: 300px">
+            <div>
+                <input type="radio" name="userFilter" id="" class="form-check-input">
+                <label class="form-check-label" for="">Student</label>
+            </div>
+            <div>
+                <input type="radio" name="userFilter" id="" class="form-check-input">
+                <label class="form-check-label" for="">Faculty</label>
             </div>
         </div>
 
