@@ -19,6 +19,19 @@
     addStudentUser($userID, $password, $name);
     addStudentInfo($userID, $name, $course, $contact, $year);*/
 
+    
+    /*$userID = '1002365986';
+    $password = 'password2';
+    $name = 'Jane Smith';
+    $category = 'Teaching';
+    $department = 'CICS';
+    $position = 'Teacher 1';
+    $status = 'Regular';
+
+    addEmployeeUser ($userID, $password, $name);
+    addEmployeeInfo ($userID, $name, $department, $position, $category, $status);*/
+    
+
     if (isset($_POST['loginButton'])) {
         $userID = $_POST['userID'];
         $password = $_POST['password'];
@@ -32,12 +45,10 @@
                 $_SESSION['userID'] = $userID;
                 $_SESSION['role'] = $role; // Store the role in session
                 
-                if ($role === 'student') {
-                    header('Location: student-dashboard.php');
+                if ($role === 'student' || $role === 'employee') {
+                    header('Location: student-dashboard.php'); // Employees and students share dashboard
                 } elseif ($role === 'department') {
                     header('Location: faculty-dashboard.php');
-                } elseif ($role === 'dean') {
-                    header('Location: dean-dashboard.php');
                 }
                 exit();
             } 

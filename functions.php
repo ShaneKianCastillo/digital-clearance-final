@@ -54,15 +54,56 @@
     }
     
     function validateLoginCredentials($userID, $password) {
+        $con = openCon();
+        $hashedPassword = md5($password);
         $errorArray = [];
-        $users = getUsers();
+        $users = [];
     
-        if (!isset($users[$userID]) || $users[$userID]['password'] !== md5($password)) {
+        // Query students_cred
+        $sql = "SELECT stud_id AS id, password, 'student' AS role FROM students_cred WHERE stud_id = ?";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $userID);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($user = mysqli_fetch_assoc($result)) {
+            if ($user['password'] === $hashedPassword) {
+                $users[$userID] = ['role' => 'student'];
+            }
+        }
+    
+        // Query employees_cred
+        $sql = "SELECT emp_id AS id, password, 'employee' AS role FROM employees_cred WHERE emp_id = ?";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $userID);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($user = mysqli_fetch_assoc($result)) {
+            if ($user['password'] === $hashedPassword) {
+                $users[$userID] = ['role' => 'employee'];
+            }
+        }
+    
+        // Query faculty_users
+        $sql = "SELECT dept_id AS id, password, 'department' AS role FROM deptartments_cred WHERE dept_id = ?";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $userID);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($user = mysqli_fetch_assoc($result)) {
+            if ($user['password'] === $hashedPassword) {
+                $users[$userID] = ['role' => 'department'];
+            }
+        }
+    
+        // If user is not found
+        if (empty($users)) {
             $errorArray['credentials'] = 'Incorrect ID or password!';
         }
-
+    
+        closeCon($con);
         return [$errorArray, $users];
     }
+    
 
     function displayErrors($errors) {
         if (empty($errors)) {
@@ -809,4 +850,53 @@
         $timestamp = strtotime($dateString); 
         return date("m-d-y", $timestamp); 
     }
+
+    function addEmployeeUser($userID, $password, $name) {
+        $con = openCon(); 
+    
+        if ($con) {
+            $hashedPassword = md5($password); 
+            $sql = "INSERT INTO employees_cred (emp_id, password, name) VALUES (?, ?, ?)";
+            $stmt = mysqli_prepare($con, $sql);
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "sss", $userID, $hashedPassword, $name);
+                if (mysqli_stmt_execute($stmt)) {
+                    echo "New employee record created successfully.";
+                } else {
+                    echo "Error executing query: " . mysqli_stmt_error($stmt);
+                }
+                mysqli_stmt_close($stmt);
+            } else {
+                echo "Error preparing statement: " . mysqli_error($con);
+            }
+            closeCon($con);
+        } else {
+            echo "Failed to connect to the database.";
+        }
+    }
+
+    function addEmployeeInfo($empID, $empName, $department, $position, $category, $status) {
+        $con = openCon();
+    
+        $empID = mysqli_real_escape_string($con, $empID);
+        $empName = mysqli_real_escape_string($con, $empName);
+        $department = mysqli_real_escape_string($con, $department);
+        $position = mysqli_real_escape_string($con, $position);
+        $category = mysqli_real_escape_string($con, $category);
+        $status = mysqli_real_escape_string($con, $status);
+    
+        $sql = "INSERT INTO employee_info (emp_id, name, department, position, category, status) 
+                VALUES ('$empID', '$empName', '$department', '$position', '$category', '$status')";
+    
+        $result = mysqli_query($con, $sql);
+    
+        if ($result) {
+            closeCon($con);
+            return true; 
+        } else {
+            closeCon($con);
+            return false; 
+        }
+    }
+
 ?>
