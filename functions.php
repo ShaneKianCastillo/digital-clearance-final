@@ -899,4 +899,49 @@
         }
     }
 
+    function getEmployeeData($employeeID) {
+        $con = openCon();
+        $sql = "SELECT * FROM employee_info WHERE emp_id = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->bind_param("s", $employeeID);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        closeCon($con);
+        return $result;
+    }
+
+    function fetchEmployeeInfo($empID) {
+        $con = openCon();
+    
+        $empID = mysqli_real_escape_string($con, $empID);
+        $sql = "SELECT * FROM employee_info WHERE emp_id = '$empID'";
+        $result = mysqli_query($con, $sql);
+    
+        if ($result && mysqli_num_rows($result) > 0) {
+            $employee = mysqli_fetch_assoc($result); 
+            closeCon($con);
+            return $employee; 
+        } else {
+            closeCon($con);
+            return null; 
+        }
+    }
+
+    function checkIfStudent($userID) {
+        $con = openCon(); // Open the database connection
+    
+        // Check if the user exists in the student_users table
+        $query = "SELECT * FROM students_cred WHERE stud_id = ?";
+        $stmt = $con->prepare($query);
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    
+        $isStudent = $result->num_rows > 0; // True if user exists, false otherwise
+    
+        closeCon($con); // Close the database connection
+    
+        return $isStudent;
+    }
+
 ?>
