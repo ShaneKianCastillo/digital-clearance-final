@@ -706,6 +706,84 @@
         return $data;
     }
 
+    function changePassword($userID, $oldPass, $newPass, $role) {
+        $con = openCon();
+    
+        // Determine the table and ID field based on role
+        switch($role) {
+            case 'dean':
+                $table = 'dean_cred';
+                $idField = 'dean_id';
+                break;
+            case 'department':
+                $table = 'departments_cred';
+                $idField = 'dept_id';
+                break;
+            case 'student':
+                $table = 'students_cred';
+                $idField = 'stud_id';
+                break;
+            default:
+                return false; // Invalid role
+        }
+        
+        // First, get the stored password hash
+        $query = "SELECT password FROM $table WHERE $idField = ?";
+        $stmt = $con->prepare($query);
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        $result = $stmt->get_result();   
+        
+        if ($result->num_rows === 0) {
+            // User not found
+            return false;
+        }
+        
+        $data = $result->fetch_assoc();
+        $storedHash = $data['password'];
+        
+        // Verify old password by comparing MD5 hashes
+        if (md5($oldPass) === $storedHash) {
+            // Hash the new password
+            $newHash = md5($newPass);
+            
+            // Update the password
+            $query = "UPDATE $table SET password = ? WHERE $idField = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("ss", $newHash, $userID);
+            
+            if ($stmt->execute()) {
+                return true; // Password changed successfully
+            }
+        }
+        
+        return false; // Either old password was wrong or update failed
+    }
+
+    function determineUserType($userID) {
+        $con = openCon();
+        
+        // Check in students_cred first
+        $stmt = $con->prepare("SELECT stud_id FROM students_cred WHERE stud_id = ?");
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        if ($stmt->get_result()->num_rows > 0) return 'student';
+        
+        // Check in dean_cred next
+        $stmt = $con->prepare("SELECT dean_id FROM dean_cred WHERE dean_id = ?");
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        if ($stmt->get_result()->num_rows > 0) return 'dean';
+        
+        // Check in departments_cred last
+        $stmt = $con->prepare("SELECT dept_id FROM departments_cred WHERE dept_id = ?");
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        if ($stmt->get_result()->num_rows > 0) return 'department';
+        
+        return false; // Not found in any table
+    }
+
     function getOrdinal($number) {
         if (!in_array(($number % 100), [11, 12, 13])) {
             switch ($number % 10) {
