@@ -4,68 +4,68 @@
     
     $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
     $facultyID = $_SESSION['userID'];
-
     $facultyData = getFacultyData($facultyID);
 
-    $studID = "";
-    $studName = "";
-    $studCourse = "";
     $commentAreaValue = '';
-    $studentFound = false;
 
-    if (isset($_POST['searchButton'])) {
-        $studID = $_POST['userID'];
-        $student = fetchStudentInfo($studID);
+    if ($facultyData['type'] == 'Student' || $facultyData['type'] == 'Both') {
+        $studID = "";
+        $studName = "";
+        $studCourse = "";
+        $studentFound = false;
 
-        $con = openCon();
-        $orderedDepartments = [];
-        $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC";
-        $result = mysqli_query($con, $deptQuery);
-    
-        if ($result) {
-            while ($row = mysqli_fetch_assoc($result)) {
-                $orderedDepartments[] = $row['dept_name'];
-            }
-        } else {
-            echo "Error fetching departments: " . mysqli_error($con);
-            $studentFound = false;
-            $commentAreaValue = '';
-            return;
+        if (isset($_POST['searchButton'])) {
+            $studID = $_POST['userID'];
+            
+            $searchResult = processStudentSearch($studID, $facultyData);
+            
+            $studName = $searchResult['studName'];
+            $studCourse = $searchResult['studCourse'];
+            $commentAreaValue = $searchResult['commentAreaValue'];
+            $studentFound = $searchResult['studentFound'];
+            $errorMessage = $searchResult['errorMessage'];
         }
-    
-        $deptName = $facultyData['dept_name'];
-        $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $orderedDepartments);
-    
-        if ($student && $studentApproved) {
-            $studName = $student['stud_name'];
-            $studCourse = $student['course'];
-            $studentFound = true;
-    
-            $commentAreaValue = fetchStudentComment($studID, $deptName);
-        } else {
-            $studentFound = false;
-            $commentAreaValue = '';
+
+        if (isset($_POST['approveButton']) && isset($_POST['userID'])) {
+            $studID = $_POST['userID'];
+            $deptName = $facultyData['dept_name'];
+            $currentDate = date('M d, Y');
+            approveStudent($studID, $deptName);
+            approveDate($studID, $deptName, $currentDate);
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
         }
-        closeCon($con);
+
+        if (isset($_POST['declineButton']) && isset($_POST['userID'])) {
+            $studID = $_POST['userID'];
+            $deptName = $facultyData['dept_name'];
+            $comment = $_POST['commentArea'];
+            storeCommentAndReset($studID, $deptName, $comment);
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        }
     }
 
-    if (isset($_POST['approveButton']) && isset($_POST['userID'])) {
-        $studID = $_POST['userID'];
-        $deptName = $facultyData['dept_name'];
-        $currentDate = date('M d, Y');
-        approveStudent($studID, $deptName);
-        approveDate($studID, $deptName, $currentDate);
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
-    }
+    elseif ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both') {
+        $empID = "";
+        $empName = "";
+        $empDept = "";
+        $employeeFound = false;
 
-    if (isset($_POST['declineButton']) && isset($_POST['userID'])) {
-        $studID = $_POST['userID'];
-        $deptName = $facultyData['dept_name'];
-        $comment = $_POST['commentArea'];
-        storeCommentAndReset($studID, $deptName, $comment);
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
+        if (isset($_POST['searchButton'])) {
+            $empID = $_POST['userID'];
+            
+            $searchResult = processEmployeeSearch($empID);
+    
+            $empName = $searchResult['empName'];
+            $empDept = $searchResult['empDepartment'];
+            $empPosition = $searchResult['empPosition'];
+            $empCategory = $searchResult['empCategory'];
+            $empStatus = $searchResult['empStatus'];
+            $employeeFound = $searchResult['employeeFound'];
+            $errorMessage = $searchResult['errorMessage'];
+        }
+
     }
 
 ?>
@@ -134,13 +134,14 @@
         </div>
         </div>
     </div>
-
     
     <div class="container text-center pt-4">
         <p class="fs-1 fw-bold"><?php echo "Welcome " . $facultyData['dept_name'] . " Employee!"; ?></p>
     </div>
 
-    <form method="post">
+    <?php if ($facultyData['type'] == 'Student' || $facultyData['type'] == 'Both') { ?>
+
+        <form method="post">
         <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
             <div class="d-flex justify-content-center align-items-center py-4">
                 <div>
@@ -181,11 +182,19 @@
                             <th><?php echo $studName ?></th>
                             <th><?php echo $studCourse ?></th>
                         </tr>
-                    <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
-                        <tr>
-                        <td colspan="3" class="text-center"><?php echo $student['stud_name']; ?> is not yet approved by previous departments.</td>
-                        </tr>
-                    <?php endif; ?>
+                        <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    <?php 
+                                        if (isset($student) && !empty($student['stud_name'])) {
+                                            echo htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+                                        } else {
+                                            echo "No student found with ID: " . htmlspecialchars($studID);
+                                        }
+                                    ?>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -218,6 +227,90 @@
             </div>
         </div>
     </form>
+
+
+    <?php } elseif ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both') {?>
+
+
+    <form method="post">
+        <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
+            <div class="d-flex justify-content-center align-items-center py-4">
+                <div>
+                    <label for="studentID" class="form-label fs-5">Enter Employee ID:</label>
+                </div>
+                <div class="ps-4" style="width: 300px;">
+                    <input type="number" step="1" name="userID" placeholder="" class="form-control" value="<?php echo $empID ?>" required>
+                </div>
+                <div class="ps-4">
+                    <button class="btn btn-info fs-5" name="searchButton">Search</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container pt-4 col-lg-6">
+            <table class="table table-striped col-lg-12">
+                <thead>
+                    <tr class="table-dark">
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($employeeFound && isset($_POST['searchButton'])): ?>
+                        <tr>
+                            <th><?php echo $empID ?></th>
+                            <th><?php echo $empName ?></th>
+                            <th><?php echo $empDept ?></th>
+                        </tr>
+                        <?php elseif (isset($_POST['searchButton']) && !$employeeFound): ?>
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    <?php 
+                                        if (isset($employee) && !empty($employee['name'])) {
+                                            echo htmlspecialchars($employee['name']) . " is not yet approved by previous departments.";
+                                        } else {
+                                            echo "No employee found with ID: " . htmlspecialchars($empID);
+                                        }
+                                    ?>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="container d-flex justify-content-center align-items-center pt-5 mt-5 custom-status pb-4" style="width: 1000px;">
+            <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
+                <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined employee:</label>
+                <textarea 
+                    class="form-control align-center" 
+                    style="width: 400px;" 
+                    name="commentArea" 
+                    id="commentArea" 
+                    rows="3" 
+                    onclick="this.setSelectionRange(0, 0)" 
+                    oninput="checkTextareaContent()" 
+                    <?php echo !$employeeFound ? 'disabled' : ''; ?>>
+                    <?php echo htmlspecialchars($commentAreaValue); ?>
+                </textarea>                
+            <div class="pt-4">       
+                <button class="btn btn-danger fs-5" name="declineButton" <?php echo $employeeFound ? '' : 'disabled'; ?>>Decline</button>      
+            </div>   
+            </div>
+            <div class="col-lg-4">
+                <button 
+                    class="btn btn-success fs-5" 
+                    name="approveButton" 
+                    id="approveButton" 
+                    <?php echo (!$employeeFound || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <?php }?>
+
     <script>
         function checkTextareaContent() {
             var commentArea = document.getElementById('commentArea');
@@ -228,16 +321,9 @@
                 approveButton.disabled = false;
             }
         }
-
-
         document.addEventListener("DOMContentLoaded", function () {
-        // Get the department name from PHP and store it in a JavaScript variable
         var departmentName = "<?php echo $facultyData['dept_name']; ?>";
-
-        // Get the sidebar links container
         var sidebarLinks = document.getElementById("accountingLinks");
-
-        // Show links only if the department is "Accounting"
         if (departmentName !== "Accounting") {
             sidebarLinks.style.display = "none"; // Hide if not Accounting
         } else {
