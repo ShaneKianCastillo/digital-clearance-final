@@ -1,22 +1,25 @@
 <?php 
-
     include 'functions.php'; 
-    
+
     $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
     $facultyID = $_SESSION['userID'];
     $facultyData = getFacultyData($facultyID);
 
     $commentAreaValue = '';
 
-    if ($facultyData['type'] == 'Student' || $facultyData['type'] == 'Both') {
-        $studID = "";
-        $studName = "";
-        $studCourse = "";
-        $studentFound = false;
+    // Determine which UI to show based on radio button selection or default
+    $userType = isset($_POST['userClearance']) ? $_POST['userClearance'] : 'Student';
 
+    // Initialize variables for both student and employee
+    $studID = $empID = "";
+    $studName = $empName = $studCourse = $empDept = "";
+    $studentFound = $employeeFound = false;
+    $errorMessage = '';
+
+    // Process form submissions based on selected user type
+    if ($userType == 'Student' && ($facultyData['type'] == 'Student' || $facultyData['type'] == 'Both')) {
         if (isset($_POST['searchButton'])) {
             $studID = $_POST['userID'];
-            
             $searchResult = processStudentSearch($studID, $facultyData);
             
             $studName = $searchResult['studName'];
@@ -44,19 +47,12 @@
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
         }
-    }
-
-    elseif ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both') {
-        $empID = "";
-        $empName = "";
-        $empDept = "";
-        $employeeFound = false;
-
+    } 
+    elseif ($userType == 'Faculty' && ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both')) {
         if (isset($_POST['searchButton'])) {
             $empID = $_POST['userID'];
-            
             $searchResult = processEmployeeSearch($empID);
-    
+
             $empName = $searchResult['empName'];
             $empDept = $searchResult['empDepartment'];
             $empPosition = $searchResult['empPosition'];
@@ -65,9 +61,7 @@
             $employeeFound = $searchResult['employeeFound'];
             $errorMessage = $searchResult['errorMessage'];
         }
-
     }
-
 ?>
 
 <!DOCTYPE html>
@@ -139,49 +133,56 @@
         <p class="fs-1 fw-bold"><?php echo "Welcome " . $facultyData['dept_name'] . " Employee!"; ?></p>
     </div>
 
-    <?php if ($facultyData['type'] == 'Student' || $facultyData['type'] == 'Both') { ?>
-
-        <form method="post">
+    <form method="post">
         <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
             <div class="d-flex justify-content-center align-items-center py-4">
                 <div>
-                    <label for="studentID" class="form-label fs-5">Enter Student ID:</label>
+                    <label for="userID" class="form-label fs-5">
+                        <?php echo ($userType == 'Student') ? 'Enter Student ID:' : 'Enter Employee ID:'; ?>
+                    </label>
                 </div>
                 <div class="ps-4" style="width: 300px;">
-                    <input type="number" step="1" name="userID" placeholder="" class="form-control" value="<?php echo $studID ?>" required>
+                    <input type="number" step="1" name="userID" placeholder="" class="form-control" 
+                        value="<?php echo ($userType == 'Student') ? $studID : $empID; ?>" required>
                 </div>
                 <div class="ps-4">
                     <button class="btn btn-info fs-5" name="searchButton">Search</button>
                 </div>
             </div>
         </div>
+        
+        <!-- Radio Button Selection -->
         <div class="container border border-1 text-center d-flex align-items-center justify-content-center shadow p-3" style="gap: 20px; width: 300px">
             <div>
-                <input type="radio" name="userFilter" id="" class="form-check-input">
-                <label class="form-check-label" for="">Student</label>
+                <input type="radio" name="userClearance" id="studentRadio" class="form-check-input" 
+                    value="Student" <?php echo ($userType == 'Student') ? 'checked' : ''; ?>>
+                <label class="form-check-label" for="studentRadio">Student</label>
             </div>
             <div>
-                <input type="radio" name="userFilter" id="" class="form-check-input">
-                <label class="form-check-label" for="">Faculty</label>
+                <input type="radio" name="userClearance" id="facultyRadio" class="form-check-input" 
+                    value="Faculty" <?php echo ($userType == 'Faculty') ? 'checked' : ''; ?>>
+                <label class="form-check-label" for="facultyRadio">Faculty</label>
             </div>
         </div>
 
-        <div class="container pt-4 col-lg-6">
-            <table class="table table-striped col-lg-12">
-                <thead>
-                    <tr class="table-dark">
-                        <th>Student ID</th>
-                        <th>Name</th>
-                        <th>Course</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($studentFound && isset($_POST['searchButton'])): ?>
-                        <tr>
-                            <th><?php echo $studID ?></th>
-                            <th><?php echo $studName ?></th>
-                            <th><?php echo $studCourse ?></th>
+        <?php if ($userType == 'Student' && ($facultyData['type'] == 'Student' || $facultyData['type'] == 'Both')): ?>
+            <!-- Student UI -->
+            <div class="container pt-4 col-lg-6">
+                <table class="table table-striped col-lg-12">
+                    <thead>
+                        <tr class="table-dark">
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Course</th>
                         </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($studentFound && isset($_POST['searchButton'])): ?>
+                            <tr>
+                                <th><?php echo $studID ?></th>
+                                <th><?php echo $studName ?></th>
+                                <th><?php echo $studCourse ?></th>
+                            </tr>
                         <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
                             <tr>
                                 <td colspan="3" class="text-center">
@@ -195,74 +196,55 @@
                                 </td>
                             </tr>
                         <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="container d-flex justify-content-center align-items-center pt-5 mt-5 custom-status pb-4" style="width: 1000px;">
-            <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
-                <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined student:</label>
-                <textarea 
-                    class="form-control align-center" 
-                    style="width: 400px;" 
-                    name="commentArea" 
-                    id="commentArea" 
-                    rows="3" 
-                    onclick="this.setSelectionRange(0, 0)" 
-                    oninput="checkTextareaContent()" 
-                    <?php echo !$studentFound ? 'disabled' : ''; ?>>
-                    <?php echo htmlspecialchars($commentAreaValue); ?>
-                </textarea>                
-            <div class="pt-4">       
-                <button class="btn btn-danger fs-5" name="declineButton" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
-            </div>   
+                    </tbody>
+                </table>
             </div>
-            <div class="col-lg-4">
-                <button 
-                    class="btn btn-success fs-5" 
-                    name="approveButton" 
-                    id="approveButton" 
-                    <?php echo (!$studentFound || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
-                </button>
-            </div>
-        </div>
-    </form>
 
-
-    <?php } elseif ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both') {?>
-
-
-    <form method="post">
-        <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
-            <div class="d-flex justify-content-center align-items-center py-4">
-                <div>
-                    <label for="studentID" class="form-label fs-5">Enter Employee ID:</label>
+            <div class="container d-flex justify-content-center align-items-center pt-5 mt-5 custom-status pb-4" style="width: 1000px;">
+                <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
+                    <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined student:</label>
+                    <textarea 
+                        class="form-control align-center" 
+                        style="width: 400px;" 
+                        name="commentArea" 
+                        id="commentArea" 
+                        rows="3" 
+                        onclick="this.setSelectionRange(0, 0)" 
+                        oninput="checkTextareaContent()" 
+                        <?php echo !$studentFound ? 'disabled' : ''; ?>>
+                        <?php echo htmlspecialchars($commentAreaValue); ?>
+                    </textarea>                
+                <div class="pt-4">       
+                    <button class="btn btn-danger fs-5" name="declineButton" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
+                </div>   
                 </div>
-                <div class="ps-4" style="width: 300px;">
-                    <input type="number" step="1" name="userID" placeholder="" class="form-control" value="<?php echo $empID ?>" required>
-                </div>
-                <div class="ps-4">
-                    <button class="btn btn-info fs-5" name="searchButton">Search</button>
+                <div class="col-lg-4">
+                    <button 
+                        class="btn btn-success fs-5" 
+                        name="approveButton" 
+                        id="approveButton" 
+                        <?php echo (!$studentFound || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <div class="container pt-4 col-lg-6">
-            <table class="table table-striped col-lg-12">
-                <thead>
-                    <tr class="table-dark">
-                        <th>Employee ID</th>
-                        <th>Name</th>
-                        <th>Department</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($employeeFound && isset($_POST['searchButton'])): ?>
-                        <tr>
-                            <th><?php echo $empID ?></th>
-                            <th><?php echo $empName ?></th>
-                            <th><?php echo $empDept ?></th>
+        <?php elseif ($userType == 'Faculty' && ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both')): ?>
+            <!-- Faculty/Employee UI -->
+            <div class="container pt-4 col-lg-6">
+                <table class="table table-striped col-lg-12">
+                    <thead>
+                        <tr class="table-dark">
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
                         </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($employeeFound && isset($_POST['searchButton'])): ?>
+                            <tr>
+                                <th><?php echo $empID ?></th>
+                                <th><?php echo $empName ?></th>
+                                <th><?php echo $empDept ?></th>
+                            </tr>
                         <?php elseif (isset($_POST['searchButton']) && !$employeeFound): ?>
                             <tr>
                                 <td colspan="3" class="text-center">
@@ -276,41 +258,39 @@
                                 </td>
                             </tr>
                         <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="container d-flex justify-content-center align-items-center pt-5 mt-5 custom-status pb-4" style="width: 1000px;">
-            <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
-                <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined employee:</label>
-                <textarea 
-                    class="form-control align-center" 
-                    style="width: 400px;" 
-                    name="commentArea" 
-                    id="commentArea" 
-                    rows="3" 
-                    onclick="this.setSelectionRange(0, 0)" 
-                    oninput="checkTextareaContent()" 
-                    <?php echo !$employeeFound ? 'disabled' : ''; ?>>
-                    <?php echo htmlspecialchars($commentAreaValue); ?>
-                </textarea>                
-            <div class="pt-4">       
-                <button class="btn btn-danger fs-5" name="declineButton" <?php echo $employeeFound ? '' : 'disabled'; ?>>Decline</button>      
-            </div>   
+            <div class="container d-flex justify-content-center align-items-center pt-5 mt-5 custom-status pb-4" style="width: 1000px;">
+                <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
+                    <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined employee:</label>
+                    <textarea 
+                        class="form-control align-center" 
+                        style="width: 400px;" 
+                        name="commentArea" 
+                        id="commentArea" 
+                        rows="3" 
+                        onclick="this.setSelectionRange(0, 0)" 
+                        oninput="checkTextareaContent()" 
+                        <?php echo !$employeeFound ? 'disabled' : ''; ?>>
+                        <?php echo htmlspecialchars($commentAreaValue); ?>
+                    </textarea>                
+                <div class="pt-4">       
+                    <button class="btn btn-danger fs-5" name="declineButton" <?php echo $employeeFound ? '' : 'disabled'; ?>>Decline</button>      
+                </div>   
+                </div>
+                <div class="col-lg-4">
+                    <button 
+                        class="btn btn-success fs-5" 
+                        name="approveButton" 
+                        id="approveButton" 
+                        <?php echo (!$employeeFound || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
+                    </button>
+                </div>
             </div>
-            <div class="col-lg-4">
-                <button 
-                    class="btn btn-success fs-5" 
-                    name="approveButton" 
-                    id="approveButton" 
-                    <?php echo (!$employeeFound || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
-                </button>
-            </div>
-        </div>
+        <?php endif; ?>
     </form>
-
-    <?php }?>
-
     <script>
         function checkTextareaContent() {
             var commentArea = document.getElementById('commentArea');
