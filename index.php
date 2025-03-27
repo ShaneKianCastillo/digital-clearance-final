@@ -45,12 +45,14 @@
             if (isset($users[$userID])) {
                 $role = $users[$userID]['role']; 
                 $_SESSION['userID'] = $userID;
-                $_SESSION['role'] = $role; // Store the role in session
+                $_SESSION['role'] = $role; 
                 
                 if ($role === 'student' || $role === 'employee') {
-                    header('Location: student-dashboard.php'); // Employees and students share dashboard
+                    header('Location: student-dashboard.php');
                 } elseif ($role === 'department') {
                     header('Location: faculty-dashboard.php');
+                } elseif ($role === 'dean') {
+                    header('Location: dean-dashboard.php'); 
                 }
                 exit();
             } 
