@@ -160,8 +160,13 @@
                 </tr>
             </thead>
             <tbody>
-                <?php if (!empty($departments)): ?>
-                    <?php foreach ($departments as $department): ?>
+                <?php if (!empty($departments)): ?>        
+                    <?php  $maxDisplay = 9;  
+                    $maxSelectable = 5; 
+                    $displayCount = 0;
+
+                    foreach ($departments as $department): 
+                        if ($displayCount >= $maxDisplay) break; ?>
                         <tr>
                             <form method="post">
                                 <th><?php echo htmlspecialchars($department['dept_id']); ?></th>
@@ -170,10 +175,14 @@
                                 <th>
                                     <input type="hidden" name="option" value="<?php echo htmlspecialchars($selectedOption); ?>">
                                     <input type="hidden" name="deptID" value="<?php echo htmlspecialchars($department['dept_id']); ?>">
-                                    <button class="btn btn-outline-info" name="selectButton">Select</button>
+                                    
+                                    <?php if ($displayCount < $maxSelectable): ?>
+                                        <button class="btn btn-outline-info" name="selectButton">Select</button>
+                                    <?php endif; ?>
                                 </th>
                             </form>
                         </tr>
+                        <?php $displayCount++; ?>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
