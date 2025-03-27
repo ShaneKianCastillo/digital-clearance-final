@@ -529,13 +529,34 @@
     
     function approveStudent($studID, $deptName) {
         $con = openCon();
-
-        $query = "UPDATE student_clearance SET `$deptName` = 1 WHERE stud_id = ?";
-        $stmt = $con->prepare($query);
-        $stmt->bind_param("s", $studID);
-        $stmt->execute();
-        $stmt->close();
-        $con->close();
+        $con->begin_transaction();
+        $success = false;
+        
+        try {
+            // 1. Update clearance status
+            $query1 = "UPDATE student_clearance SET `$deptName` = 1 WHERE stud_id = ?";
+            $stmt1 = $con->prepare($query1);
+            $stmt1->bind_param("s", $studID);
+            $stmt1->execute();
+            
+            // 2. Clear the comment
+            $query2 = "UPDATE student_comment SET `$deptName` = '' WHERE stud_id = ?";
+            $stmt2 = $con->prepare($query2);
+            $stmt2->bind_param("s", $studID);
+            $stmt2->execute();
+            
+            $con->commit();
+            $success = true;
+        } catch (Exception $e) {
+            $con->rollback();
+            error_log("Student approval error: " . $e->getMessage());
+        } finally {
+            if (isset($stmt1)) $stmt1->close();
+            if (isset($stmt2)) $stmt2->close();
+            closeCon($con);
+        }
+        
+        return $success;
     }
 
     function approveDate($studID, $deptName, $date) {
@@ -944,7 +965,7 @@
         return $isStudent;
     }
 
-    function processStudentSearch($studID, $facultyData) {
+    /*function processStudentSearch($studID, $facultyData) {
         // Initialize result array with default values
         $result = [
             'studID' => $studID,
@@ -991,41 +1012,401 @@
     
         closeCon($con);
         return $result;
+    }*/
+
+    function processStudentSearch($studID, $facultyData) {
+        // Initialize result array with default values
+        $result = [
+            'studID' => $studID,
+            'studName' => '',
+            'studCourse' => '',
+            'commentAreaValue' => '',
+            'studentFound' => false,
+            'errorMessage' => '',
+            'orderedDepartments' => []
+        ];
+    
+        $student = fetchStudentInfo($studID);
+    
+        if (!$student) {
+            $result['errorMessage'] = "No student found with ID: " . htmlspecialchars($studID);
+            return $result;
+        }
+    
+        // Always set the student name and course, even if not approved
+        $result['studName'] = $student['stud_name'];
+        $result['studCourse'] = $student['course'];
+    
+        $con = openCon();
+        $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC LIMIT 9";
+        $queryResult = mysqli_query($con, $deptQuery);
+    
+        if (!$queryResult) {
+            $result['errorMessage'] = "Error fetching departments: " . mysqli_error($con);
+            closeCon($con);
+            return $result;
+        }
+    
+        while ($row = mysqli_fetch_assoc($queryResult)) {
+            $result['orderedDepartments'][] = $row['dept_name'];
+        }
+    
+        $deptName = $facultyData['dept_name'];
+        $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
+    
+        if ($studentApproved) {
+            $result['studentFound'] = true;
+            $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+        } else {
+            $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+        }
+    
+        closeCon($con);
+        return $result;
     }
 
-    function processEmployeeSearch($empID) {
-        // Initialize result array with default values
+    
 
+    /*function processEmployeeSearch($empID, $facultyData) {
         $con = openCon();
-
         $result = [
             'empID' => $empID,
             'empName' => '',
             'empDepartment' => '',
-            'empPosition' => '',
-            'empCategory' => '',
-            'empStatus' => '',
             'employeeFound' => false,
-            'errorMessage' => ''
+            'errorMessage' => '',
+            'commentAreaValue' => ''
         ];
     
-        $employee = fetchEmployeeInfo($empID);
-    
+        // First check employee_info table
+        $sql = "SELECT * FROM employee_info WHERE emp_id = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->bind_param("s", $empID);
+        $stmt->execute();
+        $employee = $stmt->get_result()->fetch_assoc();
+        
         if (!$employee) {
             $result['errorMessage'] = "No employee found with ID: " . htmlspecialchars($empID);
+            closeCon($con);
             return $result;
         }
     
-        // Return all employee data if found
         $result['empName'] = $employee['name'];
         $result['empDepartment'] = $employee['department'];
-        $result['empPosition'] = $employee['position'];
-        $result['empCategory'] = $employee['category'];
-        $result['empStatus'] = $employee['status'];
         $result['employeeFound'] = true;
         
+        // Get existing comment if any
+        $commentSql = "SELECT `".$facultyData['dept_name']."` FROM employee_comment WHERE emp_id = ?";
+        $commentStmt = $con->prepare($commentSql);
+        $commentStmt->bind_param("s", $empID);
+        $commentStmt->execute();
+        $commentStmt->bind_result($comment);
+        $commentStmt->fetch();
+        $result['commentAreaValue'] = $comment ?? '';
+        
+        $commentStmt->close();
         closeCon($con);
         return $result;
+    }*/
+
+    function processEmployeeSearch($empID, $facultyData) {
+        $con = openCon();
+        $result = [
+            'empID' => $empID,
+            'empName' => '',
+            'empDepartment' => '',
+            'employeeFound' => false,
+            'errorMessage' => '',
+            'commentAreaValue' => ''
+        ];
+    
+        // Define department approval order
+        $orderedDepartments = [
+            'Grade Level/Strand Coordinators',
+            'Program Chair',
+            'Dean',
+            'Registrar',
+            'Library',
+            'ITS',
+            'PPFO',
+            'Vice President',
+            'Human Resources',
+            'Accounting'
+        ];
+    
+        // First check employee_info table
+        $sql = "SELECT * FROM employee_info WHERE emp_id = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->bind_param("s", $empID);
+        $stmt->execute();
+        $employee = $stmt->get_result()->fetch_assoc();
+        
+        if (!$employee) {
+            $result['errorMessage'] = "No employee found with ID: " . htmlspecialchars($empID);
+            closeCon($con);
+            return $result;
+        }
+    
+        $result['empName'] = $employee['name'];
+        $result['empDepartment'] = $employee['department'];
+    
+        // Check if employee is approved by previous departments
+        $currentDeptIndex = array_search($facultyData['dept_name'], $orderedDepartments);
+        
+        if ($currentDeptIndex !== false && $currentDeptIndex > 0) {
+            for ($i = 0; $i < $currentDeptIndex; $i++) {
+                $prevDept = $orderedDepartments[$i];
+                $approvalSql = "SELECT `$prevDept` FROM employee_clearance WHERE emp_id = ?";
+                $approvalStmt = $con->prepare($approvalSql);
+                $approvalStmt->bind_param("s", $empID);
+                $approvalStmt->execute();
+                $approvalStmt->bind_result($approved);
+                $approvalStmt->fetch();
+                $approvalStmt->close();
+                
+                if (!$approved) {
+                    $result['errorMessage'] = htmlspecialchars($employee['name']) . 
+                        " is not yet approved by " . $prevDept . " department.";
+                    closeCon($con);
+                    return $result;
+                }
+            }
+        }
+    
+        $result['employeeFound'] = true;
+        
+        // Get existing comment if any
+        $commentSql = "SELECT `".$facultyData['dept_name']."` FROM employee_comment WHERE emp_id = ?";
+        $commentStmt = $con->prepare($commentSql);
+        $commentStmt->bind_param("s", $empID);
+        $commentStmt->execute();
+        $commentStmt->bind_result($comment);
+        $commentStmt->fetch();
+        $result['commentAreaValue'] = $comment ?? '';
+        
+        $commentStmt->close();
+        closeCon($con);
+        return $result;
+    }
+
+    function addEmployeeClearance($empID) {
+        $con = openCon();
+        
+        // Escape employee ID
+        $empID = mysqli_real_escape_string($con, $empID);
+        
+        // Define departments in exact order
+        $orderedDepartments = [
+            'Grade Level/Strand Coordinators',
+            'Program Chair',
+            'Dean',
+            'Registrar',
+            'Library',
+            'ITS',
+            'PPFO',
+            'Vice President',
+            'Human Resources',
+            'Accounting'
+        ];
+        
+        // Prepare columns and values
+        $columns = [];
+        $values = [];
+        
+        foreach ($orderedDepartments as $dept) {
+            $escapedDept = mysqli_real_escape_string($con, $dept);
+            $columns[] = "`$escapedDept`";
+            $values[] = "0"; // Default value
+        }
+        
+        $columnsStr = implode(", ", $columns);
+        $valuesStr = implode(", ", $values);
+        
+        // Create the clearance record
+        $sql = "INSERT INTO employee_clearance (emp_id, $columnsStr) 
+                VALUES ('$empID', $valuesStr)";
+        
+        if (mysqli_query($con, $sql)) {
+            echo "New employee clearance record added successfully for ID: $empID";
+        } else {
+            echo "Error: " . mysqli_error($con);
+        }
+        
+        closeCon($con);
+    }
+
+    function addEmployeeDate($empID) {
+        $con = openCon();
+        
+        // Escape employee ID
+        $empID = mysqli_real_escape_string($con, $empID);
+        
+        // Define departments in exact order
+        $orderedDepartments = [
+            'Grade Level/Strand Coordinators',
+            'Program Chair',
+            'Dean',
+            'Registrar',
+            'Library',
+            'ITS',
+            'PPFO',
+            'Vice President',
+            'Human Resources',
+            'Accounting'
+        ];
+        
+        // Prepare columns and values
+        $columns = [];
+        $values = [];
+        
+        foreach ($orderedDepartments as $dept) {
+            $escapedDept = mysqli_real_escape_string($con, $dept);
+            $columns[] = "`$escapedDept`";
+            $values[] = "''"; // Empty string for date
+        }
+        
+        $columnsStr = implode(", ", $columns);
+        $valuesStr = implode(", ", $values);
+        
+        // Create the date record
+        $sql = "INSERT INTO employee_date (emp_id, $columnsStr) 
+                VALUES ('$empID', $valuesStr)";
+        
+        if (mysqli_query($con, $sql)) {
+            echo "New employee date record added successfully for ID: $empID";
+        } else {
+            echo "Error: " . mysqli_error($con);
+        }
+        
+        closeCon($con);
+    }
+    
+    function addEmployeeComment($empID) {
+        $con = openCon();
+        
+        // Escape employee ID
+        $empID = mysqli_real_escape_string($con, $empID);
+        
+        // Use the specific ordered departments list
+        $orderedDepartments = [
+            'Grade Level/Strand Coordinators',
+            'Program Chair',
+            'Dean',
+            'Registrar',
+            'Library',
+            'ITS',
+            'PPFO',
+            'Vice President',
+            'Human Resources',
+            'Accounting'
+        ];
+        
+        // Prepare columns and values
+        $columns = [];
+        $values = [];
+        
+        foreach ($orderedDepartments as $dept) {
+            $escapedDept = mysqli_real_escape_string($con, $dept);
+            $columns[] = "`$escapedDept`";
+            $values[] = "''"; // Empty string for comment
+        }
+        
+        $columnsStr = implode(", ", $columns);
+        $valuesStr = implode(", ", $values);
+        
+        // Create the comment record
+        $sql = "INSERT INTO employee_comment (emp_id, $columnsStr) 
+                VALUES ('$empID', $valuesStr)";
+        
+        if (mysqli_query($con, $sql)) {
+            error_log("Employee comment record added for ID: $empID");
+            closeCon($con);
+            return true;
+        } else {
+            error_log("Error adding employee comment: " . mysqli_error($con));
+            closeCon($con);
+            return false;
+        }
+    }
+
+    function approveEmployee($empID, $deptName) {
+        $con = openCon();
+        $con->begin_transaction();
+        $success = false;
+        
+        try {
+            // 1. Update clearance status
+            $query1 = "UPDATE employee_clearance SET `$deptName` = 1 WHERE emp_id = ?";
+            $stmt1 = $con->prepare($query1);
+            $stmt1->bind_param("s", $empID);
+            $stmt1->execute();
+            
+            // 2. Clear the comment
+            $query2 = "UPDATE employee_comment SET `$deptName` = '' WHERE emp_id = ?";
+            $stmt2 = $con->prepare($query2);
+            $stmt2->bind_param("s", $empID);
+            $stmt2->execute();
+            
+            $con->commit();
+            $success = true;
+        } catch (Exception $e) {
+            $con->rollback();
+            error_log("Employee approval error: " . $e->getMessage());
+        } finally {
+            if (isset($stmt1)) $stmt1->close();
+            if (isset($stmt2)) $stmt2->close();
+            closeCon($con);
+        }
+        
+        return $success;
+    }
+    
+    function approveEmployeeDate($empID, $deptName, $date) {
+        $con = openCon();
+        $success = false;
+        
+        try {
+            $query = "UPDATE employee_date SET `$deptName` = ? WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("ss", $date, $empID);
+            $success = $stmt->execute();
+        } catch (Exception $e) {
+            error_log("Employee date approval error: " . $e->getMessage());
+        }
+        
+        if ($stmt) $stmt->close();
+        closeCon($con);
+        return $success;
+    }
+    
+    function storeEmployeeCommentAndReset($empID, $deptName, $comment) {
+        $con = openCon();
+        $con->begin_transaction();
+        
+        try {
+            // Store comment
+            $query1 = "UPDATE employee_comment SET `$deptName` = ? WHERE emp_id = ?";
+            $stmt1 = $con->prepare($query1);
+            $stmt1->bind_param("ss", $comment, $empID);
+            $stmt1->execute();
+            
+            // Reset approval status
+            $query2 = "UPDATE employee_clearance SET `$deptName` = 0 WHERE emp_id = ?";
+            $stmt2 = $con->prepare($query2);
+            $stmt2->bind_param("s", $empID);
+            $stmt2->execute();
+            
+            $con->commit();
+            return true;
+        } catch (Exception $e) {
+            $con->rollback();
+            error_log("Employee decline error: " . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($stmt1)) $stmt1->close();
+            if (isset($stmt2)) $stmt2->close();
+            closeCon($con);
+        }
     }
 
 ?>
