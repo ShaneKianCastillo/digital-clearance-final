@@ -2,9 +2,8 @@
     include 'functions.php'; 
     
     $userID = $_SESSION['userID'];
-    $role = $_SESSION['role']; // 'student' or 'department'
+    $role = $_SESSION['role']; 
 
-    // Get user data based on role
     if ($role === 'student') {
         $userData = getStudentData($userID);
         $studentInfo = fetchStudentInfo($userID);

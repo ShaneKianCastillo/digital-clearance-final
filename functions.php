@@ -418,7 +418,7 @@
         $con = openCon();
 
         $clearanceData = [];
-        $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred";
+        $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred LIMIT 9";
         $resultDept = mysqli_query($con, $queryDept);
 
         if (!$resultDept) {
@@ -493,7 +493,7 @@
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
-        $deptQuery = "SELECT dept_name FROM deptartments_cred"; 
+        $deptQuery = "SELECT dept_name FROM deptartments_cred LIMIT 9"; 
         $result = mysqli_query($con, $deptQuery);
     
         if (!$result) {
@@ -965,55 +965,6 @@
         return $isStudent;
     }
 
-    /*function processStudentSearch($studID, $facultyData) {
-        // Initialize result array with default values
-        $result = [
-            'studID' => $studID,
-            'studName' => '',
-            'studCourse' => '',
-            'commentAreaValue' => '',
-            'studentFound' => false,
-            'errorMessage' => '',
-            'orderedDepartments' => []
-        ];
-    
-        $student = fetchStudentInfo($studID);
-    
-        if (!$student) {
-            $result['errorMessage'] = "No student found with ID: " . htmlspecialchars($studID);
-            return $result;
-        }
-    
-        $con = openCon();
-        $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC LIMIT 9";
-        $queryResult = mysqli_query($con, $deptQuery);
-    
-        if (!$queryResult) {
-            $result['errorMessage'] = "Error fetching departments: " . mysqli_error($con);
-            closeCon($con);
-            return $result;
-        }
-    
-        while ($row = mysqli_fetch_assoc($queryResult)) {
-            $result['orderedDepartments'][] = $row['dept_name'];
-        }
-    
-        $deptName = $facultyData['dept_name'];
-        $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
-    
-        if ($studentApproved) {
-            $result['studName'] = $student['stud_name'];
-            $result['studCourse'] = $student['course'];
-            $result['studentFound'] = true;
-            $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
-        } else {
-            $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
-        }
-    
-        closeCon($con);
-        return $result;
-    }*/
-
     function processStudentSearch($studID, $facultyData) {
         // Initialize result array with default values
         $result = [
@@ -1064,50 +1015,6 @@
         closeCon($con);
         return $result;
     }
-
-    
-
-    /*function processEmployeeSearch($empID, $facultyData) {
-        $con = openCon();
-        $result = [
-            'empID' => $empID,
-            'empName' => '',
-            'empDepartment' => '',
-            'employeeFound' => false,
-            'errorMessage' => '',
-            'commentAreaValue' => ''
-        ];
-    
-        // First check employee_info table
-        $sql = "SELECT * FROM employee_info WHERE emp_id = ?";
-        $stmt = $con->prepare($sql);
-        $stmt->bind_param("s", $empID);
-        $stmt->execute();
-        $employee = $stmt->get_result()->fetch_assoc();
-        
-        if (!$employee) {
-            $result['errorMessage'] = "No employee found with ID: " . htmlspecialchars($empID);
-            closeCon($con);
-            return $result;
-        }
-    
-        $result['empName'] = $employee['name'];
-        $result['empDepartment'] = $employee['department'];
-        $result['employeeFound'] = true;
-        
-        // Get existing comment if any
-        $commentSql = "SELECT `".$facultyData['dept_name']."` FROM employee_comment WHERE emp_id = ?";
-        $commentStmt = $con->prepare($commentSql);
-        $commentStmt->bind_param("s", $empID);
-        $commentStmt->execute();
-        $commentStmt->bind_result($comment);
-        $commentStmt->fetch();
-        $result['commentAreaValue'] = $comment ?? '';
-        
-        $commentStmt->close();
-        closeCon($con);
-        return $result;
-    }*/
 
     function processEmployeeSearch($empID, $facultyData) {
         $con = openCon();
