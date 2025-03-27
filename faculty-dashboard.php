@@ -7,8 +7,13 @@
 
     $commentAreaValue = '';
 
-    // Determine which UI to show based on radio button selection or default
-    $userType = isset($_POST['userClearance']) ? $_POST['userClearance'] : 'Student';
+    $userType = 'Student'; // Default value
+
+    if ($facultyData['type'] == 'Employee') {
+        $userType = 'Employee';
+    } elseif ($facultyData['type'] == 'Both') {
+        $userType = isset($_POST['userClearance']) ? $_POST['userClearance'] : 'Student';
+    }
 
     // Initialize variables for both student and employee
     $studID = $empID = "";
@@ -48,20 +53,40 @@
             exit();
         }
     } 
-    elseif ($userType == 'Faculty' && ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both')) {
+    elseif ($userType == 'Employee' && ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both')) {
         if (isset($_POST['searchButton'])) {
             $empID = $_POST['userID'];
-            $searchResult = processEmployeeSearch($empID);
+            $searchResult = processEmployeeSearch($empID, $facultyData);
 
-            $empName = $searchResult['empName'];
-            $empDept = $searchResult['empDepartment'];
-            $empPosition = $searchResult['empPosition'];
-            $empCategory = $searchResult['empCategory'];
-            $empStatus = $searchResult['empStatus'];
-            $employeeFound = $searchResult['employeeFound'];
-            $errorMessage = $searchResult['errorMessage'];
+            if ($searchResult) {
+                $empName = $searchResult['empName'];
+                $empDept = $searchResult['empDepartment'];
+                $employeeFound = $searchResult['employeeFound'];
+                $errorMessage = $searchResult['errorMessage'];
+                $commentAreaValue = $searchResult['commentAreaValue'] ?? '';
+            }       
+        }
+
+        if (isset($_POST['approveButtonEmployee']) && isset($_POST['userID'])) {
+            $empID = $_POST['userID'];
+            $deptName = $facultyData['dept_name'];
+            $currentDate = date('M d, Y');
+            approveEmployee($empID, $deptName);
+            approveEmployeeDate($empID, $deptName, $currentDate);
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        }
+    
+        if (isset($_POST['declineButton']) && isset($_POST['userID'])) {
+            $empID = $_POST['userID'];
+            $deptName = $facultyData['dept_name'];
+            $comment = $_POST['commentArea'];
+            storeEmployeeCommentAndReset($empID, $deptName, $comment);
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
         }
     }
+         
 ?>
 
 <!DOCTYPE html>
@@ -133,7 +158,7 @@
         <p class="fs-1 fw-bold"><?php echo "Welcome " . $facultyData['dept_name'] . " Employee!"; ?></p>
     </div>
 
-    <form method="post">
+    <form method="post" id="clearanceForm">
         <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
             <div class="d-flex justify-content-center align-items-center py-4">
                 <div>
@@ -151,21 +176,23 @@
             </div>
         </div>
         
-        <!-- Radio Button Selection -->
-        <div class="container border border-1 text-center d-flex align-items-center justify-content-center shadow p-3" style="gap: 20px; width: 300px">
-            <div>
-                <input type="radio" name="userClearance" id="studentRadio" class="form-check-input" 
-                    value="Student" <?php echo ($userType == 'Student') ? 'checked' : ''; ?>>
-                <label class="form-check-label" for="studentRadio">Student</label>
+        <?php if ($facultyData['type'] == 'Both'): ?>
+            <!-- Radio Button Selection -->
+            <div class="container border border-1 text-center d-flex align-items-center justify-content-center shadow p-3" style="gap: 20px; width: 300px">
+                <div>
+                    <input type="radio" name="userClearance" id="studentRadio" class="form-check-input" 
+                        value="Student" <?php echo ($userType == 'Student') ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="studentRadio">Student</label>
+                </div>
+                <div>
+                    <input type="radio" name="userClearance" id="employeeRadio" class="form-check-input" 
+                        value="Employee" <?php echo ($userType == 'Employee') ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="employeeRadio">Employee</label>
+                </div>
             </div>
-            <div>
-                <input type="radio" name="userClearance" id="facultyRadio" class="form-check-input" 
-                    value="Faculty" <?php echo ($userType == 'Faculty') ? 'checked' : ''; ?>>
-                <label class="form-check-label" for="facultyRadio">Faculty</label>
-            </div>
-        </div>
+        <?php endif; ?>
 
-        <?php if ($userType == 'Student' && ($facultyData['type'] == 'Student' || $facultyData['type'] == 'Both')): ?>
+        <?php if ($userType == 'Student'): ?>
             <!-- Student UI -->
             <div class="container pt-4 col-lg-6">
                 <table class="table table-striped col-lg-12">
@@ -183,19 +210,13 @@
                                 <th><?php echo $studName ?></th>
                                 <th><?php echo $studCourse ?></th>
                             </tr>
-                        <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
-                            <tr>
-                                <td colspan="3" class="text-center">
-                                    <?php 
-                                        if (isset($student) && !empty($student['stud_name'])) {
-                                            echo htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
-                                        } else {
-                                            echo "No student found with ID: " . htmlspecialchars($studID);
-                                        }
-                                    ?>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
+                            <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
+                                <tr>
+                                    <td colspan="3" class="text-center">
+                                        <?php echo $errorMessage; ?>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -227,8 +248,9 @@
                     </button>
                 </div>
             </div>
-        <?php elseif ($userType == 'Faculty' && ($facultyData['type'] == 'Employee' || $facultyData['type'] == 'Both')): ?>
-            <!-- Faculty/Employee UI -->
+
+            <?php elseif ($userType == 'Employee'): ?>
+                <!-- Employee UI -->
             <div class="container pt-4 col-lg-6">
                 <table class="table table-striped col-lg-12">
                     <thead>
@@ -245,16 +267,10 @@
                                 <th><?php echo $empName ?></th>
                                 <th><?php echo $empDept ?></th>
                             </tr>
-                        <?php elseif (isset($_POST['searchButton']) && !$employeeFound): ?>
+                            <?php elseif (isset($_POST['searchButton']) && !$employeeFound): ?>
                             <tr>
                                 <td colspan="3" class="text-center">
-                                    <?php 
-                                        if (isset($employee) && !empty($employee['name'])) {
-                                            echo htmlspecialchars($employee['name']) . " is not yet approved by previous departments.";
-                                        } else {
-                                            echo "No employee found with ID: " . htmlspecialchars($empID);
-                                        }
-                                    ?>
+                                    <?php echo $errorMessage; ?>
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -283,7 +299,7 @@
                 <div class="col-lg-4">
                     <button 
                         class="btn btn-success fs-5" 
-                        name="approveButton" 
+                        name="approveButtonEmployee" 
                         id="approveButton" 
                         <?php echo (!$employeeFound || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
                     </button>
@@ -291,7 +307,15 @@
             </div>
         <?php endif; ?>
     </form>
+
     <script>
+
+        document.querySelectorAll('input[name="userClearance"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    this.form.submit();
+                });
+            });                                
+
         function checkTextareaContent() {
             var commentArea = document.getElementById('commentArea');
             var approveButton = document.getElementById('approveButton');

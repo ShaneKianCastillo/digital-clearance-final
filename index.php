@@ -29,8 +29,10 @@
     $status = 'Regular';
 
     addEmployeeUser ($userID, $password, $name);
+    addEmployeeClearance($userID);
+    addEmployeeComment($userID);
+    addEmployeeDate($userID);
     addEmployeeInfo ($userID, $name, $department, $position, $category, $status);*/
-    
 
     if (isset($_POST['loginButton'])) {
         $userID = $_POST['userID'];
