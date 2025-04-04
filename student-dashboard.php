@@ -21,6 +21,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="styles/student-dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" href="img/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -214,6 +215,7 @@
                     <th>Status</th>
                     <th>Date</th>
                     <th>Remarks</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -226,6 +228,7 @@
                     </th>
                     <th><?php echo htmlspecialchars($data['date']); ?></th>
                     <th><?php echo htmlspecialchars($data['remarks']); ?></th>
+                    <th><button class="btn btn-info request-btn">Request</button></th>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -333,6 +336,22 @@
             }
         }, 30);
         <?php endif; ?>
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".request-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                Swal.fire({
+                    position: "center",
+                    icon: "success",
+                    title: "Your request has been sent!",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            });
+        });
     });
 </script>
 </body>

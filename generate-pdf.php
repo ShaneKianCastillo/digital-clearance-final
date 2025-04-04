@@ -97,7 +97,7 @@
         </div>
     </header>
 
-    <div class="sidebar position-relative">
+    <div class="sidebar">
         <div class="container position-fixed start-0 sidebar-shadow z-1 bg-light" style="height: 100vh; width:250px;">
             <div class="pt-4 d-flex gy-1 " >
                 <div>
@@ -108,20 +108,32 @@
                     <p class="position-absolute" style="top: 52px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
                 </div>
             </div>
-            <div class="pt-4 ms-2 d-flex align-items-center">
-                <div class="fs-2 ">
+            <div class="d-flex gy-1 pt-5 ms-2">
+                    <div>
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <i class="fa-solid fa-unlock" style="font-size: 25px;"></i>
+                        </a>
+                    </div>
+                    <div class="ps-3">
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <p class="fs-6 fw-medium">Change Password</p>
+                        </a>
+                    </div>  
+                </div>
+            <div class="pt-1 ms-2 d-flex align-items-center">
+                <div class="" style="font-size: 25px">
                     <i class="fa-solid fa-house"></i>
                 </div>
-                <div class="ps-3 fs-5">
-                    <a href="faculty-dashboard.php" class="text-decoration-none text-dark">Dashboard</a>
+                <div class="ps-3">
+                    <a href="faculty-dashboard.php" class="text-decoration-none text-dark fs-6 fw-medium">Dashboard</a>
                 </div>
             </div>
             <div class="pt-4 ms-2 d-flex align-items-center">
-                <div class="fs-2 ">
+                <div class="" style="font-size: 25px">
                     <i class="fa-solid fa-file-pdf"></i>
                 </div>
-                <div class="ps-3 fs-5">
-                    <a href="generate-pdf.php" class="text-decoration-none text-dark">Print PDF File</a>
+                <div class="ps-3">
+                    <a href="generate-pdf.php" class="text-decoration-none text-dark fs-6 fw-medium">Print PDF File</a>
                 </div>
             </div>
             <br>  
@@ -136,7 +148,7 @@
     </div>
 
     <div class="container align-items-center">
-        <div class="container mt-5  col-lg-4" >
+        <div class="container mt-5  pt-5 col-lg-4" >
             <h1>Clearance PDF File</h1>
         </div>
     </div>
@@ -154,6 +166,16 @@
                     <button class="btn btn-info fs-5" name="searchButton">Search</button>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="container text-center d-flex justify-content-center form-check" style="gap: 50px">
+        <div>
+            <input type="radio" name="pdfForm" id="" class="form-check-input">
+            <label for="" class="form-check-label fs-6 fw-meduim">Student Clearance Form</label>
+        </div>
+        <div>
+            <input type="radio" name="pdfForm" id="" class="form-check-input">
+            <label for="" class="form-check-label fs-6 fw-meduim">Employee Clearance Form</label>
         </div>
     </div>
     <div class="container text-center pt-3">
