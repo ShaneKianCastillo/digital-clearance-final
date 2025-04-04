@@ -21,6 +21,9 @@
     $studentFound = $employeeFound = false;
     $errorMessage = '';
 
+
+    $currentDate = '';
+
     // Process form submissions based on selected user type
     if ($userType == 'Student' && ($facultyData['type'] == 'Student' || $facultyData['type'] == 'Both')) {
         if (isset($_POST['searchButton'])) {
@@ -48,6 +51,8 @@
             $studID = $_POST['userID'];
             $deptName = $facultyData['dept_name'];
             $comment = $_POST['commentArea'];
+            $currentDate = date('M d, Y');
+            approveDate($studID, $deptName, $currentDate);
             storeCommentAndReset($studID, $deptName, $comment);
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
@@ -81,6 +86,8 @@
             $empID = $_POST['userID'];
             $deptName = $facultyData['dept_name'];
             $comment = $_POST['commentArea'];
+            $currentDate = date('M d, Y');
+            approveEmployeeDate($empID, $deptName, $currentDate);
             storeEmployeeCommentAndReset($empID, $deptName, $comment);
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();

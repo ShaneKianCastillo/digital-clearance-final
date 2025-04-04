@@ -275,30 +275,36 @@
 
 <!-- Clearance Status Table -->
 <div class="container custom-container d-flex justify-content-center mt-5 col-lg-8 text-center">
-    <?php //$clearanceData = getStudentClearanceData($userID); ?> 
     <div class="table">
-        <table class="table table-striped">
-            <thead>
-                <tr class="table-dark">
-                    <th>Office/Dept</th>
-                    <th>Signatory Name</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody>               
+    <table class="table table-striped">
+        <thead>
+            <tr class="table-dark">
+                <th>Office/Dept</th>
+                <th>Signatory Name</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Remarks</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php 
+                $clearanceData = getEmployeeClearanceData($userID); 
+            ?> 
+            <?php foreach ($clearanceData as $data): ?>
                 <tr>
-                    <th><?php //echo htmlspecialchars($data['dept_name']); ?></th>
-                    <th><?php //echo htmlspecialchars($data['signatory']); ?></th>
-                    <th class="<?php //echo $data['status'] == 'Approved' ? 'text-success' : 'text-danger'; ?>">
-                        <?php //echo htmlspecialchars($data['status']); ?>
-                    </th>
-                    <th><?php //echo htmlspecialchars($data['date']); ?></th>
-                    <th><?php //echo htmlspecialchars($data['remarks']); ?></th>
+                    <td><?php echo htmlspecialchars($data['dept_name']); ?></td>
+                    <td><?php echo htmlspecialchars($data['signatory']); ?></td>
+                    <td class="<?php echo $data['status'] == 'Approved' ? 'text-success' : 'text-danger'; ?>">
+                        <?php echo htmlspecialchars($data['status']); ?>
+                    </td>
+                    <td><?php echo htmlspecialchars($data['date']); ?></td>
+                    <td><?php echo htmlspecialchars($data['remarks']); ?></td>
+                    <th><button class="btn btn-info request-btn">Request</button></th>
                 </tr>
-            </tbody>
-        </table>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
     </div>
 </div>
 

@@ -790,12 +790,16 @@
                 $idField = 'dean_id';
                 break;
             case 'department':
-                $table = 'departments_cred';
+                $table = 'deptartments_cred';
                 $idField = 'dept_id';
                 break;
             case 'student':
                 $table = 'students_cred';
                 $idField = 'stud_id';
+                break;
+            case 'employee':
+                $table = 'employees_cred';
+                $idField = 'emp_id';
                 break;
             default:
                 return false; // Invalid role
@@ -848,6 +852,12 @@
         $stmt->bind_param("s", $userID);
         $stmt->execute();
         if ($stmt->get_result()->num_rows > 0) return 'dean';
+
+        // Check in employees_cred next
+        $stmt = $con->prepare("SELECT emp_id FROM employees_cred WHERE emp_id = ?");
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        if ($stmt->get_result()->num_rows > 0) return 'employee';
         
         // Check in departments_cred last
         $stmt = $con->prepare("SELECT dept_id FROM departments_cred WHERE dept_id = ?");
@@ -1043,7 +1053,7 @@
         $orderedDepartments = [
             'Grade Level/Strand Coordinators',
             'Program Chair',
-            'Dean',
+            'Principal',
             'Registrar',
             'Library',
             'ITS',
@@ -1118,7 +1128,7 @@
         $orderedDepartments = [
             'Grade Level/Strand Coordinators',
             'Program Chair',
-            'Dean',
+            'Principal',
             'Registrar',
             'Library',
             'ITS',
@@ -1164,7 +1174,7 @@
         $orderedDepartments = [
             'Grade Level/Strand Coordinators',
             'Program Chair',
-            'Dean',
+            'Principal',
             'Registrar',
             'Library',
             'ITS',
@@ -1210,7 +1220,7 @@
         $orderedDepartments = [
             'Grade Level/Strand Coordinators',
             'Program Chair',
-            'Dean',
+            'Principal',
             'Registrar',
             'Library',
             'ITS',
@@ -1282,20 +1292,14 @@
     
     function approveEmployeeDate($empID, $deptName, $date) {
         $con = openCon();
-        $success = false;
+    
+        $query = "UPDATE employee_date SET `$deptName` = ? WHERE emp_id = ?";
+        $stmt = $con->prepare($query);
+        $stmt->bind_param("ss", $date, $empID);
+        $stmt->execute();
+        $stmt->close();
         
-        try {
-            $query = "UPDATE employee_date SET `$deptName` = ? WHERE emp_id = ?";
-            $stmt = $con->prepare($query);
-            $stmt->bind_param("ss", $date, $empID);
-            $success = $stmt->execute();
-        } catch (Exception $e) {
-            error_log("Employee date approval error: " . $e->getMessage());
-        }
-        
-        if ($stmt) $stmt->close();
         closeCon($con);
-        return $success;
     }
     
     function storeEmployeeCommentAndReset($empID, $deptName, $comment) {
@@ -1328,4 +1332,69 @@
         }
     }
 
+    function getEmployeeClearanceData($empID) {
+        $con = openCon();
+        $clearanceData = [];
+    
+        // Define the ordered departments
+        $orderedDepartments = [
+            'Grade Level/Strand Coordinators',
+            'Program Chair',
+            'Principal',
+            'Registrar',
+            'Library',
+            'ITS',
+            'PPFO',
+            'Vice President',
+            'Human Resources',
+            'Accounting'
+        ];
+    
+        // Get department signatory info
+        $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred WHERE type = 'Employee' OR type = 'Both'";
+        $resultDept = mysqli_query($con, $queryDept);
+    
+        if (!$resultDept) {
+            die("Error fetching departments: " . mysqli_error($con));
+        }
+    
+        // Map department names to signatories
+        $signatories = [];
+        while ($rowDept = mysqli_fetch_assoc($resultDept)) {
+            $signatories[$rowDept['dept_name']] = $rowDept['employee_name'];
+        }
+    
+        // Get clearance info
+        foreach ($orderedDepartments as $deptName) {
+            // Status
+            $queryStatus = "SELECT `$deptName` AS status FROM employee_clearance WHERE emp_id = '$empID'";
+            $resultStatus = mysqli_query($con, $queryStatus);
+            $statusRow = mysqli_fetch_assoc($resultStatus);
+            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
+    
+            // Date
+            $queryDate = "SELECT `$deptName` AS date FROM employee_date WHERE emp_id = '$empID'";
+            $resultDate = mysqli_query($con, $queryDate);
+            $dateRow = mysqli_fetch_assoc($resultDate);
+            $date = isset($dateRow['date']) ? $dateRow['date'] : 'No Date';
+
+            // Remarks
+            $queryRemarks = "SELECT `$deptName` AS remarks FROM employee_comment WHERE emp_id = '$empID'";
+            $resultRemarks = mysqli_query($con, $queryRemarks);
+            $remarksRow = mysqli_fetch_assoc($resultRemarks);
+            $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
+    
+            // Final push
+            $clearanceData[] = [
+                'dept_name' => $deptName,
+                'signatory' => $signatories[$deptName] ?? 'N/A',
+                'status' => $status,
+                'date' => $date,
+                'remarks' => $remarks
+            ];
+        }
+    
+        closeCon($con);
+        return $clearanceData;
+    }
 ?>
