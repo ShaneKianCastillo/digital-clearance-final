@@ -81,7 +81,7 @@
                 <i class="fa-solid fa-eye position-absolute" style="left: 101%; top:58px; cursor:pointer; font-size:20px" id="toggleConNewPassword"></i>
             </div>
             <div class="pt-4 text-center">
-                <button class="btn btn-danger fs-5" onclick="goBack()">Cancel</button>
+                <button class="btn btn-danger fs-5" type="reset" onclick="goBack()">Cancel</button>
                 <button class="btn btn-success fs-5" type="submit" name="saveButton">Save</button>
         </div>
         </form>
@@ -109,13 +109,15 @@
             }
    </script>
    <script>
-    function goBack() {
-        if (document.referrer) {
-            window.location.href = document.referrer; // Redirects to the previous page
-        } else {
-            window.location.href = "student-dashboard.php"; // Fallback if no referrer
-        }
+   function goBack() {
+    if (window.history.length > 1) {
+        window.history.back(); // Go back to the previous page in history
+    } else {
+        window.location.href = "student-dashboard.php"; // Fallback page
     }
+}
+
+
 </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
