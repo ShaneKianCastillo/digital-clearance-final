@@ -125,21 +125,33 @@
                     <p class="position-absolute" style="top: 35px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
                 </div>
             </div>
+            <div class="d-flex gy-1 pt-5 ms-2">
+                    <div>
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <i class="fa-solid fa-unlock" style="font-size: 25px;"></i>
+                        </a>
+                    </div>
+                    <div class="ps-3">
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <p class="fs-6 fw-medium">Change Password</p>
+                        </a>
+                    </div>  
+                </div>  
             <div id="accountingLinks"> 
-                <div class="pt-4 ms-2 d-flex align-items-center">
-                    <div class="fs-2 ">
+                <div class="pt-1 ms-2 d-flex align-items-center">
+                    <div class="" style="font-size: 25px;">
                         <i class="fa-solid fa-house"></i>
                     </div>
-                    <div class="ps-3 fs-5">
-                        <a href="generate-pdf.php" class="text-decoration-none text-dark">Dashboard</a>
+                    <div class="ps-3">
+                        <a href="generate-pdf.php" class="text-decoration-none text-dark fs-6 fw-medium">Dashboard</a>
                     </div>
                 </div>
                 <div class="pt-4 ms-2 d-flex align-items-center">
-                    <div class="fs-2 ">
+                    <div class="" style="font-size: 25px;">
                         <i class="fa-solid fa-file-pdf"></i>
                     </div>
-                    <div class="ps-3 fs-5">
-                        <a href="generate-pdf.php" class="text-decoration-none text-dark">Print PDF File</a>
+                    <div class="ps-3">
+                        <a href="generate-pdf.php" class="text-decoration-none text-dark fs-6 fw-medium">Print PDF File</a>
                     </div>
                 </div>
             </div>
