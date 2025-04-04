@@ -150,6 +150,10 @@
                         <tr>
                             <td colspan="3" class="text-center"><?php echo $student['stud_name']; ?> is not yet approved by previous departments.</td>
                         </tr>
+                    <?php elseif (isset($_POST['searchButton']) && !$studentFound && !$studentApproved): ?>
+                        <tr>
+                            <td colspan="3" class="text-center">No student found with ID: <?php echo $studID ?> </td>
+                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
