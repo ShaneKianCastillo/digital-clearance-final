@@ -35,6 +35,14 @@
             $commentAreaValue = $searchResult['commentAreaValue'];
             $studentFound = $searchResult['studentFound'];
             $errorMessage = $searchResult['errorMessage'];
+
+            if ($studentFound) {
+                $hasRequested = hasStudentRequested($studID, $facultyData['dept_name']);
+                if (!$hasRequested) {
+                    $errorMessage = "Student hasn't requested clearance from this department";
+                    $studentFound = false;
+                }
+            }
         }
 
         if (isset($_POST['approveButton']) && isset($_POST['userID'])) {
@@ -69,6 +77,14 @@
                 $employeeFound = $searchResult['employeeFound'];
                 $errorMessage = $searchResult['errorMessage'];
                 $commentAreaValue = $searchResult['commentAreaValue'] ?? '';
+
+                if ($employeeFound) {
+                    $hasRequested = hasEmployeeRequested($empID, $facultyData['dept_name']);
+                    if (!$hasRequested) {
+                        $errorMessage = "Employee hasn't requested clearance from this department";
+                        $employeeFound = false;
+                    }
+                }
             }       
         }
 
