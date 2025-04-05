@@ -8,11 +8,38 @@
         $userData = getStudentData($userID);
         $studentInfo = fetchStudentInfo($userID);
         $approvalCount = countApprovals($userID);
+        
+        // Handle student request submission
+        if (isset($_POST['request_dept']) && isset($_POST['requestButton'])) {
+            $deptName = $_POST['request_dept'];
+            requestClearanceStudent($userID, $deptName);
+
+            // Set session to trigger Swal alert
+            $_SESSION['clearance_requested'] = true;
+
+            // Redirect to refresh the page (prevents form resubmission issues)
+            header("Location: student-dashboard.php");
+            exit();
+        }
     } elseif ($role === 'employee') {
         $userData = getEmployeeData($userID);
         $employeeInfo = fetchEmployeeInfo($userID);
+        
+        // Handle employee request submission
+        if (isset($_POST['request_dept']) && isset($_POST['requestButton'])) {
+            $deptName = $_POST['request_dept'];
+            if (requestClearanceEmployee($userID, $deptName)) {
+                // Set session to trigger Swal alert
+                $_SESSION['clearance_requested'] = true;
+
+                // Redirect to refresh the page (prevents form resubmission issues)
+                header("Location: student-dashboard.php");
+                exit();
+            }
+        }
     }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,6 +128,31 @@
         .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+        }
+
+        .request-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .request-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .request-btn[title]:hover:after {
+            content: attr(title);
+            position: absolute;
+            background: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            z-index: 100;
+            white-space: nowrap;
+            margin-top: -35px;
+            margin-left: -10px;
         }
     </style>
 </head>
@@ -219,7 +271,9 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($clearanceData as $data): ?>
+                <?php foreach ($clearanceData as $data): 
+                    $isDisabled = shouldDisableButton($userID, $data['dept_name'], $data['status']);
+                ?>
                 <tr>
                     <th><?php echo htmlspecialchars($data['dept_name']); ?></th>
                     <th><?php echo htmlspecialchars($data['signatory']); ?></th>
@@ -228,7 +282,17 @@
                     </th>
                     <th><?php echo htmlspecialchars($data['date']); ?></th>
                     <th><?php echo htmlspecialchars($data['remarks']); ?></th>
-                    <th><button class="btn btn-info request-btn">Request</button></th>
+                    <th>
+                        <form class="request-form" method="POST">
+                            <input type="hidden" name="request_dept" value="<?php echo htmlspecialchars($data['dept_name']); ?>">
+                            <button type="submit" name="requestButton" 
+                                class="btn btn-info request-btn" 
+                                <?php echo $isDisabled ? 'disabled' : ''; ?>
+                                <?php echo $data['status'] == 'Approved' ? 'title="Already approved"' : ''; ?>>
+                                <?php echo $data['status'] == 'Approved' ? 'Approved' : 'Request'; ?>
+                            </button>
+                        </form>
+                    </th>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -275,6 +339,7 @@
 
 <!-- Clearance Status Table -->
 <div class="container custom-container d-flex justify-content-center mt-5 col-lg-8 text-center">
+    <?php $clearanceData = getEmployeeClearanceData($userID);  ?>
     <div class="table">
     <table class="table table-striped">
         <thead>
@@ -288,10 +353,9 @@
             </tr>
         </thead>
         <tbody>
-            <?php 
-                $clearanceData = getEmployeeClearanceData($userID); 
-            ?> 
-            <?php foreach ($clearanceData as $data): ?>
+            <?php foreach ($clearanceData as $data): 
+                $isDisabled = shouldDisableEmployeeButton($userID, $data['dept_name'], $data['status']);
+            ?>
                 <tr>
                     <td><?php echo htmlspecialchars($data['dept_name']); ?></td>
                     <td><?php echo htmlspecialchars($data['signatory']); ?></td>
@@ -300,7 +364,17 @@
                     </td>
                     <td><?php echo htmlspecialchars($data['date']); ?></td>
                     <td><?php echo htmlspecialchars($data['remarks']); ?></td>
-                    <th><button class="btn btn-info request-btn">Request</button></th>
+                    <th>
+                        <form class="request-form" method="POST">
+                            <input type="hidden" name="request_dept" value="<?php echo htmlspecialchars($data['dept_name']); ?>">
+                            <button type="submit" name="requestButton" 
+                                class="btn btn-info request-btn" 
+                                <?php echo $isDisabled ? 'disabled' : ''; ?>
+                                <?php echo $data['status'] == 'Approved' ? 'title="Already approved"' : ''; ?>>
+                                <?php echo $data['status'] == 'Approved' ? 'Approved' : 'Request'; ?>
+                            </button>
+                        </form>
+                    </th>
                 </tr>
             <?php endforeach; ?>
         </tbody>
@@ -346,19 +420,16 @@
 </script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".request-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                Swal.fire({
-                    position: "center",
-                    icon: "success",
-                    title: "Your request has been sent!",
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-            });
+    <?php if (isset($_SESSION['clearance_requested'])): ?>
+        Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Your request has been sent!",
+            showConfirmButton: false,
+            timer: 1500
         });
-    });
+        <?php unset($_SESSION['clearance_requested']); ?> // Remove session variable after showing alert
+    <?php endif; ?>
 </script>
 </body>
 </html>

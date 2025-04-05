@@ -14,11 +14,14 @@
     $year = '4';
 
     addStudentClearance($userID);
+    addStudentRequest($userID);
     addStudentComment($userID);
     addStudentDate($userID);
     addStudentUser($userID, $password, $name);
     addStudentInfo($userID, $name, $course, $contact, $year);*/
 
+    /*$userID = '1002365986';
+    addEmployeeRequest($userID);*/
     
     /*$userID = '1002365986';
     $password = 'password2';
@@ -30,6 +33,7 @@
 
     addEmployeeUser ($userID, $password, $name);
     addEmployeeClearance($userID);
+    addEmployeeRequest($userID);
     addEmployeeComment($userID);
     addEmployeeDate($userID);
     addEmployeeInfo ($userID, $name, $department, $position, $category, $status);*/
