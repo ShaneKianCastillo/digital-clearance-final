@@ -1072,6 +1072,24 @@
     
         closeCon($con);
         return $result;
+
+        if ($student) {
+            $hasRequested = hasStudentRequested($studID, $facultyData['dept_name']);
+            if (!$hasRequested) {
+                $errorMessage = "Student found but hasn't requested clearance";
+                $studentFound = false;
+            }
+        }
+        
+        return [
+            'studID' => $studID,
+            'studName' => $student ? $student['stud_name'] : '',
+            'studCourse' => $student ? $student['course'] : '',
+            'commentAreaValue' => $commentAreaValue,
+            'studentFound' => $studentFound,
+            'errorMessage' => $errorMessage,
+            'hasRequested' => $hasRequested ?? false
+        ];
     }
 
     function processEmployeeSearch($empID, $facultyData) {
@@ -1111,7 +1129,7 @@
             closeCon($con);
             return $result;
         }
-    
+
         $result['empName'] = $employee['name'];
         $result['empDepartment'] = $employee['department'];
     
@@ -1152,6 +1170,24 @@
         $commentStmt->close();
         closeCon($con);
         return $result;
+
+        if ($employee) {
+            $hasRequested = hasEmployeeRequested($empID, $facultyData['dept_name']);
+            if (!$hasRequested) {
+                $errorMessage = "Employee found but hasn't requested clearance";
+                $employeeFound = false;
+            }
+        }
+        
+        return [
+            'empID' => $empID,
+            'empName' => $employee ? $employee['name'] : '',
+            'empDepartment' => $employee ? $employee['department'] : '',
+            'employeeFound' => $employeeFound,
+            'errorMessage' => $errorMessage,
+            'commentAreaValue' => $commentAreaValue ?? '',
+            'hasRequested' => $hasRequested ?? false
+        ];
     }
 
     function addEmployeeClearance($empID) {
@@ -1505,86 +1541,6 @@
         }        
     }
 
-    function shouldDisableButton($studID, $deptName, $currentStatus) {
-        if ($currentStatus == 'Approved') return true; // If already approved, disable the button
-    
-        $con = openCon();
-        $disable = false;
-    
-        try {
-            // Check if this department already has a request (value = 1)
-            $query = "SELECT `$deptName` FROM student_request WHERE stud_id = ?";
-            $stmt = $con->prepare($query);
-            $stmt->bind_param("s", $studID);
-            $stmt->execute();
-            $result = $stmt->get_result();
-    
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
-                if ($row[$deptName] == 1) {
-                    $disable = true; // Disable if value is already 1
-                }
-            }
-    
-            $stmt->close();
-            
-            // If not already requested, check department order requirements
-            if (!$disable) {
-                $deptOrder = getDepartmentOrder();
-                $currentPos = array_search($deptName, $deptOrder);
-    
-                // Check if the next department has already been requested
-                if ($currentPos !== false && isset($deptOrder[$currentPos + 1])) {
-                    $nextDept = $deptOrder[$currentPos + 1];
-    
-                    $query = "SELECT `$nextDept` FROM student_request WHERE stud_id = ?";
-                    $stmt = $con->prepare($query);
-                    $stmt->bind_param("s", $studID);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-    
-                    if ($result->num_rows > 0) {
-                        $row = $result->fetch_assoc();
-                        $disable = ($row[$nextDept] == 1); // Disable if the next department already has a pending request
-                    }
-    
-                    $stmt->close();
-                }
-    
-                // Ensure previous departments are all approved
-                if (!$disable) {
-                    $disable = !isPreviousDepartmentApproved($studID, $deptName);
-                }
-    
-                // The first department should always be enabled if the student is new
-                if ($currentPos === 0) {
-                    $disable = false;
-                }
-            }
-        } catch (Exception $e) {
-            error_log("Error in shouldDisableButton: " . $e->getMessage());
-        } finally {
-            closeCon($con);
-        }
-    
-        return $disable;
-    }
-
-    function getDepartmentOrder() {
-        return [
-            'Library',
-            'OSA',
-            'Guidance',
-            'Foreign Affairs', 
-            'Computer Lab',
-            'Program Chair',
-            'Registrar',
-            'Vice President',
-            'Accounting',
-            'Dean'
-        ];
-    }
-
     function isPreviousDepartmentApproved($studID, $currentDept) {
         $con = openCon();
         $approved = false;
@@ -1647,87 +1603,6 @@
         return $success;
     }
 
-    /*function shouldDisableEmployeeButton($empID, $deptName, $currentStatus) {
-        if ($currentStatus == 'Approved') return true; // If already approved, disable the button
-    
-        $con = openCon();
-        $disable = false;
-    
-        try {
-            // Check if this department already has a request (value = 1)
-            $query = "SELECT `$deptName` FROM employee_request WHERE emp_id = ?";
-            $stmt = $con->prepare($query);
-            $stmt->bind_param("s", $empID);
-            $stmt->execute();
-            $result = $stmt->get_result();
-    
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
-                if ($row[$deptName] == 1) {
-                    $disable = true; // Disable if value is already 1
-                }
-            }
-    
-            $stmt->close();
-            
-            // If not already requested, check department order requirements
-            if (!$disable) {
-                $orderedDepartments = [
-                    'Grade Level/Strand Coordinators',
-                    'Program Chair',
-                    'Principal',
-                    'Registrar',
-                    'Library',
-                    'ITS',
-                    'PPFO',
-                    'Vice President',
-                    'Human Resources',
-                    'Accounting'
-                ];
-                
-                $currentPos = array_search($deptName, $orderedDepartments);
-    
-                // Check if the next department has already been requested
-                if ($currentPos !== false && isset($orderedDepartments[$currentPos + 1])) {
-                    $nextDept = $orderedDepartments[$currentPos + 1];
-    
-                    $query = "SELECT `$nextDept` FROM employee_request WHERE emp_id = ?";
-                    $stmt = $con->prepare($query);
-                    $stmt->bind_param("s", $empID);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-    
-                    if ($result->num_rows > 0) {
-                        $row = $result->fetch_assoc();
-                        $disable = ($row[$nextDept] == 1); // Disable if the next department already has a pending request
-                    }
-    
-                    $stmt->close();
-                }
-    
-                // Ensure previous departments are all approved
-                if (!$disable && $currentPos > 0) {
-                    $prevDept = $orderedDepartments[$currentPos - 1];
-                    $query = "SELECT `$prevDept` FROM employee_clearance WHERE emp_id = ?";
-                    $stmt = $con->prepare($query);
-                    $stmt->bind_param("s", $empID);
-                    $stmt->execute();
-                    $stmt->bind_result($approved);
-                    $stmt->fetch();
-                    $stmt->close();
-                    
-                    $disable = ($approved != 1);
-                }
-            }
-        } catch (Exception $e) {
-            error_log("Error in shouldDisableEmployeeButton: " . $e->getMessage());
-        } finally {
-            closeCon($con);
-        }
-    
-        return $disable;
-    }*/
-
     function isPreviousDepartmentApprovedEmployee($studID, $currentDept) {
         $con = openCon();
         $approved = false;
@@ -1780,7 +1655,97 @@
         ];
     }
 
-    function shouldDisableEmployeeButton($studID, $deptName, $currentStatus) {
+    function shouldEnableNextStudentRequestButton($studID, $deptName) {
+        $con = openCon();
+        $enable = false;
+        
+        try {
+            // Check if the current department is approved in student_clearance
+            $query = "SELECT `$deptName` FROM student_clearance WHERE stud_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $studID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $enable = ($row[$deptName] == 1); // Enable only if approved (value = 1)
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error checking department approval: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $enable;
+    }
+
+    function getDepartmentOrder() {
+        return [
+            'Library',
+            'OSA',
+            'Guidance',
+            'Foreign Affairs', 
+            'Computer Lab',
+            'Program Chair',
+            'Registrar',
+            'Vice President',
+            'Accounting',
+            'Dean'
+        ];
+    }
+    
+    function shouldDisableStudentButton($studID, $deptName, $currentStatus) {
+        if ($currentStatus == 'Approved') return true; // If already approved, disable the button
+    
+        $con = openCon();
+        $disable = false;
+    
+        try {
+            // Check if this department already has a request (value = 1)
+            $query = "SELECT `$deptName` FROM student_request WHERE stud_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $studID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+    
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                if ($row[$deptName] == 1) {
+                    $disable = true; // Disable if value is already 1
+                }
+            }
+    
+            $stmt->close();
+            
+            // If not already requested, check department order requirements
+            if (!$disable) {
+                $deptOrder = getDepartmentOrder();
+                $currentPos = array_search($deptName, $deptOrder);
+    
+                // Check if the previous department is approved
+                if ($currentPos > 0) {
+                    $prevDept = $deptOrder[$currentPos - 1];
+                    $disable = !shouldEnableNextStudentRequestButton($studID, $prevDept);
+                }
+    
+                // The first department should always be enabled
+                if ($currentPos === 0) {
+                    $disable = false;
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Error in shouldDisableStudentButton: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+    
+        return $disable;
+    }
+
+    function shouldDisableEmployeeButton($empID, $deptName, $currentStatus) {
         if ($currentStatus == 'Approved') return true; // If already approved, disable the button
     
         $con = openCon();
@@ -1790,7 +1755,7 @@
             // Check if this department already has a request (value = 1)
             $query = "SELECT `$deptName` FROM employee_request WHERE emp_id = ?";
             $stmt = $con->prepare($query);
-            $stmt->bind_param("s", $studID);
+            $stmt->bind_param("s", $empID);
             $stmt->execute();
             $result = $stmt->get_result();
     
@@ -1808,30 +1773,13 @@
                 $deptOrder = getEmployeeDepartmentOrder();
                 $currentPos = array_search($deptName, $deptOrder);
     
-                // Check if the next department has already been requested
-                if ($currentPos !== false && isset($deptOrder[$currentPos + 1])) {
-                    $nextDept = $deptOrder[$currentPos + 1];
-    
-                    $query = "SELECT `$nextDept` FROM employee_request WHERE emp_id = ?";
-                    $stmt = $con->prepare($query);
-                    $stmt->bind_param("s", $studID);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-    
-                    if ($result->num_rows > 0) {
-                        $row = $result->fetch_assoc();
-                        $disable = ($row[$nextDept] == 1); // Disable if the next department already has a pending request
-                    }
-    
-                    $stmt->close();
+                // Check if the previous department is approved
+                if ($currentPos > 0) {
+                    $prevDept = $deptOrder[$currentPos - 1];
+                    $disable = !shouldEnableNextEmployeeRequestButton($empID, $prevDept);
                 }
     
-                // Ensure previous departments are all approved
-                if (!$disable) {
-                    $disable = !isPreviousDepartmentApprovedEmployee($studID, $deptName);
-                }
-    
-                // The first department should always be enabled if the student is new
+                // The first department should always be enabled
                 if ($currentPos === 0) {
                     $disable = false;
                 }
@@ -1843,6 +1791,85 @@
         }
     
         return $disable;
+    }
+
+    function shouldEnableNextEmployeeRequestButton($empID, $deptName) {
+        $con = openCon();
+        $enable = false;
+        
+        try {
+            // Check if the current department is approved in employee_clearance
+            $query = "SELECT `$deptName` FROM employee_clearance WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $empID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $enable = ($row[$deptName] == 1); // Enable only if approved (value = 1)
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error checking department approval: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $enable;
+    }
+
+    function hasStudentRequested($studID, $deptName) {
+        $con = openCon();
+        $hasRequested = false;
+        
+        try {
+            $query = "SELECT `$deptName` FROM student_request WHERE stud_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $studID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $hasRequested = ($row[$deptName] == 1);
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error checking student request: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $hasRequested;
+    }
+    
+    function hasEmployeeRequested($empID, $deptName) {
+        $con = openCon();
+        $hasRequested = false;
+        
+        try {
+            $query = "SELECT `$deptName` FROM employee_request WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $empID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $hasRequested = ($row[$deptName] == 1);
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error checking employee request: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $hasRequested;
     }
     
 ?>

@@ -272,28 +272,44 @@
             </thead>
             <tbody>
                 <?php foreach ($clearanceData as $data): 
-                    $isDisabled = shouldDisableButton($userID, $data['dept_name'], $data['status']);
+                    $isDisabled = shouldDisableStudentButton($userID, $data['dept_name'], $data['status']);
+                    $tooltip = '';
+                    
+                    if ($data['status'] == 'Approved') {
+                        $tooltip = 'title="Already approved"';
+                    } else if ($isDisabled) {
+                        // Get department order
+                        $deptOrder = getDepartmentOrder();
+                        $currentPos = array_search($data['dept_name'], $deptOrder);
+                        
+                        if ($currentPos > 0) {
+                            $prevDept = $deptOrder[$currentPos - 1];
+                            $tooltip = 'title="Requires approval from '.$prevDept.' first"';
+                        } else if ($data['dept_name'] != 'Library') {
+                            $tooltip = 'title="Please complete previous departments first"';
+                        }
+                    }
                 ?>
-                <tr>
-                    <th><?php echo htmlspecialchars($data['dept_name']); ?></th>
-                    <th><?php echo htmlspecialchars($data['signatory']); ?></th>
-                    <th class="<?php echo $data['status'] == 'Approved' ? 'text-success' : 'text-danger'; ?>">
-                        <?php echo htmlspecialchars($data['status']); ?>
-                    </th>
-                    <th><?php echo htmlspecialchars($data['date']); ?></th>
-                    <th><?php echo htmlspecialchars($data['remarks']); ?></th>
-                    <th>
-                        <form class="request-form" method="POST">
-                            <input type="hidden" name="request_dept" value="<?php echo htmlspecialchars($data['dept_name']); ?>">
-                            <button type="submit" name="requestButton" 
-                                class="btn btn-info request-btn" 
-                                <?php echo $isDisabled ? 'disabled' : ''; ?>
-                                <?php echo $data['status'] == 'Approved' ? 'title="Already approved"' : ''; ?>>
-                                <?php echo $data['status'] == 'Approved' ? 'Approved' : 'Request'; ?>
-                            </button>
-                        </form>
-                    </th>
-                </tr>
+                    <tr>
+                        <th><?php echo htmlspecialchars($data['dept_name']); ?></th>
+                        <th><?php echo htmlspecialchars($data['signatory']); ?></th>
+                        <th class="<?php echo $data['status'] == 'Approved' ? 'text-success' : 'text-danger'; ?>">
+                            <?php echo htmlspecialchars($data['status']); ?>
+                        </th>
+                        <th><?php echo htmlspecialchars($data['date']); ?></th>
+                        <th><?php echo htmlspecialchars($data['remarks']); ?></th>
+                        <th>
+                            <form class="request-form" method="POST">
+                                <input type="hidden" name="request_dept" value="<?php echo htmlspecialchars($data['dept_name']); ?>">
+                                <button type="submit" name="requestButton" 
+                                    class="btn btn-info request-btn" 
+                                    <?php echo $isDisabled ? 'disabled' : ''; ?>
+                                    <?php echo $tooltip; ?>>
+                                    <?php echo $data['status'] == 'Approved' ? 'Approved' : 'Request'; ?>
+                                </button>
+                            </form>
+                        </th>
+                    </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
@@ -355,6 +371,20 @@
         <tbody>
             <?php foreach ($clearanceData as $data): 
                 $isDisabled = shouldDisableEmployeeButton($userID, $data['dept_name'], $data['status']);
+                $tooltip = '';
+                
+                if ($data['status'] == 'Approved') {
+                    $tooltip = 'title="Already approved"';
+                } else if ($isDisabled) {
+                    // Get department order
+                    $deptOrder = getEmployeeDepartmentOrder();
+                    $currentPos = array_search($data['dept_name'], $deptOrder);
+                    
+                    if ($currentPos > 0) {
+                        $prevDept = $deptOrder[$currentPos - 1];
+                        $tooltip = 'title="Requires approval from '.$prevDept.' first"';
+                    }
+                }
             ?>
                 <tr>
                     <td><?php echo htmlspecialchars($data['dept_name']); ?></td>
@@ -370,7 +400,7 @@
                             <button type="submit" name="requestButton" 
                                 class="btn btn-info request-btn" 
                                 <?php echo $isDisabled ? 'disabled' : ''; ?>
-                                <?php echo $data['status'] == 'Approved' ? 'title="Already approved"' : ''; ?>>
+                                <?php echo $tooltip; ?>>
                                 <?php echo $data['status'] == 'Approved' ? 'Approved' : 'Request'; ?>
                             </button>
                         </form>

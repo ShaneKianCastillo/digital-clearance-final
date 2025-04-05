@@ -20,8 +20,8 @@
     addStudentUser($userID, $password, $name);
     addStudentInfo($userID, $name, $course, $contact, $year);*/
 
-    /*$userID = '1002365986';
-    addEmployeeRequest($userID);*/
+    /*$userID = '0122303926';
+    addStudentRequest($userID);*/
     
     /*$userID = '1002365986';
     $password = 'password2';
