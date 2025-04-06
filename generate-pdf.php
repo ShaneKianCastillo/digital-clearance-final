@@ -170,7 +170,7 @@
     </div>
     <div class="container text-center d-flex justify-content-center form-check" style="gap: 50px">
         <div>
-            <input type="radio" name="pdfForm" id="" class="form-check-input">
+            <input type="radio" name="pdfForm" id="" class="form-check-input" checked>
             <label for="" class="form-check-label fs-6 fw-meduim">Student Clearance Form</label>
         </div>
         <div>
