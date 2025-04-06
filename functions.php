@@ -684,7 +684,17 @@
 
     function fetchStudentComment($studID, $deptName) {
         $con = openCon();
+        
+        // Get the list of valid departments
+        $validDepartments = getDepartmentOrder();
+        
+        // Ensure that the provided deptName is valid
+        if (!in_array($deptName, $validDepartments)) {
+            // Handle invalid deptName, use a default or throw an error
+            $deptName = 'Library'; // Example: use the 'Library' department as fallback
+        }
     
+        // Construct the query with the validated deptName
         $commentQuery = "SELECT `$deptName` AS comment FROM student_comment WHERE stud_id = ?";
         $stmt = $con->prepare($commentQuery);
         $stmt->bind_param("i", $studID);
@@ -693,8 +703,10 @@
         $stmt->fetch();
         $stmt->close();
         closeCon($con);
+    
         return $existingComment ?? '';
     }
+    
 
     function checkIfAllPreviousDepartmentsApproved($studID) {
         $con = openCon();
@@ -1047,7 +1059,7 @@
         $result['studCourse'] = $student['course'];
     
         $con = openCon();
-        $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC LIMIT 9";
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' ORDER BY id ASC LIMIT 9";
         $queryResult = mysqli_query($con, $deptQuery);
     
         if (!$queryResult) {
@@ -1060,37 +1072,65 @@
             $result['orderedDepartments'][] = $row['dept_name'];
         }
     
-        $deptName = $facultyData['dept_name'];
-        $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
-    
-        if ($studentApproved) {
-            $result['studentFound'] = true;
-            $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+        if (isset($facultyData['dept_name'])) {
+            $deptName = $facultyData['dept_name'];
         } else {
-            $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+            $deptName = 'Dean'; // Or any fallback
+        }
+        
+        // Special case for Dean - check if all other departments have approved
+        if ($deptName === 'Dean') {
+            $allApproved = true;
+            
+            // Check if all previous departments have approved
+            foreach ($result['orderedDepartments'] as $department) {
+                // Check the approval status of each department
+                $query = "SELECT `$department` FROM student_clearance WHERE stud_id = ?";
+                $stmt = $con->prepare($query);
+                $stmt->bind_param("s", $studID);
+                $stmt->execute();
+                $stmt->bind_result($status);
+                $stmt->fetch();
+                $stmt->close();
+                
+                // If any department hasn't approved (status != 1), then the student isn't eligible
+                if ($status != 1) {
+                    $allApproved = false;
+                    break;
+                }
+            }
+            
+            // If all departments have approved, grant approval and set the comment area
+            if ($allApproved) {
+                $result['studentFound'] = true;
+                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+            } else {
+                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by all departments.";
+            }
+        } else {
+            // Existing logic for other departments
+            $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
+            if ($studentApproved) {
+                $result['studentFound'] = true;
+                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+            } else {
+                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+            }
+        }
+    
+        // Check if student has requested clearance from this department
+        if ($result['studentFound']) {
+            $hasRequested = hasStudentRequested($studID, $deptName);
+            if (!$hasRequested) {
+                $result['errorMessage'] = "Student hasn't requested clearance from this department";
+                $result['studentFound'] = false;
+            }
         }
     
         closeCon($con);
         return $result;
-
-        if ($student) {
-            $hasRequested = hasStudentRequested($studID, $facultyData['dept_name']);
-            if (!$hasRequested) {
-                $errorMessage = "Student found but hasn't requested clearance";
-                $studentFound = false;
-            }
-        }
-        
-        return [
-            'studID' => $studID,
-            'studName' => $student ? $student['stud_name'] : '',
-            'studCourse' => $student ? $student['course'] : '',
-            'commentAreaValue' => $commentAreaValue,
-            'studentFound' => $studentFound,
-            'errorMessage' => $errorMessage,
-            'hasRequested' => $hasRequested ?? false
-        ];
     }
+    
 
     function processEmployeeSearch($empID, $facultyData) {
         $con = openCon();
