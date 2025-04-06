@@ -1,4 +1,8 @@
 <?php 
+    session_start(); // If not already included
+    if (!isset($_SESSION['return_to'])) {
+        $_SESSION['return_to'] = $_SERVER['HTTP_REFERER'] ?? 'student-dashboard.php';
+    }
     include 'functions.php'; 
     $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Student';
     $studentID = $_SESSION['userID'];
@@ -32,8 +36,11 @@
         } else {
             // Call the changePassword function with role
             if (changePassword($userID, $oldPass, $newPass, $role)) {
-                $message = 'Password changed successfully!';
-                $messageType = 'success';
+                // Redirect after success
+                $returnTo = $_SESSION['return_to'] ?? 'student-dashboard.php';
+                unset($_SESSION['return_to']); // Clean up session variable
+                header("Location: $returnTo");
+                exit;
             } else {
                 $message = 'Failed to change password. Old password may be incorrect.';
                 $messageType = 'danger';
@@ -110,12 +117,9 @@
    </script>
    <script>
    function goBack() {
-    if (window.history.length > 1) {
-        window.history.back(); // Go back to the previous page in history
-    } else {
-        window.location.href = "student-dashboard.php"; // Fallback page
-    }
+    window.location.href = "<?php echo $_SESSION['return_to'] ?? 'student-dashboard.php'; ?>";
 }
+
 
 
 </script>
