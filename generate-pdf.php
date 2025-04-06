@@ -1,5 +1,4 @@
 <?php 
-
     include 'functions.php'; 
     
     $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
@@ -7,69 +6,52 @@
 
     $facultyData = getFacultyData($facultyID);
 
-    $studID = "";
-    $studName = "";
-    $studCourse = "";
-    $studYearLevel = "";
-    $studContactNumber = "";
-    $commentAreaValue = '';
-    $studentFound = false;
+    $userType = 'student'; // Default value
 
-    if (isset($_POST['searchButton'])) {
-        $studID = $_POST['userID'];
-        $student = fetchStudentInfo($studID);
+    if (isset($_POST['userType'])) {
+        $userType = $_POST['userType'];
+    }
+
+    // Initialize variables
+    $studID = $empID = "";
+    $studName = $empName = $studCourse = $empDepartment = $empPosition = "";
+    $studentFound = $employeeFound = false;
+    $errorMessage = '';
+    $studContactNumber = '';
+
+    if ($userType == 'student') {
+        if (isset($_POST['searchButton'])) {
+            $studID = $_POST['userID'];
+            $student = fetchStudentInfo($studID);
     
-        $con = openCon();
-        $orderedDepartments = [];
-        $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC";
-        $result = mysqli_query($con, $deptQuery);
-    
-        if ($result) {
-            while ($row = mysqli_fetch_assoc($result)) {
-                $orderedDepartments[] = $row['dept_name'];
+            if ($student) {
+                $studName = $student['stud_name'];
+                $studCourse = $student['course'];
+                $studYearLevel = $student['year_level'];
+                $studContactNumber = $student['contact_number'];
+                $studentFound = true;
+            } else {
+                $studentFound = false;
+                $errorMessage = "No student found with ID: " . htmlspecialchars($studID);
             }
-        } else {
-            echo "Error fetching departments: " . mysqli_error($con);
-            $studentFound = false;
-            $commentAreaValue = '';
-            return;
         }
+    } 
+    elseif ($userType == 'employee') {
+        if (isset($_POST['searchButton'])) {
+            $empID = $_POST['userID'];
+            $employee = fetchEmployeeInfo($empID);
     
-        if ($student) { // Removed clearance completion check
-            $studName = $student['stud_name'];
-            $studCourse = $student['course'];
-            $studYearLevel = $student['year_level'];
-            $studContactNumber = $student['contact_number'];
-            $studentFound = true;
-    
-            $deptName = $facultyData['dept_name'];
-            $commentAreaValue = fetchStudentComment($studID, $deptName);
-        } else {
-            $studentFound = false;
-            $commentAreaValue = '';
+            if ($employee) {
+                $empName = $employee['name'];
+                $empDepartment = $employee['department'];
+                $empPosition = $employee['position'];
+                $employeeFound = true;
+            } else {
+                $employeeFound = false;
+                $errorMessage = "No employee found with ID: " . htmlspecialchars($empID);
+            }
         }
-        closeCon($con);
     }
-
-    if (isset($_POST['approveButton']) && isset($_POST['userID'])) {
-        $studID = $_POST['userID'];
-        $deptName = $facultyData['dept_name'];
-        $currentDate = date('M d, Y');
-        approveStudent($studID, $deptName);
-        approveDate($studID, $deptName, $currentDate);
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
-    }
-
-    if (isset($_POST['declineButton']) && isset($_POST['userID'])) {
-        $studID = $_POST['userID'];
-        $deptName = $facultyData['dept_name'];
-        $comment = $_POST['commentArea'];
-        storeCommentAndReset($studID, $deptName, $comment);
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
-    }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -152,41 +134,62 @@
             <h1>Clearance PDF File</h1>
         </div>
     </div>
-    <div class="">
-        <form method="post">
-        <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
-            <div class="d-flex justify-content-center align-items-center py-4">
-                <div>
-                    <label for="studentID" class="form-label fs-5">Enter Student ID:</label>
-                </div>
-                <div class="ps-4" style="width: 300px;">
-                    <input type="number" step="1" name="userID" placeholder="" class="form-control" value="<?php echo $studID ?>" >
-                </div>
-                <div class="ps-4">
-                    <button class="btn btn-info fs-5" name="searchButton">Search</button>
+    
+    <!-- Main Form Container -->
+    <div class="container">
+        <form method="post" id="pdfForm">
+            <!-- Search Bar -->
+            <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
+                <div class="d-flex justify-content-center align-items-center py-4">
+                    <div>
+                        <label for="userID" class="form-label fs-5">
+                            <?php echo ($userType == 'student') ? 'Enter Student ID:' : 'Enter Employee ID:'; ?>
+                        </label>
+                    </div>
+                    <div class="ps-4" style="width: 300px;">
+                        <input type="number" step="1" name="userID" placeholder="" class="form-control" 
+                            value="<?php echo ($userType == 'student') ? $studID : $empID; ?>" required>
+                    </div>
+                    <div class="ps-4">
+                        <button class="btn btn-info fs-5" name="searchButton">Search</button>
+                    </div>
                 </div>
             </div>
-        </div>
+            
+            <!-- Radio Buttons -->
+            <div class="container text-center d-flex justify-content-center form-check" style="gap: 50px; margin-top: 20px;">
+                <div class="border border-1 shadow p-3">
+                    <input type="radio" name="userType" id="studentRadio" class="form-check-input" 
+                        value="student" <?php echo ($userType == 'student') ? 'checked' : ''; ?>>
+                    <label for="studentRadio" class="form-check-label fs-6 fw-meduim">Student Clearance Form</label>
+                </div>
+                <div class="border border-1 shadow p-3">
+                    <input type="radio" name="userType" id="employeeRadio" class="form-check-input" 
+                        value="employee" <?php echo ($userType == 'employee') ? 'checked' : ''; ?>>
+                    <label for="employeeRadio" class="form-check-label fs-6 fw-meduim">Employee Clearance Form</label>
+                </div>
+            </div>
+            
+            <!-- PDF Download Button -->
+            <div class="container text-center pt-3">
+                <button type="button" class="btn btn-danger" onclick="downloadPDF()">Download PDF</button>
+            </div>
+            
+            <!-- Error Message Display -->
+            <?php if (!empty($errorMessage)): ?>
+                <div class="container alert alert-danger alert-dismissible fade show mt-3" style="width: 700px;" role="alert">
+                    <?php echo $errorMessage; ?>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            <?php endif; ?>
+        </form>
     </div>
-    <div class="container text-center d-flex justify-content-center form-check" style="gap: 50px">
-        <div>
-            <input type="radio" name="userType" id="" value="student" class="form-check-input" onclick="toggleDivs()" checked>
-            <label for="" class="form-check-label fs-6 fw-meduim">Student Clearance Form</label>
-        </div>
-        <div>
-            <input type="radio" name="userType" id="" value="employee" class="form-check-input" onclick="toggleDivs()">
-            <label for="" class="form-check-label fs-6 fw-meduim">Employee Clearance Form</label>
-        </div>
-    </div>
-    <div class="container text-center pt-3">
-        <div>
-            <button class="btn btn-danger" onclick="downloadPDF()">Download PDF</button>
-        </div>
-    </div>
-   
 
-    <div class="container pt-3 col-lg-7" id="generatePDF">
-        <div class="container border border-dark text-center pt-2">
+    <!-- Student Clearance Form -->
+    <div class="container pt-3 col-lg-7" id="generatePDF" style="display: <?php echo ($userType == 'student') ? 'block' : 'none'; ?>;">
+    <div class="container border border-dark text-center pt-2">
             <p class="fs-3 fw-bold">Clearance Form</p>
         </div>
         <div class="container col-lg-12 border pt-2 border-dark" style="background-color: lightcyan;">
@@ -524,8 +527,9 @@
             </div>
     </div>
 
-    <div class="container pt-3 col-lg-7 mb-5" id="generatePDFEmployee" style="display: none;">
-        <div class="container text-center border border-dark pt-2">
+    <!-- Employee Clearance Form -->
+    <div class="container pt-3 col-lg-7 mb-5" id="generatePDFEmployee" style="display: <?php echo ($userType == 'employee') ? 'block' : 'none'; ?>;">
+    <div class="container text-center border border-dark pt-2">
             <p class="fs-3 fw-bold">TEACHING CLEARANCE FORM</p>
         </div>
         <div class="container border border-dark">
@@ -540,21 +544,21 @@
         <div class="container d-flex border border-dark justidfy-content-center align-items-center">
             <div class="container d-flex  border-dark border-end">
                 <p class="fw-bold">NAME:</p>
-                <p>Shane</p>
+                <p> <?php echo $empName ?></p>
             </div>
             <div class="container d-flex">
                 <p class="fw-bold">EMPLOYEE ID NO:</p>
-                <p>123456</p>
+                <p> <?php echo $empID ?></p>
             </div>
         </div>
         <div class="container d-flex border border-dark justidfy-content-center align-items-center">
             <div class="container d-flex  border-dark border-end">
                 <p class="fw-bold">DEPARTMENT:</p>
-                <p>Shane</p>
+                <p> <?php echo $empDepartment ?></p>
             </div>
             <div class="container d-flex">
                 <p class="fw-bold">POSITION:</p>
-                <p>123456</p>
+                <p> <?php echo $empPosition ?></p>
             </div>
         </div>
         <div class="container border border-dark">
@@ -633,10 +637,72 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr style="font-size: 15px;">
-                        <th>GRADE LEVEL/STRAND COORDINATORS</th>
-                    </tr>
-                </tbody>
+                <?php
+                if (!empty($empID)) {
+                    // Define the department order for employees
+                    $orderedDepartments = [
+                        'Grade Level/Strand Coordinators',
+                        'Program Chair',
+                        'Principal',
+                        'Registrar',
+                        'Library',
+                        'ITS',
+                        'PPFO',
+                        'Vice President',
+                        'Human Resources',
+                        'Accounting'
+                    ];
+
+                    $con = openCon();
+                    
+                    // Get department signatories
+                    $signatories = [];
+                    $deptQuery = "SELECT dept_name, employee_name FROM deptartments_cred WHERE type = 'Employee' OR type = 'Both'";
+                    $deptResult = mysqli_query($con, $deptQuery);
+                    while ($row = mysqli_fetch_assoc($deptResult)) {
+                        $signatories[$row['dept_name']] = $row['employee_name'];
+                    }
+
+                    // Get clearance data for each department
+                    foreach ($orderedDepartments as $index => $deptName) {
+                        // Get status
+                        $statusQuery = "SELECT `$deptName` FROM employee_clearance WHERE emp_id = '$empID'";
+                        $statusResult = mysqli_query($con, $statusQuery);
+                        $statusRow = mysqli_fetch_assoc($statusResult);
+                        $status = isset($statusRow[$deptName]) && $statusRow[$deptName] == 1 ? 'Approved' : 'Declined';
+                        $statusColor = $status == 'Approved' ? 'green' : 'red';
+
+                        // Get date
+                        $dateQuery = "SELECT `$deptName` FROM employee_date WHERE emp_id = '$empID'";
+                        $dateResult = mysqli_query($con, $dateQuery);
+                        $dateRow = mysqli_fetch_assoc($dateResult);
+                        $date = isset($dateRow[$deptName]) && !empty($dateRow[$deptName]) ? formatDate($dateRow[$deptName]) : 'N/A';
+
+                        // Get remarks
+                        $remarksQuery = "SELECT `$deptName` FROM employee_comment WHERE emp_id = '$empID'";
+                        $remarksResult = mysqli_query($con, $remarksQuery);
+                        $remarksRow = mysqli_fetch_assoc($remarksResult);
+                        $remarks = isset($remarksRow[$deptName]) && !empty($remarksRow[$deptName]) ? $remarksRow[$deptName] : 'No Remarks';
+
+                        ?>
+                        <tr>
+                            <td><strong><?php echo ($index + 1) . ". " . strtoupper($deptName); ?></strong></td>
+                            <td class="text-center"><strong><?php echo isset($signatories[$deptName]) ? htmlspecialchars($signatories[$deptName]) : 'N/A'; ?></strong></td>
+                            <td class="text-center"><strong style="color: <?php echo $statusColor; ?>;"><?php echo htmlspecialchars($status); ?></strong></td>
+                            <td class="text-center"><strong><?php echo htmlspecialchars($date); ?></strong></td>
+                            <td class="text-center"><strong><?php echo htmlspecialchars($remarks); ?></strong></td>
+                        </tr>
+                        <?php
+                    }
+                    
+                    closeCon($con);
+                } else {
+                    ?>
+                    <tr><td colspan="5" class="text-center">Search for an employee to display clearance data.</td></tr>
+                    <?php
+                }
+                ?>
+        </tbody>
             </table> 
             
         <div class="container">
@@ -654,6 +720,7 @@
             <tbody>
                 <tr style="font-size: 15px;">
                     <th>EXECUTIVE VICE PRESIDENT</th>
+                </tr>
                 </tr>
             </tbody>
         </table>
@@ -694,31 +761,31 @@
         });
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelector(".btn-danger").addEventListener("click", function (event) {
-            event.preventDefault();
-            downloadPDF();
-        });
-    });
-</script>
+    function toggleDivs() {
+        const studentDiv = document.getElementById('generatePDF');
+        const employeeDiv = document.getElementById('generatePDFEmployee');
+        const selectedValue = document.querySelector('input[name="userType"]:checked').value;
 
-<script>
-  function toggleDivs() {
-    const studentDiv = document.getElementById('generatePDF');
-    const employeeDiv = document.getElementById('generatePDFEmployee');
-    const selectedValue = document.querySelector('input[name="userType"]:checked').value;
-
-    if (selectedValue === 'student') {
-      studentDiv.style.display = 'block';
-      employeeDiv.style.display = 'none';
-    } else if (selectedValue === 'employee') {
-      studentDiv.style.display = 'none';
-      employeeDiv.style.display = 'block';
+        if (selectedValue === 'student') {
+            studentDiv.style.display = 'block';
+            employeeDiv.style.display = 'none';
+        } else if (selectedValue === 'employee') {
+            studentDiv.style.display = 'none';
+            employeeDiv.style.display = 'block';
+        }
+        
+        // Submit the form to update the PHP variables
+        document.getElementById('pdfForm').submit();
     }
-  }
-</script>
 
+    // Add event listeners to radio buttons
+    document.querySelectorAll('input[name="userType"]').forEach(radio => {
+        radio.addEventListener('change', toggleDivs);
+    });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
 </body>
 </html>
