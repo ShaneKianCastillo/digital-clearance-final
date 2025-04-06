@@ -1871,5 +1871,59 @@
         
         return $hasRequested;
     }
+
+    function getPendingStudentRequests($deptName) {
+        $con = openCon();
+        $requests = [];
+        
+        // Get students who have requested but not yet been approved/declined by this department
+        $sql = "SELECT sr.stud_id, si.stud_name 
+                FROM student_request sr
+                JOIN student_info si ON sr.stud_id = si.stud_id
+                LEFT JOIN student_clearance sc ON sr.stud_id = sc.stud_id
+                WHERE sr.`$deptName` = 1 
+                AND (sc.`$deptName` IS NULL OR sc.`$deptName` = 0)";
+        
+        $result = mysqli_query($con, $sql);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $requests[] = [
+                    'id' => $row['stud_id'],
+                    'name' => $row['stud_name']
+                ];
+            }
+        }
+        
+        closeCon($con);
+        return $requests;
+    }
+    
+    function getPendingEmployeeRequests($deptName) {
+        $con = openCon();
+        $requests = [];
+        
+        // Get employees who have requested but not yet been approved/declined by this department
+        $sql = "SELECT er.emp_id, ei.name 
+                FROM employee_request er
+                JOIN employee_info ei ON er.emp_id = ei.emp_id
+                LEFT JOIN employee_clearance ec ON er.emp_id = ec.emp_id
+                WHERE er.`$deptName` = 1 
+                AND (ec.`$deptName` IS NULL OR ec.`$deptName` = 0)";
+        
+        $result = mysqli_query($con, $sql);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $requests[] = [
+                    'id' => $row['emp_id'],
+                    'name' => $row['name']
+                ];
+            }
+        }
+        
+        closeCon($con);
+        return $requests;
+    }
     
 ?>
