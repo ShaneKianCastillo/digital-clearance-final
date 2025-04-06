@@ -159,7 +159,20 @@
                             <p class="fs-6 fw-medium">Change Password</p>
                         </a>
                     </div>  
+                </div>
+                <div class="d-flex gy-1 pt-1 ms-2">
+                    <div>
+                        <a href="request-list.php" style="text-decoration: none;" class="text-dark">
+                        <i class="fa-solid fa-list" style="font-size: 25px;"></i>
+                        </a>
+                    </div>
+                    <div class="ps-3">
+                        <a href="request-list.php" style="text-decoration: none;" class="text-dark">
+                            <p class="fs-6 fw-medium">Request List</p>
+                        </a>
+                    </div>  
                 </div>  
+                
             <div id="accountingLinks"> 
                 <div class="pt-1 ms-2 d-flex align-items-center">
                     <div class="" style="font-size: 25px;">
