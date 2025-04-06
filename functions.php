@@ -684,7 +684,17 @@
 
     function fetchStudentComment($studID, $deptName) {
         $con = openCon();
+        
+        // Get the list of valid departments
+        $validDepartments = getDepartmentOrder();
+        
+        // Ensure that the provided deptName is valid
+        if (!in_array($deptName, $validDepartments)) {
+            // Handle invalid deptName, use a default or throw an error
+            $deptName = 'Library'; // Example: use the 'Library' department as fallback
+        }
     
+        // Construct the query with the validated deptName
         $commentQuery = "SELECT `$deptName` AS comment FROM student_comment WHERE stud_id = ?";
         $stmt = $con->prepare($commentQuery);
         $stmt->bind_param("i", $studID);
@@ -693,8 +703,10 @@
         $stmt->fetch();
         $stmt->close();
         closeCon($con);
+    
         return $existingComment ?? '';
     }
+    
 
     function checkIfAllPreviousDepartmentsApproved($studID) {
         $con = openCon();
@@ -1023,6 +1035,102 @@
         return $isStudent;
     }
 
+    /*function processStudentSearch($studID, $facultyData) {
+        // Initialize result array with default values
+        $result = [
+            'studID' => $studID,
+            'studName' => '',
+            'studCourse' => '',
+            'commentAreaValue' => '',
+            'studentFound' => false,
+            'errorMessage' => '',
+            'orderedDepartments' => []
+        ];
+    
+        $student = fetchStudentInfo($studID);
+    
+        if (!$student) {
+            $result['errorMessage'] = "No student found with ID: " . htmlspecialchars($studID);
+            return $result;
+        }
+    
+        // Always set the student name and course, even if not approved
+        $result['studName'] = $student['stud_name'];
+        $result['studCourse'] = $student['course'];
+    
+        $con = openCon();
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' ORDER BY id ASC LIMIT 9";
+        $queryResult = mysqli_query($con, $deptQuery);
+    
+        if (!$queryResult) {
+            $result['errorMessage'] = "Error fetching departments: " . mysqli_error($con);
+            closeCon($con);
+            return $result;
+        }
+    
+        while ($row = mysqli_fetch_assoc($queryResult)) {
+            $result['orderedDepartments'][] = $row['dept_name'];
+        }
+    
+        if (isset($facultyData['dept_name'])) {
+            $deptName = $facultyData['dept_name'];
+        } else {
+            $deptName = 'Dean'; // Or any fallback
+        }
+        
+        // Special case for Dean - check if all other departments have approved
+        if ($deptName === 'Dean') {
+            $allApproved = true;
+            
+            // Check if all previous departments have approved
+            foreach ($result['orderedDepartments'] as $department) {
+                // Check the approval status of each department
+                $query = "SELECT `$department` FROM student_clearance WHERE stud_id = ?";
+                $stmt = $con->prepare($query);
+                $stmt->bind_param("s", $studID);
+                $stmt->execute();
+                $stmt->bind_result($status);
+                $stmt->fetch();
+                $stmt->close();
+                
+                // If any department hasn't approved (status != 1), then the student isn't eligible
+                if ($status != 1) {
+                    $allApproved = false;
+                    break;
+                }
+            }
+            
+            // If all departments have approved, grant approval and set the comment area
+            if ($allApproved) {
+                $result['studentFound'] = true;
+                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+            } else {
+                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by all departments.";
+            }
+        } else {
+            // Existing logic for other departments
+            $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
+            if ($studentApproved) {
+                $result['studentFound'] = true;
+                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+            } else {
+                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+            }
+        }
+    
+        // Check if student has requested clearance from this department
+        if ($result['studentFound']) {
+            $hasRequested = hasStudentRequested($studID, $deptName);
+            if (!$hasRequested) {
+                $result['errorMessage'] = "Student hasn't requested clearance from this department";
+                $result['studentFound'] = false;
+            }
+        }
+    
+        closeCon($con);
+        return $result;
+    }*/
+
     function processStudentSearch($studID, $facultyData) {
         // Initialize result array with default values
         $result = [
@@ -1047,7 +1155,7 @@
         $result['studCourse'] = $student['course'];
     
         $con = openCon();
-        $deptQuery = "SELECT dept_name FROM deptartments_cred ORDER BY id ASC LIMIT 9";
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' ORDER BY id ASC LIMIT 9";
         $queryResult = mysqli_query($con, $deptQuery);
     
         if (!$queryResult) {
@@ -1060,37 +1168,40 @@
             $result['orderedDepartments'][] = $row['dept_name'];
         }
     
-        $deptName = $facultyData['dept_name'];
-        $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
-    
-        if ($studentApproved) {
+        if (isset($facultyData['dept_name'])) {
+            $deptName = $facultyData['dept_name'];
+        } else {
+            $deptName = 'Dean'; // Or any fallback
+        }
+        
+        // Modified logic for Dean - no longer checks if all departments have approved
+        if ($deptName === 'Dean') {
             $result['studentFound'] = true;
             $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
         } else {
-            $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+            // Existing logic for other departments
+            $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
+            if ($studentApproved) {
+                $result['studentFound'] = true;
+                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+            } else {
+                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+            }
+        }
+    
+        // Check if student has requested clearance from this department
+        if ($result['studentFound']) {
+            $hasRequested = hasStudentRequested($studID, $deptName);
+            if (!$hasRequested) {
+                $result['errorMessage'] = "Student hasn't requested clearance from this department";
+                $result['studentFound'] = false;
+            }
         }
     
         closeCon($con);
         return $result;
-
-        if ($student) {
-            $hasRequested = hasStudentRequested($studID, $facultyData['dept_name']);
-            if (!$hasRequested) {
-                $errorMessage = "Student found but hasn't requested clearance";
-                $studentFound = false;
-            }
-        }
-        
-        return [
-            'studID' => $studID,
-            'studName' => $student ? $student['stud_name'] : '',
-            'studCourse' => $student ? $student['course'] : '',
-            'commentAreaValue' => $commentAreaValue,
-            'studentFound' => $studentFound,
-            'errorMessage' => $errorMessage,
-            'hasRequested' => $hasRequested ?? false
-        ];
     }
+    
 
     function processEmployeeSearch($empID, $facultyData) {
         $con = openCon();
@@ -1690,10 +1801,10 @@
             'Foreign Affairs', 
             'Computer Lab',
             'Program Chair',
+            'Dean',
             'Registrar',
             'Vice President',
             'Accounting',
-            'Dean'
         ];
     }
     
@@ -1870,6 +1981,60 @@
         }
         
         return $hasRequested;
+    }
+
+    function getPendingStudentRequests($deptName) {
+        $con = openCon();
+        $requests = [];
+        
+        // Get students who have requested but not yet been approved/declined by this department
+        $sql = "SELECT sr.stud_id, si.stud_name 
+                FROM student_request sr
+                JOIN student_info si ON sr.stud_id = si.stud_id
+                LEFT JOIN student_clearance sc ON sr.stud_id = sc.stud_id
+                WHERE sr.`$deptName` = 1 
+                AND (sc.`$deptName` IS NULL OR sc.`$deptName` = 0)";
+        
+        $result = mysqli_query($con, $sql);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $requests[] = [
+                    'id' => $row['stud_id'],
+                    'name' => $row['stud_name']
+                ];
+            }
+        }
+        
+        closeCon($con);
+        return $requests;
+    }
+    
+    function getPendingEmployeeRequests($deptName) {
+        $con = openCon();
+        $requests = [];
+        
+        // Get employees who have requested but not yet been approved/declined by this department
+        $sql = "SELECT er.emp_id, ei.name 
+                FROM employee_request er
+                JOIN employee_info ei ON er.emp_id = ei.emp_id
+                LEFT JOIN employee_clearance ec ON er.emp_id = ec.emp_id
+                WHERE er.`$deptName` = 1 
+                AND (ec.`$deptName` IS NULL OR ec.`$deptName` = 0)";
+        
+        $result = mysqli_query($con, $sql);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $requests[] = [
+                    'id' => $row['emp_id'],
+                    'name' => $row['name']
+                ];
+            }
+        }
+        
+        closeCon($con);
+        return $requests;
     }
     
 ?>

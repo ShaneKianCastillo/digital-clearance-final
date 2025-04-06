@@ -1,35 +1,45 @@
 <?php 
     include 'functions.php';
 
+    // Initialize session variables
     $checkID = isset($_SESSION['userID']) ? $_SESSION['userID'] : 'Faculty';
     $deanID = $_SESSION['userID'];
 
+    // Fetch dean data
     $deanData = getDeanData($deanID);
     $deptName = 'Dean';
 
+    // Initialize variables for student data
     $studID = "";
     $studName = "";
     $studCourse = "";
     $studentFound = false;
     $commentAreaValue = '';
+    $errorMessage = '';
 
+    // Process search button submission
     if (isset($_POST['searchButton'])) {
-        $studID = $_POST['userID']; 
-        $student = fetchStudentInfo($studID); 
-        
-        if ($student) {
-            $studName = $student['stud_name'];
-            $studCourse = $student['course'];
-            $studentFound = true;
-            $studentApproved = checkIfAllPreviousDepartmentsApproved($studID);
-            $commentAreaValue = fetchStudentComment($studID, $deptName);
-        } else {
-            $studentFound = false;
-            $studentApproved = false;
-            $commentAreaValue = '';
+        $studID = $_POST['userID'];
+        $searchResult = processStudentSearch($studID, $deanData);
+
+        // Assign search results to variables
+        $studName = $searchResult['studName'];
+        $studCourse = $searchResult['studCourse'];
+        $commentAreaValue = $searchResult['commentAreaValue'];
+        $studentFound = $searchResult['studentFound'];
+        $errorMessage = $searchResult['errorMessage'];
+
+        // Check if the student has requested clearance from this department
+        if ($studentFound) {
+            $hasRequested = hasStudentRequested($studID, $deptName);
+            if (!$hasRequested) {
+                $errorMessage = "Student hasn't requested clearance from this department";
+                $studentFound = false;
+            }
         }
     }
 
+    // Process approval button submission
     if (isset($_POST['approveButton']) && isset($_POST['userID'])) {
         $studID = $_POST['userID'];
         $currentDate = date('M d, Y');
@@ -39,6 +49,7 @@
         exit();
     }
 
+    // Process decline button submission
     if (isset($_POST['declineButton']) && isset($_POST['userID'])) {
         $studID = $_POST['userID'];
         $comment = $_POST['commentArea'];
@@ -116,6 +127,7 @@
             </div>
         </div>
     </div>
+
     <form method="post">
         <div class="container text-center mt-5 custom-search-shadow position-relative z-1 bg-light" style="width: 700px;">
             <div class="d-flex justify-content-center align-items-center py-4">
@@ -130,6 +142,7 @@
                 </div>
             </div>
         </div>
+
         <div class="container pt-4 col-lg-6">
             <table class="table table-striped col-lg-12">
                 <thead>
@@ -140,68 +153,70 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if ($studentFound && $studentApproved): ?>
+                    <?php if ($studentFound && isset($_POST['searchButton'])): ?>
                         <tr>
-                            <td><?php echo $studID; ?></td>
-                            <td><?php echo $studName; ?></td>
-                            <td><?php echo $studCourse; ?></td>
+                            <th><?php echo $studID ?></th>
+                            <th><?php echo $studName ?></th>
+                            <th><?php echo $studCourse ?></th>
                         </tr>
-                    <?php elseif (isset($_POST['searchButton']) && $studentFound && !$studentApproved): ?>
+                    <?php elseif (isset($_POST['searchButton']) && !$studentFound): ?>
                         <tr>
-                            <td colspan="3" class="text-center"><?php echo $student['stud_name']; ?> is not yet approved by previous departments.</td>
-                        </tr>
-                    <?php elseif (isset($_POST['searchButton']) && !$studentFound && !$studentApproved): ?>
-                        <tr>
-                            <td colspan="3" class="text-center">No student found with ID: <?php echo $studID ?> </td>
+                            <td colspan="3" class="text-center">
+                                <?php echo $errorMessage; ?>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
+
         <div class="container d-flex justify-content-center align-items-center pt-5 mt-5 custom-status pb-4" style="width: 1000px;">
-            <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
-                <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined student:</label>
-                <textarea 
-                    class="form-control align-center" 
-                    style="width: 400px;" 
-                    name="commentArea" 
-                    id="commentArea" 
-                    rows="3" 
-                    onclick="this.setSelectionRange(0, 0)" 
-                    oninput="checkTextareaContent()" 
-                    <?php echo (!isset($student) || !$studentFound || !$studentApproved) ? 'disabled' : ''; ?>>
-                    <?php echo htmlspecialchars($commentAreaValue); ?>
-                </textarea>
+                <div class="col-lg-8 text-center d-flex flex-column justify-content-center align-items-center">
+                    <label for="commentArea" class="form-label fs-6 fw-medium">Comment for declined student:</label>
+                    <textarea 
+                        class="form-control align-center" 
+                        style="width: 400px;" 
+                        name="commentArea" 
+                        id="commentArea" 
+                        rows="3" 
+                        onclick="this.setSelectionRange(0, 0)" 
+                        oninput="checkTextareaContent()" 
+                        <?php echo !$studentFound ? 'disabled' : ''; ?>>
+                        <?php echo htmlspecialchars($commentAreaValue); ?>
+                    </textarea>                
                 <div class="pt-4">       
-                    <button class="btn btn-danger fs-5" name="declineButton" <?php echo (!isset($student) || !$studentFound || !$studentApproved) ? 'disabled' : ''; ?>>Decline</button>      
+                    <button class="btn btn-danger fs-5" name="declineButton" <?php echo $studentFound ? '' : 'disabled'; ?>>Decline</button>      
                 </div>   
+                </div>
+                <div class="col-lg-4">
+                    <button 
+                        class="btn btn-success fs-5" 
+                        name="approveButton" 
+                        id="approveButton" 
+                        <?php echo (!$studentFound || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
+                    </button>
+                </div>
             </div>
-            <div class="col-lg-4">
-                <button 
-                    class="btn btn-success fs-5" 
-                    name="approveButton" 
-                    id="approveButton" 
-                    <?php echo (!$studentFound || !$studentApproved || !empty($commentAreaValue)) ? 'disabled' : ''; ?>>Approve
-                </button>
-            </div>  
         </div>
     </form>
+
     <script>
         var studentFound = <?php echo $studentFound ? 'true' : 'false'; ?>;
         var studentApproved = <?php echo isset($studentApproved) ? ($studentApproved ? 'true' : 'false') : 'false'; ?>;
         function checkTextareaContent() {
             var commentArea = document.getElementById('commentArea');
             var approveButton = document.getElementById('approveButton');
-            if (studentFound && studentApproved && commentArea.value.trim() === '') {
-                approveButton.disabled = false;
-            } else {
+            if (commentArea.value.trim() !== '') {
                 approveButton.disabled = true;
+            } else {
+                approveButton.disabled = false;
             }
         }
         window.onload = function() {
             checkTextareaContent();
         };
     </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

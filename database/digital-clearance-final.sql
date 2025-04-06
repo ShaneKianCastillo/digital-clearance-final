@@ -34,7 +34,7 @@ CREATE TABLE `dean_cred` (
   `dean_name` varchar(255) NOT NULL,
   `semester` varchar(255) NOT NULL,
   `school_year` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `dean_cred`
@@ -56,7 +56,7 @@ CREATE TABLE `deptartments_cred` (
   `dept_name` varchar(255) NOT NULL,
   `employee_name` varchar(255) NOT NULL,
   `type` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `deptartments_cred`
@@ -89,7 +89,7 @@ CREATE TABLE `employees_cred` (
   `emp_id` int NOT NULL,
   `password` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employees_cred`
@@ -118,7 +118,7 @@ CREATE TABLE `employee_clearance` (
   `Vice President` int NOT NULL,
   `Human Resources` int NOT NULL,
   `Accounting` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employee_clearance`
@@ -139,7 +139,7 @@ CREATE TABLE `employee_comment` (
   `emp_id` int NOT NULL,
   `Grade Level/Strand Coordinators` varchar(255) DEFAULT NULL,
   `Program Chair` varchar(255) DEFAULT NULL,
-  `Principal` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `Principal` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `Registrar` varchar(255) DEFAULT NULL,
   `Library` varchar(255) DEFAULT NULL,
   `ITS` varchar(255) DEFAULT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE `employee_comment` (
   `Vice President` varchar(255) DEFAULT NULL,
   `Human Resources` varchar(255) DEFAULT NULL,
   `Accounting` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employee_comment`
@@ -168,7 +168,7 @@ CREATE TABLE `employee_date` (
   `emp_id` int NOT NULL,
   `Grade Level/Strand Coordinators` varchar(255) DEFAULT NULL,
   `Program Chair` varchar(255) DEFAULT NULL,
-  `Principal` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `Principal` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `Registrar` varchar(255) DEFAULT NULL,
   `Library` varchar(255) DEFAULT NULL,
   `ITS` varchar(255) DEFAULT NULL,
@@ -176,7 +176,7 @@ CREATE TABLE `employee_date` (
   `Vice President` varchar(255) DEFAULT NULL,
   `Human Resources` varchar(255) DEFAULT NULL,
   `Accounting` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employee_date`
@@ -200,7 +200,7 @@ CREATE TABLE `employee_info` (
   `position` varchar(255) NOT NULL,
   `category` varchar(255) NOT NULL,
   `status` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employee_info`
@@ -229,7 +229,7 @@ CREATE TABLE `employee_request` (
   `Vice President` int NOT NULL,
   `Human Resources` int NOT NULL,
   `Accounting` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employee_request`
@@ -250,7 +250,7 @@ CREATE TABLE `students_cred` (
   `stud_id` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `students_cred`
@@ -281,7 +281,7 @@ CREATE TABLE `student_clearance` (
   `Vice President` int NOT NULL,
   `Accounting` varchar(255) DEFAULT NULL,
   `Dean` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `student_clearance`
@@ -312,7 +312,7 @@ CREATE TABLE `student_comment` (
   `Vice President` text NOT NULL,
   `Accounting` varchar(255) DEFAULT NULL,
   `Dean` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `student_comment`
@@ -343,7 +343,7 @@ CREATE TABLE `student_date` (
   `Vice President` text NOT NULL,
   `Accounting` varchar(255) DEFAULT NULL,
   `Dean` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `student_date`
@@ -368,7 +368,7 @@ CREATE TABLE `student_info` (
   `course` varchar(255) NOT NULL,
   `contact_number` varchar(255) NOT NULL,
   `year_level` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `student_info`
@@ -399,7 +399,7 @@ CREATE TABLE `student_request` (
   `Vice President` int NOT NULL,
   `Accounting` int NOT NULL,
   `Dean` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `student_request`

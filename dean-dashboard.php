@@ -98,6 +98,30 @@
                     <a href="semester.php" style="text-decoration: none;" class="text-dark"><p class="fs-6 fw-medium">Semester - S.Y.</p></a>
                 </div>
             </div>
+            <div class="d-flex gy-1 pt-3 ms-2">
+                    <div>
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <i class="fa-solid fa-unlock" style="font-size: 25px;"></i>
+                        </a>
+                    </div>
+                    <div class="ps-3">
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <p class="fs-6 fw-medium">Change Password</p>
+                        </a>
+                    </div>  
+                </div>
+                <div class="d-flex gy-1 pt-3 ms-2">
+                    <div>
+                        <a href="request-list.php" style="text-decoration: none;" class="text-dark">
+                        <i class="fa-solid fa-list" style="font-size: 25px;"></i>
+                        </a>
+                    </div>
+                    <div class="ps-3">
+                        <a href="request-list.php" style="text-decoration: none;" class="text-dark">
+                            <p class="fs-6 fw-medium">Request List</p>
+                        </a>
+                    </div>  
+                </div>  
             <hr>
             <div class="ps-3 pt-3">
                 <a href="logout.php" class="text-danger">               

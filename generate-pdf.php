@@ -170,11 +170,11 @@
     </div>
     <div class="container text-center d-flex justify-content-center form-check" style="gap: 50px">
         <div>
-            <input type="radio" name="pdfForm" id="" class="form-check-input" checked>
+            <input type="radio" name="userType" id="" value="student" class="form-check-input" onclick="toggleDivs()" checked>
             <label for="" class="form-check-label fs-6 fw-meduim">Student Clearance Form</label>
         </div>
         <div>
-            <input type="radio" name="pdfForm" id="" class="form-check-input">
+            <input type="radio" name="userType" id="" value="employee" class="form-check-input" onclick="toggleDivs()">
             <label for="" class="form-check-label fs-6 fw-meduim">Employee Clearance Form</label>
         </div>
     </div>
@@ -522,7 +522,141 @@
                     </div>
                 </div>
             </div>
+    </div>
+
+    <div class="container pt-3 col-lg-7 mb-5" id="generatePDFEmployee" style="display: none;">
+        <div class="container text-center border border-dark pt-2">
+            <p class="fs-3 fw-bold">TEACHING CLEARANCE FORM</p>
+        </div>
+        <div class="container border border-dark">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Harum, sequi nam. Vero recusandae inventore perspiciatis tempora totam. Placeat, vero quasi!</p>
+        </div>
+        <div class="container text-center border border-dark">
+            <p class="fs-3 fw-bold">PERSONAL INFORMATION</p>
+        </div>
+        <div class="container border border-dark">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Mollitia repellat provident cum, dolorem laboriosam autem? Veniam cupiditate ducimus enim in!s</p>
+        </div>
+        <div class="container d-flex border border-dark justidfy-content-center align-items-center">
+            <div class="container d-flex  border-dark border-end">
+                <p class="fw-bold">NAME:</p>
+                <p>Shane</p>
+            </div>
+            <div class="container d-flex">
+                <p class="fw-bold">EMPLOYEE ID NO:</p>
+                <p>123456</p>
+            </div>
+        </div>
+        <div class="container d-flex border border-dark justidfy-content-center align-items-center">
+            <div class="container d-flex  border-dark border-end">
+                <p class="fw-bold">DEPARTMENT:</p>
+                <p>Shane</p>
+            </div>
+            <div class="container d-flex">
+                <p class="fw-bold">POSITION:</p>
+                <p>123456</p>
+            </div>
+        </div>
+        <div class="container border border-dark">
+            <div>
+                <p class="fw-bold">EMPLOYEE CATEGORY:</p>
+            </div>
+            <div class="d-flex text-center align-items-center justify-content-center" style="gap: 150px;">
+                <div class="">
+                    <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+                    <label class="form-check-label" for="checkDefault">
+                        REGULAR
+                    </label>
+                </div>
+                <div>
+                    <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+                    <label class="form-check-label" for="checkDefault">
+                        PROBATIONARY FULL-TIME
+                    </label>
+                </div>
+                <div>
+                    <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+                    <label class="form-check-label" for="checkDefault">
+                        PROBATIONARY PART-TIME
+                    </label>
+                </div>
+            </div>        
+        </div>
+        <div class="container border border-dark">
+            <div>
+                <p class="fw-bold">PURPOSE:</p>
+            </div>
+            <div class="d-flex text-center align-items-center justify-content-center" style="gap: 150px;">
+                <div class="">
+                    <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+                    <label class="form-check-label" for="checkDefault">
+                        RESIGNATION
+                    </label>
+                </div>
+                <div>
+                    <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+                    <label class="form-check-label" for="checkDefault">
+                        RETIREMENT
+                    </label>
+                </div>
+                <div>
+                    <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+                    <label class="form-check-label" for="checkDefault">
+                        END OF CONTRACT (SEMESTER)
+                    </label>
+                </div>
+            </div>
+            <div class="pt-5">
+                <p>OTHERS (PLEASE SPECIFY): ___________________</p>
+            </div>        
+        </div>
+        <div class="container border border-dark d-flex">
+               <div class="pt-3">
+                    <p class="fw-bold">CLEARANCE COVERED</p>
+               </div>
+               <div class="ps-5 pt-3">
+                    <p>FROM: ____________________UNTIL:____________________</p>
+               </div>     
+        </div>
+        <div class="container pt-3">
+            <p class="" style="font-size: 18.5px;">This is to certify that I, _________________________________________________ has no pending accountability with the following offices as of today, __________________.</p>
+        </div>
+
+            <table class="table table-striped  container border border-dark">
+                <thead>
+                    <tr class="text-center">
+                        <th>DEPARTMENT/OFFICES</th>
+                        <th>STATUS</th>
+                        <th>NAME OF CLEARING OFFICER/HEAD</th>
+                        <th>DATE SIGNED</th>
+                        <th>REMARKS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="font-size: 15px;">
+                        <th>GRADE LEVEL/STRAND COORDINATORS</th>
+                    </tr>
+                </tbody>
+            </table> 
             
+        <div class="container">
+            <p class="fw-bold">CLEARED:</p>
+        </div>  
+        <table class="table table-striped  container border border-dark">
+            <thead>
+                <tr class="text-center">
+                    <th>DEPARTMENT/OFFICES</th>
+                    <th>STATUS</th>
+                    <th>DATE SIGNED</th>
+                    <th>REMARKS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="font-size: 15px;">
+                    <th>EXECUTIVE VICE PRESIDENT</th>
+                </tr>
+            </tbody>
+        </table>
     </div>
     
     <script type="text/javascript">
@@ -534,14 +668,25 @@
             format: 'a4'
         });
 
-        const element = document.getElementById("generatePDF");
+        // Check which radio is selected
+        const selectedType = document.querySelector('input[name="userType"]:checked').value;
+
+        // Get the corresponding element based on selection
+        const elementId = selectedType === 'student' ? "generatePDF" : "generatePDFEmployee";
+        const element = document.getElementById(elementId);
+
+        // Make sure the element exists before proceeding
+        if (!element) {
+            alert("No content found to generate PDF.");
+            return;
+        }
 
         html2canvas(element, {
-            scale: 2, // Increases resolution
-            useCORS: true // Fixes potential image loading issues
+            scale: 2,
+            useCORS: true
         }).then(canvas => {
             const imgData = canvas.toDataURL("image/png");
-            const imgWidth = 210; // A4 width in mm
+            const imgWidth = 210;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
             doc.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
@@ -551,10 +696,26 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         document.querySelector(".btn-danger").addEventListener("click", function (event) {
-            event.preventDefault(); // Prevent any default action
+            event.preventDefault();
             downloadPDF();
         });
     });
+</script>
+
+<script>
+  function toggleDivs() {
+    const studentDiv = document.getElementById('generatePDF');
+    const employeeDiv = document.getElementById('generatePDFEmployee');
+    const selectedValue = document.querySelector('input[name="userType"]:checked').value;
+
+    if (selectedValue === 'student') {
+      studentDiv.style.display = 'block';
+      employeeDiv.style.display = 'none';
+    } else if (selectedValue === 'employee') {
+      studentDiv.style.display = 'none';
+      employeeDiv.style.display = 'block';
+    }
+  }
 </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
