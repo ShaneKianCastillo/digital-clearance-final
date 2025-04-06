@@ -144,7 +144,7 @@
                     <i class="fa-regular fa-user" style="font-size: 50px; color:gray"></i>
                 </div>
                 <div class="ps-3">
-                    <p class="fs-5" style="font-weight: 500;"><?php echo $facultyData['employee_name']; ?></p>
+                    <p class="" style="font-weight: 500;"><?php echo $facultyData['employee_name']; ?></p>
                     <p class="position-absolute" style="top: 35px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
                 </div>
             </div>
