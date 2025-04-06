@@ -1035,7 +1035,7 @@
         return $isStudent;
     }
 
-    function processStudentSearch($studID, $facultyData) {
+    /*function processStudentSearch($studID, $facultyData) {
         // Initialize result array with default values
         $result = [
             'studID' => $studID,
@@ -1107,6 +1107,77 @@
             } else {
                 $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by all departments.";
             }
+        } else {
+            // Existing logic for other departments
+            $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
+            if ($studentApproved) {
+                $result['studentFound'] = true;
+                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
+            } else {
+                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+            }
+        }
+    
+        // Check if student has requested clearance from this department
+        if ($result['studentFound']) {
+            $hasRequested = hasStudentRequested($studID, $deptName);
+            if (!$hasRequested) {
+                $result['errorMessage'] = "Student hasn't requested clearance from this department";
+                $result['studentFound'] = false;
+            }
+        }
+    
+        closeCon($con);
+        return $result;
+    }*/
+
+    function processStudentSearch($studID, $facultyData) {
+        // Initialize result array with default values
+        $result = [
+            'studID' => $studID,
+            'studName' => '',
+            'studCourse' => '',
+            'commentAreaValue' => '',
+            'studentFound' => false,
+            'errorMessage' => '',
+            'orderedDepartments' => []
+        ];
+    
+        $student = fetchStudentInfo($studID);
+    
+        if (!$student) {
+            $result['errorMessage'] = "No student found with ID: " . htmlspecialchars($studID);
+            return $result;
+        }
+    
+        // Always set the student name and course, even if not approved
+        $result['studName'] = $student['stud_name'];
+        $result['studCourse'] = $student['course'];
+    
+        $con = openCon();
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' ORDER BY id ASC LIMIT 9";
+        $queryResult = mysqli_query($con, $deptQuery);
+    
+        if (!$queryResult) {
+            $result['errorMessage'] = "Error fetching departments: " . mysqli_error($con);
+            closeCon($con);
+            return $result;
+        }
+    
+        while ($row = mysqli_fetch_assoc($queryResult)) {
+            $result['orderedDepartments'][] = $row['dept_name'];
+        }
+    
+        if (isset($facultyData['dept_name'])) {
+            $deptName = $facultyData['dept_name'];
+        } else {
+            $deptName = 'Dean'; // Or any fallback
+        }
+        
+        // Modified logic for Dean - no longer checks if all departments have approved
+        if ($deptName === 'Dean') {
+            $result['studentFound'] = true;
+            $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
         } else {
             // Existing logic for other departments
             $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
@@ -1730,10 +1801,10 @@
             'Foreign Affairs', 
             'Computer Lab',
             'Program Chair',
+            'Dean',
             'Registrar',
             'Vice President',
             'Accounting',
-            'Dean'
         ];
     }
     

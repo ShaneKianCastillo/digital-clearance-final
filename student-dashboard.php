@@ -271,15 +271,42 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($clearanceData as $data): 
+                <?php 
+                // Define the desired department order
+                $desiredOrder = [
+                    'Library',
+                    'OSA',
+                    'Guidance',
+                    'Foreign Affairs',
+                    'Computer Lab',
+                    'Program Chair',
+                    'Dean',
+                    'Registrar',
+                    'Vice President',
+                    'Accounting'
+                ];
+                
+                // Reorder the clearanceData array according to the desired order
+                $orderedData = [];
+                foreach ($desiredOrder as $dept) {
+                    foreach ($clearanceData as $data) {
+                        if ($data['dept_name'] === $dept) {
+                            $orderedData[] = $data;
+                            break;
+                        }
+                    }
+                }
+                
+                // Display the reordered data
+                foreach ($orderedData as $data): 
                     $isDisabled = shouldDisableStudentButton($userID, $data['dept_name'], $data['status']);
                     $tooltip = '';
                     
                     if ($data['status'] == 'Approved') {
                         $tooltip = 'title="Already approved"';
                     } else if ($isDisabled) {
-                        // Get department order
-                        $deptOrder = getDepartmentOrder();
+                        // Get department order (using the new desired order)
+                        $deptOrder = $desiredOrder;
                         $currentPos = array_search($data['dept_name'], $deptOrder);
                         
                         if ($currentPos > 0) {

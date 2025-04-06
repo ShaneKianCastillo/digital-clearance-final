@@ -23,12 +23,12 @@
     /*$userID = '0122303926';
     addStudentRequest($userID);*/
     
-    /*$userID = '1002365986';
-    $password = 'password2';
-    $name = 'Jane Smith';
+    /*$userID = '1007445568';
+    $password = 'Granados';
+    $name = 'George Granados';
     $category = 'Teaching';
     $department = 'CICS';
-    $position = 'Teacher 1';
+    $position = 'Teacher';
     $status = 'Regular';
 
     addEmployeeUser ($userID, $password, $name);
