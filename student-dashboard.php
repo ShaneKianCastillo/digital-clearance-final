@@ -203,11 +203,27 @@
                         </a>
                     </div>  
                 </div>  
-            </div>    
+            </div> 
+            
+            <div class="pt-3 ps-2">
+        <div class="d-flex gy-1">
+            <div>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#manageSignatoriesModal" style="text-decoration: none;" class="text-dark">
+                    <i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i>
+                </a>
+            </div>
+            <div class="ps-2">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#manageSignatoriesModal" style="text-decoration: none;" class="text-dark">
+                    <p class="fs-6 fw-medium">Manage Signatories</p>
+                </a>
+            </div>  
+        </div>  
+    </div>
+
             <hr>
             <div class="ps-3 pt-3">
                 <a href="logout.php" class="text-danger">               
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    <i class="fa-solid fa-right-from-bracket">Logout</i> 
                 </a>
             </div>
         </div>
@@ -416,9 +432,20 @@
                 <tr>
                     <td><?php echo htmlspecialchars($data['dept_name']); ?></td>
                     <td><?php echo htmlspecialchars($data['signatory']); ?></td>
-                    <td class="<?php echo $data['status'] == 'Approved' ? 'text-success' : 'text-danger'; ?>">
-                        <?php echo htmlspecialchars($data['status']); ?>
+                    <td class="<?php
+                        if (empty($data['status'])) {
+                            echo 'text-secondary'; // Dark gray (plain)
+                        } elseif ($data['status'] == 'Approved') {
+                            echo 'text-success';
+                        } else {
+                            echo 'text-danger';
+                        }
+                    ?>">
+                        <?php
+                            echo htmlspecialchars(!empty($data['status']) ? $data['status'] : 'N/A');
+                        ?>
                     </td>
+
                     <td><?php echo htmlspecialchars($data['date']); ?></td>
                     <td><?php echo htmlspecialchars($data['remarks']); ?></td>
                     <th>
@@ -431,6 +458,9 @@
                                 <?php echo $data['status'] == 'Approved' ? 'Approved' : 'Request'; ?>
                             </button>
                         </form>
+                        <button class="btn btn-danger mt-2" type="submit" name="removeButton">
+                                Remove
+                            </button>
                     </th>
                 </tr>
             <?php endforeach; ?>
@@ -488,5 +518,86 @@
         <?php unset($_SESSION['clearance_requested']); ?> // Remove session variable after showing alert
     <?php endif; ?>
 </script>
+
+        <!-- Manage Signatories Modal -->
+<div class="modal fade" id="manageSignatoriesModal" tabindex="-1" aria-labelledby="manageSignatoriesLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="manageSignatoriesLabel">Manage Signatories</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Default Signatories List -->
+       
+        <table class="table table-striped">
+        <thead>
+            <tr class="table-dark">
+                <th>Office/Dept</th>
+                <th>Signatory Name</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($clearanceData as $data): 
+                $isDisabled = shouldDisableEmployeeButton($userID, $data['dept_name'], $data['status']);
+                $tooltip = '';
+                
+                if ($data['status'] == 'Approved') {
+                    $tooltip = 'title="Already approved"';
+                } else if ($isDisabled) {
+                    // Get department order
+                    $deptOrder = getEmployeeDepartmentOrder();
+                    $currentPos = array_search($data['dept_name'], $deptOrder);
+                    
+                    if ($currentPos > 0) {
+                        $prevDept = $deptOrder[$currentPos - 1];
+                        $tooltip = 'title="Requires approval from '.$prevDept.' first"';
+                    }
+                }
+            ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($data['dept_name']); ?></td>
+                    <td><?php echo htmlspecialchars($data['signatory']); ?></td>
+                    <th>
+                        <button class="btn btn-info">add</button>
+                        <button class="btn btn-danger">remove</button>
+                    </th>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+        
+            <div>
+                <button class="btn btn-danger">Cancel</button>
+                <button class="btn btn-success">Save</button>
+            </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('addSignatoryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('newSignatoryName').value.trim();
+    if (name) {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.innerHTML = `${name} <button class="btn btn-sm btn-outline-danger">Remove</button>`;
+      document.getElementById('custom-signatories').appendChild(li);
+      document.getElementById('newSignatoryName').value = '';
+    }
+  });
+
+  // Delegate click events for Remove buttons
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.matches('.btn-outline-danger')) {
+      e.target.closest('li').remove();
+    }
+  });
+</script>
+
 </body>
 </html>
