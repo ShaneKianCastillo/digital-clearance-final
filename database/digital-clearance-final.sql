@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 05, 2025 at 05:18 PM
+-- Generation Time: Apr 06, 2025 at 08:40 PM
 -- Server version: 8.0.30
 -- PHP Version: 8.1.10
 
@@ -97,7 +97,9 @@ CREATE TABLE `employees_cred` (
 
 INSERT INTO `employees_cred` (`id`, `emp_id`, `password`, `name`) VALUES
 (1, 1002365985, '7c6a180b36896a0a8c02787eeafb0e4c', 'John Doe'),
-(2, 1002365986, '6cb75f652a9b52798eb6cf2201057c73', 'Jane Smith');
+(2, 1002365986, '6cb75f652a9b52798eb6cf2201057c73', 'Jane Smith'),
+(3, 1007445568, '2b67dc1d2103efffe673d36835717204', 'George Granados'),
+(4, 100254436, 'e75f2200d01d4dbe900c495f37f6c1bf', 'Lhiz Mananquil');
 
 -- --------------------------------------------------------
 
@@ -126,7 +128,9 @@ CREATE TABLE `employee_clearance` (
 
 INSERT INTO `employee_clearance` (`id`, `emp_id`, `Grade Level/Strand Coordinators`, `Program Chair`, `Principal`, `Registrar`, `Library`, `ITS`, `PPFO`, `Vice President`, `Human Resources`, `Accounting`) VALUES
 (1, 1002365986, '0', 0, 0, 0, 0, 0, 0, 0, 0, 0),
-(2, 1002365985, '0', 0, 0, 0, 0, 0, 0, 0, 0, 0);
+(2, 1002365985, '0', 0, 0, 0, 0, 0, 0, 0, 0, 0),
+(3, 1007445568, '0', 0, 0, 0, 0, 0, 0, 0, 0, 0),
+(4, 100254436, '0', 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -155,7 +159,9 @@ CREATE TABLE `employee_comment` (
 
 INSERT INTO `employee_comment` (`id`, `emp_id`, `Grade Level/Strand Coordinators`, `Program Chair`, `Principal`, `Registrar`, `Library`, `ITS`, `PPFO`, `Vice President`, `Human Resources`, `Accounting`) VALUES
 (2, 1002365985, '', '', '', '', '                                                          ', '', '', '', '', ''),
-(3, 1002365986, '', '', '', '', '', '', '', '', '', '');
+(3, 1002365986, '', '', '', '', '', '', '', '', '', ''),
+(4, 1007445568, '', '', '', '', '', '', '', '', '', ''),
+(5, 100254436, '', '', '', '', '', '', '', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -184,7 +190,9 @@ CREATE TABLE `employee_date` (
 
 INSERT INTO `employee_date` (`id`, `emp_id`, `Grade Level/Strand Coordinators`, `Program Chair`, `Principal`, `Registrar`, `Library`, `ITS`, `PPFO`, `Vice President`, `Human Resources`, `Accounting`) VALUES
 (1, 1002365985, '', '', '', '', '', '', '', '', '', ''),
-(2, 1002365986, '', '', '', '', '', '', '', '', '', '');
+(2, 1002365986, '', '', '', '', '', '', '', '', '', ''),
+(3, 1007445568, '', '', '', '', '', '', '', '', '', ''),
+(4, 100254436, '', '', '', '', '', '', '', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -208,7 +216,9 @@ CREATE TABLE `employee_info` (
 
 INSERT INTO `employee_info` (`id`, `emp_id`, `name`, `department`, `position`, `category`, `status`) VALUES
 (1, 1002365985, 'John Doe', 'CICS', 'Teacher 3', 'Teaching', 'Regular'),
-(2, 1002365986, 'Jane Smith', 'CICS', 'Teacher 1', 'Teaching', 'Regular');
+(2, 1002365986, 'Jane Smith', 'CICS', 'Teacher 1', 'Teaching', 'Regular'),
+(3, 1007445568, 'George Granados', 'CICS', 'Teacher', 'Teaching', 'Regular'),
+(4, 100254436, 'Lhiz Mananquil', 'CICS', 'Teacher', 'Teaching', 'Regular');
 
 -- --------------------------------------------------------
 
@@ -237,7 +247,9 @@ CREATE TABLE `employee_request` (
 
 INSERT INTO `employee_request` (`id`, `emp_id`, `Grade Level/Strand Coordinators`, `Program Chair`, `Principal`, `Registrar`, `Library`, `ITS`, `PPFO`, `Vice President`, `Human Resources`, `Accounting`) VALUES
 (1, 1002365985, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-(2, 1002365986, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+(2, 1002365986, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+(3, 1007445568, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+(4, 100254436, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -519,37 +531,37 @@ ALTER TABLE `deptartments_cred`
 -- AUTO_INCREMENT for table `employees_cred`
 --
 ALTER TABLE `employees_cred`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `employee_clearance`
 --
 ALTER TABLE `employee_clearance`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `employee_comment`
 --
 ALTER TABLE `employee_comment`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `employee_date`
 --
 ALTER TABLE `employee_date`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `employee_info`
 --
 ALTER TABLE `employee_info`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `employee_request`
 --
 ALTER TABLE `employee_request`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `students_cred`

@@ -23,9 +23,9 @@
     /*$userID = '0122303926';
     addStudentRequest($userID);*/
     
-    /*$userID = '1007445568';
-    $password = 'Granados';
-    $name = 'George Granados';
+    /*$userID = '100254436';
+    $password = 'Mananquil';
+    $name = 'Lhiz Mananquil';
     $category = 'Teaching';
     $department = 'CICS';
     $position = 'Teacher';

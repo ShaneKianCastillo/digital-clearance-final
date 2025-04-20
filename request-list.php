@@ -1,29 +1,33 @@
 <?php 
-
     include 'functions.php';
     checkUserSessionIsActive();
 
-    // Get the faculty data to determine which department we're viewing
-    $facultyID = $_SESSION['userID'];
-    $facultyData = getFacultyData($facultyID);
-    $deptName = $facultyData['dept_name'];
+    $deptName = '';
+    $requests = [];
+    $userType = 'Student'; 
 
-   // Determine user type (default Student)
-    $userType = 'Student';
-
-    if ($facultyData['type'] == 'Employee') {
-        $userType = 'Employee';
-    } elseif ($facultyData['type'] == 'Both') {
-        $userType = isset($_POST['userClearance']) ? $_POST['userClearance'] : 'Student';
-    }
-
-    // Get the appropriate pending requests based on list type
-    if ($userType == 'Student') {
-        $requests = getPendingStudentRequests($deptName);
+    if ($_SESSION['role'] === 'dean') {
+        $deanID = $_SESSION['userID'];
+        $deanData = getDeanData($deanID);
+        $deptName = 'Dean'; 
+        $userType = 'Student'; 
+        $requests = getPendingStudentRequests($deptName); 
     } else {
-        $requests = getPendingEmployeeRequests($deptName);
-    }
+        $facultyID = $_SESSION['userID'];
+        $facultyData = getFacultyData($facultyID);
+        $deptName = $facultyData['dept_name'];
 
+        if ($facultyData['type'] == 'Employee') {
+            $userType = 'Employee';
+        } elseif ($facultyData['type'] == 'Both') {
+            $userType = isset($_POST['userClearance']) ? $_POST['userClearance'] : 'Student';
+        }
+
+        // Get the appropriate pending requests
+        $requests = ($userType == 'Student') 
+            ? getPendingStudentRequests($deptName) 
+            : getPendingEmployeeRequests($deptName);
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,6 +45,9 @@
             font-weight: bold;
             color: #0d6efd !important;
         }
+        .action-btns {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -50,12 +57,16 @@
 
     <nav aria-label="breadcrumb" class="container">
         <ol class="breadcrumb">
+
             <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
+
+            <li class="breadcrumb-item"><a href="dean-dashboard.php">Dashboard</a></li>
+
             <li class="breadcrumb-item active" aria-current="page">Request List</li>
         </ol>
     </nav>
 
-    <?php if ($facultyData['type'] === 'Both'): ?>
+    <?php if (isset($facultyData) && $facultyData['type'] === 'Both'): ?>
     <div class="container mb-3">
         <form method="POST" id="filterForm" class="d-flex gap-3">
             <div class="form-check">
@@ -87,7 +98,6 @@
                     <tr class="table-dark">
                         <th>ID No.</th>
                         <th>Name</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -95,12 +105,6 @@
                         <tr>
                             <td><?php echo htmlspecialchars($request['id']); ?></td>
                             <td><?php echo htmlspecialchars($request['name']); ?></td>
-                            <td>
-                                <a href="faculty-dashboard.php?search=<?php echo urlencode($request['id']); ?>&type=<?php echo $userType; ?>" 
-                                   class="btn btn-sm btn-primary">
-                                   Process
-                                </a>
-                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
