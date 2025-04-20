@@ -54,7 +54,7 @@
                 if ($role === 'student' || $role === 'employee') {
                     header('Location: student-dashboard.php');
                 } elseif ($role === 'department') {
-                    header('Location: faculty-dashboard.php');
+                    header('Location: dashboard.php');
                 } elseif ($role === 'dean') {
                     header('Location: dean-dashboard.php'); 
                 }

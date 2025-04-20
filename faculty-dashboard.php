@@ -124,7 +124,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-    <title>Faculty Dashboard</title>
+    <title>Student Clearance</title>
 </head>
 
 <body style="background-color: whitesmoke;">
@@ -133,7 +133,7 @@
             <img src="img/logo.png" alt="" height="80px" class="ps-3">
         </div>
         <div class="head">
-            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $facultyData['dept_name'] . " - Dashboard"; ?></a>
+            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-10 text-white " href="#"><?php echo $facultyData['dept_name'] . " - Clearance"; ?></a>
         </div>
     </header>
 
@@ -144,7 +144,7 @@
                     <i class="fa-regular fa-user" style="font-size: 50px; color:gray"></i>
                 </div>
                 <div class="ps-3">
-                    <p class="" style="font-weight: 500;"><?php echo $facultyData['employee_name']; ?></p>
+                    <p class="s" style="font-weight: 500;"><?php echo $facultyData['employee_name']; ?></p>
                     <p class="position-absolute" style="top: 35px;"><?php echo $facultyData['dept_name'] . " Employee"; ?></p>
                 </div>
             </div>
@@ -160,28 +160,44 @@
                         </a>
                     </div>  
                 </div>
+
+                <!-- Request List -->
                 <div class="d-flex gy-1 pt-1 ms-2">
-                    <div>
+                    <div class="position-relative">
                         <a href="request-list.php" style="text-decoration: none;" class="text-dark">
-                        <i class="fa-solid fa-list" style="font-size: 25px;"></i>
+                            <i class="fa-solid fa-list" style="font-size: 25px;"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                5
+                            </span>
                         </a>
                     </div>
                     <div class="ps-3">
                         <a href="request-list.php" style="text-decoration: none;" class="text-dark">
-                            <p class="fs-6 fw-medium">Request List</p>
+                            <p class="fs-6 fw-medium mb-0">Request List</p>
                         </a>
                     </div>  
                 </div>  
+
+                <div class="pt-3 ms-2 d-flex align-items-center">
+                <div class="fs-5">
+                    <i class="fa-solid fa-house" style="font-size: 25px;"></i>
+                </div>
+                <div class="ps-3">
+                    <a href="dashboard.php" class="text-decoration-none text-dark fs-6 fw-medium">Dashboard</a>
+                </div>
+            </div> 
+
+            <div class="pt-4 ms-2 d-flex align-items-center">
+                <div>
+                    <i class="fa-solid fa-user-graduate " style="font-size: 25px;"></i>
+                </div>
+                <div class="ps-3">
+                    <a href="faculty-dashboard.php" class="text-decoration-none text-dark fs-6 fw-medium">Clearance</a>
+                </div>
+            </div>
                 
             <div id="accountingLinks"> 
-                <div class="pt-1 ms-2 d-flex align-items-center">
-                    <div class="" style="font-size: 25px;">
-                        <i class="fa-solid fa-house"></i>
-                    </div>
-                    <div class="ps-3">
-                        <a href="generate-pdf.php" class="text-decoration-none text-dark fs-6 fw-medium">Dashboard</a>
-                    </div>
-                </div>
+                
                 <div class="pt-4 ms-2 d-flex align-items-center">
                     <div class="" style="font-size: 25px;">
                         <i class="fa-solid fa-file-pdf"></i>
