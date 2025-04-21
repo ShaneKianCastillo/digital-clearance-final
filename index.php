@@ -14,12 +14,12 @@
     $year = '4';
     $foreigner = 1; // 1 for foreigner, 0 for local students
 
+    addStudentUser($userID, $password, $name);
+    addStudentInfo($userID, $name, $course, $contact, $year, $foreigner);
     addStudentClearance($userID);
     addStudentRequest($userID);
     addStudentComment($userID);
-    addStudentDate($userID);
-    addStudentUser($userID, $password, $name);
-    addStudentInfo($userID, $name, $course, $contact, $year, $foreigner);*/
+    addStudentDate($userID);*/
     
     /*$userID = '100254436';
     $password = 'Mananquil';

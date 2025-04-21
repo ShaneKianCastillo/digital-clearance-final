@@ -295,7 +295,7 @@
                     'Library',
                     'OSA',
                     'Guidance',
-                    'Foreign Affairs',
+                    // Remove 'Foreign Affairs' from the order for foreign students
                     'Computer Lab',
                     'Program Chair',
                     'Dean',
@@ -304,7 +304,12 @@
                     'Accounting'
                 ];
                 
-                // Reorder the clearanceData array according to the desired order
+                // If student is not foreign, include Foreign Affairs in the order
+                if (!isset($studentInfo['foreigner']) || $studentInfo['foreigner'] != 1) {
+                    array_splice($desiredOrder, 3, 0, 'Foreign Affairs');
+                }
+                
+                // Reorder the clearanceData array according to the modified order
                 $orderedData = [];
                 foreach ($desiredOrder as $dept) {
                     foreach ($clearanceData as $data) {
@@ -317,6 +322,11 @@
                 
                 // Display the reordered data
                 foreach ($orderedData as $data): 
+                    // Skip Foreign Affairs for foreign students
+                    if (isset($studentInfo['foreigner']) && $studentInfo['foreigner'] == 1 && $data['dept_name'] == 'Foreign Affairs') {
+                        continue;
+                    }
+                    
                     $isDisabled = shouldDisableStudentButton($userID, $data['dept_name'], $data['status']);
                     $tooltip = '';
                     

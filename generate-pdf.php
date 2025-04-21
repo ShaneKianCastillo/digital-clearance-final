@@ -286,20 +286,12 @@
             </thead>
             <tbody>
             <?php
-
-                function getFirstFiveDepartments($studID) {
-                    $departments = getStudentClearanceData($studID);
+                if (!empty($studID)) {
+                    // Get student info to check foreigner status
+                    $studentInfo = fetchStudentInfo($studID);
+                    $isForeigner = isset($studentInfo['foreigner']) && $studentInfo['foreigner'] == 1;
                     
-                    // Ensure $departments is an array before slicing
-                    if (is_array($departments)) {
-                        return array_slice($departments, 0, 5); // Get only the first 5 departments
-                    } else {
-                        return []; // Return an empty array if no data found
-                    }
-                }
-
-                if (!empty($studID)) { // Instead of $_GET['studID']
-                    $departments = getFirstFiveDepartments($studID);
+                    $departments = getDepartmentsStudentForPDF($studID);
 
                     if (!empty($departments)) {
                         $count = 1;
