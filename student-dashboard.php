@@ -434,18 +434,16 @@
                 <tr>
                     <td><?php echo htmlspecialchars($data['dept_name']); ?></td>
                     <td><?php echo htmlspecialchars($data['signatory']); ?></td>
-                    <td class="<?php
-                        if (empty($data['status'])) {
-                            echo 'text-secondary'; // Dark gray (plain)
-                        } elseif ($data['status'] == 'Approved') {
+                    <td class="<?php 
+                        if ($data['status'] == 'Approved') {
                             echo 'text-success';
-                        } else {
+                        } elseif ($data['status'] == 'Declined') {
                             echo 'text-danger';
+                        } elseif ($data['status'] == 'N/A') {
+                            echo 'text-secondary'; // This will make N/A appear in black/gray
                         }
                     ?>">
-                        <?php
-                            echo htmlspecialchars(!empty($data['status']) ? $data['status'] : 'N/A');
-                        ?>
+                        <?php echo htmlspecialchars($data['status']); ?>
                     </td>
 
                     <td><?php echo htmlspecialchars($data['date']); ?></td>

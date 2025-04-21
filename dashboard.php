@@ -20,8 +20,6 @@
     $studName = $empName = $studCourse = $empDept = "";
     $studentFound = $employeeFound = false;
     $errorMessage = '';
-
-
     $currentDate = '';
 
     // Process form submissions based on selected user type

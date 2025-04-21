@@ -281,7 +281,7 @@
         }
     }
     
-    function addStudentInfo($studID, $studName, $course, $contactNumber, $yearLevel) {
+    function addStudentInfo($studID, $studName, $course, $contactNumber, $yearLevel, $foreigner = 0) {
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
@@ -289,9 +289,10 @@
         $course = mysqli_real_escape_string($con, $course);
         $contactNumber = mysqli_real_escape_string($con, $contactNumber);
         $yearLevel = mysqli_real_escape_string($con, $yearLevel);
+        $foreigner = mysqli_real_escape_string($con, $foreigner);
     
-        $sql = "INSERT INTO student_info (stud_id, stud_name, course, contact_number, year_level) 
-                VALUES ('$studID', '$studName', '$course', '$contactNumber', '$yearLevel')";
+        $sql = "INSERT INTO student_info (stud_id, stud_name, course, contact_number, year_level, foreigner) 
+                VALUES ('$studID', '$studName', '$course', '$contactNumber', '$yearLevel', '$foreigner')";
     
         $result = mysqli_query($con, $sql);
     
@@ -325,7 +326,7 @@
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
-        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean'";
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' limit 9";
         $result = mysqli_query($con, $deptQuery);
     
         if (!$result) {
@@ -397,7 +398,7 @@
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
-        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean'";
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' limit 9";
         $result = mysqli_query($con, $deptQuery);
     
         if (!$result) {
@@ -431,7 +432,7 @@
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
-        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean'";
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' limit 9";
         $result = mysqli_query($con, $deptQuery);
     
         if (!$result) {
@@ -461,38 +462,53 @@
     
         closeCon($con);
     }
-    
+
     function getStudentClearanceData($studID) {
         $con = openCon();
-
+    
         $clearanceData = [];
         $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred LIMIT 9";
         $resultDept = mysqli_query($con, $queryDept);
-
+    
         if (!$resultDept) {
             die("Error fetching departments: " . mysqli_error($con));
         }
-
+    
         while ($rowDept = mysqli_fetch_assoc($resultDept)) {
             $deptID = $rowDept['dept_id'];
             $deptName = $rowDept['dept_name'];
             $signatory = $rowDept['employee_name'];
-
+    
             $queryStatus = "SELECT `$deptName` AS status FROM student_clearance WHERE stud_id = '$studID'";
             $resultStatus = mysqli_query($con, $queryStatus);
             $statusRow = mysqli_fetch_assoc($resultStatus);
-            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
-
+            
+            $status = '';
+            if (!isset($statusRow['status'])) {
+                $status = 'N/A';
+            } else {
+                switch ($statusRow['status']) {
+                    case 1:
+                        $status = 'Approved';
+                        break;
+                    case 2:
+                        $status = 'Declined';
+                        break;
+                    default:
+                        $status = 'N/A';
+                }
+            }
+    
             $queryDate = "SELECT `$deptName` AS date FROM student_date WHERE stud_id = '$studID'";
             $resultDate = mysqli_query($con, $queryDate);
             $dateRow = mysqli_fetch_assoc($resultDate);
             $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
-
+    
             $queryRemarks = "SELECT `$deptName` AS remarks FROM student_comment WHERE stud_id = '$studID'";
             $resultRemarks = mysqli_query($con, $queryRemarks);
             $remarksRow = mysqli_fetch_assoc($resultRemarks);
             $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
-
+    
             $clearanceData[] = [
                 'dept_name' => $deptName,
                 'signatory' => $signatory,
@@ -501,29 +517,45 @@
                 'remarks' => $remarks
             ];
         }
-
+    
         $queryDean = "SELECT dean_name FROM dean_cred LIMIT 1";
         $resultDean = mysqli_query($con, $queryDean);
-
+    
         if ($resultDean) {
             $rowDean = mysqli_fetch_assoc($resultDean);
             $deanName = $rowDean['dean_name'];
-
+    
             $queryStatus = "SELECT Dean AS status FROM student_clearance WHERE stud_id = '$studID'";
             $resultStatus = mysqli_query($con, $queryStatus);
             $statusRow = mysqli_fetch_assoc($resultStatus);
-            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
-
+            
+            // Apply same logic to Dean status
+            $status = '';
+            if (!isset($statusRow['status'])) {
+                $status = 'N/A';
+            } else {
+                switch ($statusRow['status']) {
+                    case 1:
+                        $status = 'Approved';
+                        break;
+                    case 2:
+                        $status = 'Declined';
+                        break;
+                    default:
+                        $status = 'N/A';
+                }
+            }
+    
             $queryDate = "SELECT Dean AS date FROM student_date WHERE stud_id = '$studID'";
             $resultDate = mysqli_query($con, $queryDate);
             $dateRow = mysqli_fetch_assoc($resultDate);
             $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
-
+    
             $queryRemarks = "SELECT Dean AS remarks FROM student_comment WHERE stud_id = '$studID'";
             $resultRemarks = mysqli_query($con, $queryRemarks);
             $remarksRow = mysqli_fetch_assoc($resultRemarks);
             $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
-
+    
             $clearanceData[] = [
                 'dept_name' => 'Dean',
                 'signatory' => $deanName,
@@ -532,7 +564,7 @@
                 'remarks' => $remarks
             ];
         }
-
+    
         closeCon($con);
         return $clearanceData;
     }
@@ -620,29 +652,39 @@
 
     function storeCommentAndReset($studID, $deptName, $comment) {
         $con = openCon();
-
+    
         $con->begin_transaction();
         try {
+            // Store the comment
             $query1 = "UPDATE student_comment SET `$deptName` = ? WHERE stud_id = ?";
             $stmt1 = $con->prepare($query1);
             $stmt1->bind_param("si", $comment, $studID);
             $stmt1->execute();
-
+    
+            // Reset the date
             $query2 = "UPDATE student_date SET `$deptName` = '' WHERE stud_id = ?";
             $stmt2 = $con->prepare($query2);
             $stmt2->bind_param("i", $studID);
             $stmt2->execute();
     
-            $query3 = "UPDATE student_clearance SET `$deptName` = 0 WHERE stud_id = ?";
+            // Set status to declined (2)
+            $query3 = "UPDATE student_clearance SET `$deptName` = 2 WHERE stud_id = ?";
             $stmt3 = $con->prepare($query3);
             $stmt3->bind_param("i", $studID);
             $stmt3->execute();
+    
+            // Reset the request status so they can request again
+            $query4 = "UPDATE student_request SET `$deptName` = 0 WHERE stud_id = ?";
+            $stmt4 = $con->prepare($query4);
+            $stmt4->bind_param("i", $studID);
+            $stmt4->execute();
     
             $con->commit();
     
             $stmt1->close();
             $stmt2->close();
             $stmt3->close();
+            $stmt4->close();
     
         } catch (Exception $e) {
             $con->rollback();
@@ -650,20 +692,20 @@
         }
         $con->close();
     }
-
+    
     function isStudentEligibleForDepartment($studID, $currentDeptName, $orderedDepartments) {
         $con = openCon();
-    
+        
         if ($currentDeptName === 'Library') {
             closeCon($con);
             return true;
         }
-    
+        
         foreach ($orderedDepartments as $department) {
             if ($department === $currentDeptName) {
                 break;
             }
-    
+        
             $queryApprovalStatus = "SELECT `$department` AS status FROM student_clearance WHERE stud_id = ?";
             $stmt = $con->prepare($queryApprovalStatus);
             $stmt->bind_param("i", $studID);
@@ -671,13 +713,13 @@
             $stmt->bind_result($status);
             $stmt->fetch();
             $stmt->close();
-    
-            if ($status != 1) {
+        
+            if ($status != 1) {  // Only approved (1) counts
                 closeCon($con);
                 return false;
             }
         }
-    
+        
         closeCon($con);
         return true;
     }
@@ -928,11 +970,19 @@
     }
 
     function getStatusClass($status) {
-        return $status == 1 ? 'text-success' : 'text-danger';
+        switch ($status) {
+            case 1: return 'text-success';
+            case 2: return 'text-danger';
+            default: return 'text-secondary';
+        }
     }
     
     function getStatusText($status) {
-        return $status == 1 ? 'Approved' : 'Declined';
+        switch ($status) {
+            case 1: return 'Approved';
+            case 2: return 'Declined';
+            default: return 'N/A';
+        }
     }
 
     function formatDate($dateString) {
@@ -966,7 +1016,7 @@
         }
     }
 
-    function addEmployeeInfo($empID, $empName, $department, $position, $category, $status) {
+    function addEmployeeInfo($empID, $empName, $department, $position, $category, $status, $gradeLevel = 0) {
         $con = openCon();
     
         $empID = mysqli_real_escape_string($con, $empID);
@@ -975,9 +1025,10 @@
         $position = mysqli_real_escape_string($con, $position);
         $category = mysqli_real_escape_string($con, $category);
         $status = mysqli_real_escape_string($con, $status);
+        $gradeLevel = mysqli_real_escape_string($con, $gradeLevel);
     
-        $sql = "INSERT INTO employee_info (emp_id, name, department, position, category, status) 
-                VALUES ('$empID', '$empName', '$department', '$position', '$category', '$status')";
+        $sql = "INSERT INTO employee_info (emp_id, name, department, position, category, status, gradeLevel) 
+                VALUES ('$empID', '$empName', '$department', '$position', '$category', '$status', '$gradeLevel')";
     
         $result = mysqli_query($con, $sql);
     
@@ -1544,11 +1595,17 @@
             $stmt1->bind_param("ss", $comment, $empID);
             $stmt1->execute();
             
-            // Reset approval status
-            $query2 = "UPDATE employee_clearance SET `$deptName` = 0 WHERE emp_id = ?";
+            // Reset approval status to declined (2)
+            $query2 = "UPDATE employee_clearance SET `$deptName` = 2 WHERE emp_id = ?";
             $stmt2 = $con->prepare($query2);
             $stmt2->bind_param("s", $empID);
             $stmt2->execute();
+            
+            // Reset request status so they can request again
+            $query3 = "UPDATE employee_request SET `$deptName` = 0 WHERE emp_id = ?";
+            $stmt3 = $con->prepare($query3);
+            $stmt3->bind_param("s", $empID);
+            $stmt3->execute();
             
             $con->commit();
             return true;
@@ -1559,6 +1616,7 @@
         } finally {
             if (isset($stmt1)) $stmt1->close();
             if (isset($stmt2)) $stmt2->close();
+            if (isset($stmt3)) $stmt3->close();
             closeCon($con);
         }
     }
@@ -1601,21 +1659,36 @@
             $queryStatus = "SELECT `$deptName` AS status FROM employee_clearance WHERE emp_id = '$empID'";
             $resultStatus = mysqli_query($con, $queryStatus);
             $statusRow = mysqli_fetch_assoc($resultStatus);
-            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
+            
+            // Modified status logic
+            $status = '';
+            if (!isset($statusRow['status'])) {
+                $status = 'N/A';
+            } else {
+                switch ($statusRow['status']) {
+                    case 1:
+                        $status = 'Approved';
+                        break;
+                    case 2:
+                        $status = 'Declined';
+                        break;
+                    default:
+                        $status = 'N/A';
+                }
+            }
     
             // Date
             $queryDate = "SELECT `$deptName` AS date FROM employee_date WHERE emp_id = '$empID'";
             $resultDate = mysqli_query($con, $queryDate);
             $dateRow = mysqli_fetch_assoc($resultDate);
-            $date = isset($dateRow['date']) ? $dateRow['date'] : 'No Date';
-
+            $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
+    
             // Remarks
             $queryRemarks = "SELECT `$deptName` AS remarks FROM employee_comment WHERE emp_id = '$empID'";
             $resultRemarks = mysqli_query($con, $queryRemarks);
             $remarksRow = mysqli_fetch_assoc($resultRemarks);
             $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
     
-            // Final push
             $clearanceData[] = [
                 'dept_name' => $deptName,
                 'signatory' => $signatories[$deptName] ?? 'N/A',
@@ -1771,7 +1844,6 @@
         $enable = false;
         
         try {
-            // Check if the current department is approved in student_clearance
             $query = "SELECT `$deptName` FROM student_clearance WHERE stud_id = ?";
             $stmt = $con->prepare($query);
             $stmt->bind_param("s", $studID);
@@ -1780,7 +1852,7 @@
             
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
-                $enable = ($row[$deptName] == 1); // Enable only if approved (value = 1)
+                $enable = ($row[$deptName] == 1); // Only enable if approved (1)
             }
             
             $stmt->close();
@@ -1809,7 +1881,15 @@
     }
     
     function shouldDisableStudentButton($studID, $deptName, $currentStatus) {
-        if ($currentStatus == 'Approved') return true; // If already approved, disable the button
+        // If status is declined (2), enable the button (return false)
+        if ($currentStatus == 'Declined') {
+            return false;
+        }
+    
+        // If already approved, disable the button
+        if ($currentStatus == 'Approved') {
+            return true;
+        }
     
         $con = openCon();
         $disable = false;
@@ -1857,7 +1937,15 @@
     }
 
     function shouldDisableEmployeeButton($empID, $deptName, $currentStatus) {
-        if ($currentStatus == 'Approved') return true; // If already approved, disable the button
+        // If status is declined (2), enable the button (return false)
+        if ($currentStatus == 'Declined') {
+            return false;
+        }
+    
+        // If already approved, disable the button
+        if ($currentStatus == 'Approved') {
+            return true;
+        }
     
         $con = openCon();
         $disable = false;
@@ -1896,7 +1984,7 @@
                 }
             }
         } catch (Exception $e) {
-            error_log("Error in shouldDisableButton: " . $e->getMessage());
+            error_log("Error in shouldDisableEmployeeButton: " . $e->getMessage());
         } finally {
             closeCon($con);
         }
@@ -1909,7 +1997,6 @@
         $enable = false;
         
         try {
-            // Check if the current department is approved in employee_clearance
             $query = "SELECT `$deptName` FROM employee_clearance WHERE emp_id = ?";
             $stmt = $con->prepare($query);
             $stmt->bind_param("s", $empID);
@@ -1918,7 +2005,7 @@
             
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
-                $enable = ($row[$deptName] == 1); // Enable only if approved (value = 1)
+                $enable = ($row[$deptName] == 1); // Only enable if approved (1)
             }
             
             $stmt->close();
@@ -1987,13 +2074,14 @@
         $con = openCon();
         $requests = [];
         
-        // Get students who have requested but not yet been approved/declined by this department
+        // Get students who have requested but not yet been approved (status != 1)
+        // Also include those who were declined (status = 2) so they can request again
         $sql = "SELECT sr.stud_id, si.stud_name 
                 FROM student_request sr
                 JOIN student_info si ON sr.stud_id = si.stud_id
                 LEFT JOIN student_clearance sc ON sr.stud_id = sc.stud_id
                 WHERE sr.`$deptName` = 1 
-                AND (sc.`$deptName` IS NULL OR sc.`$deptName` = 0)";
+                AND (sc.`$deptName` IS NULL OR sc.`$deptName` = 0 OR sc.`$deptName` = 2)";
         
         $result = mysqli_query($con, $sql);
         
@@ -2014,13 +2102,14 @@
         $con = openCon();
         $requests = [];
         
-        // Get employees who have requested but not yet been approved/declined by this department
+        // Get employees who have requested but not yet been approved (status != 1)
+        // Also include those who were declined (status = 2) so they can request again
         $sql = "SELECT er.emp_id, ei.name 
                 FROM employee_request er
                 JOIN employee_info ei ON er.emp_id = ei.emp_id
                 LEFT JOIN employee_clearance ec ON er.emp_id = ec.emp_id
                 WHERE er.`$deptName` = 1 
-                AND (ec.`$deptName` IS NULL OR ec.`$deptName` = 0)";
+                AND (ec.`$deptName` IS NULL OR ec.`$deptName` = 0 OR ec.`$deptName` = 2)";
         
         $result = mysqli_query($con, $sql);
         

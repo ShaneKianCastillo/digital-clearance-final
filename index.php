@@ -6,22 +6,20 @@
     $errorArray = [];
     $users = [];
 
-    /*$userID = '200893651';
+    /*$userID = '200890522';
     $password = 'Paul';
     $name = 'Paul';
     $course = 'BSIT';
     $contact = '09326614570';
     $year = '4';
+    $foreigner = 1; // 1 for foreigner, 0 for local students
 
     addStudentClearance($userID);
     addStudentRequest($userID);
     addStudentComment($userID);
     addStudentDate($userID);
     addStudentUser($userID, $password, $name);
-    addStudentInfo($userID, $name, $course, $contact, $year);*/
-
-    /*$userID = '0122303926';
-    addStudentRequest($userID);*/
+    addStudentInfo($userID, $name, $course, $contact, $year, $foreigner);*/
     
     /*$userID = '100254436';
     $password = 'Mananquil';
@@ -30,6 +28,7 @@
     $department = 'CICS';
     $position = 'Teacher';
     $status = 'Regular';
+    $gradeLevel = 1; //1 for grade 1-12, 0 for college instructors
 
     addEmployeeUser ($userID, $password, $name);
     addEmployeeClearance($userID);
