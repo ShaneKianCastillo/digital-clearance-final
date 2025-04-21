@@ -205,17 +205,19 @@
                 </div>  
             </div> 
             
-            <div class="pt-3 ps-2">
+            <div class="pt-3 ps-2" id="manageSignatories">
         <div class="d-flex gy-1">
             <div>
                 <a href="#" data-bs-toggle="modal" data-bs-target="#manageSignatoriesModal" style="text-decoration: none;" class="text-dark">
                     <i class="fa-solid fa-pen-to-square" style="font-size: 20px;"></i>
                 </a>
             </div>
-            <div class="ps-2">
-                <a href="#" data-bs-toggle="modal" data-bs-target="#manageSignatoriesModal" style="text-decoration: none;" class="text-dark">
-                    <p class="fs-6 fw-medium">Manage Signatories</p>
-                </a>
+            <div id="">
+                <div class="ps-2">
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#manageSignatoriesModal" style="text-decoration: none;" class="text-dark">
+                        <p class="fs-6 fw-medium">Manage Signatories</p>
+                    </a>
+                </div>
             </div>  
         </div>  
     </div>
@@ -458,9 +460,6 @@
                                 <?php echo $data['status'] == 'Approved' ? 'Approved' : 'Request'; ?>
                             </button>
                         </form>
-                        <button class="btn btn-danger mt-2" type="submit" name="removeButton">
-                                Remove
-                            </button>
                     </th>
                 </tr>
             <?php endforeach; ?>
@@ -518,6 +517,9 @@
         <?php unset($_SESSION['clearance_requested']); ?> // Remove session variable after showing alert
     <?php endif; ?>
 </script>
+
+
+
 
         <!-- Manage Signatories Modal -->
 <div class="modal fade" id="manageSignatoriesModal" tabindex="-1" aria-labelledby="manageSignatoriesLabel" aria-hidden="true">
@@ -578,26 +580,27 @@
   </div>
 </div>
 
-<script>
-  document.getElementById('addSignatoryForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const name = document.getElementById('newSignatoryName').value.trim();
-    if (name) {
-      const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center';
-      li.innerHTML = `${name} <button class="btn btn-sm btn-outline-danger">Remove</button>`;
-      document.getElementById('custom-signatories').appendChild(li);
-      document.getElementById('newSignatoryName').value = '';
-    }
-  });
 
-  // Delegate click events for Remove buttons
-  document.addEventListener('click', function(e) {
-    if (e.target && e.target.matches('.btn-outline-danger')) {
-      e.target.closest('li').remove();
-    }
-  });
-</script>
+    <script>
+        // Get the PHP variable into JavaScript
+        const role = "<?php echo $role; ?>";
+
+        // Wait until the page is fully loaded
+        document.addEventListener("DOMContentLoaded", function () {
+            const signatoriesDiv = document.getElementById("manageSignatories");
+
+            if (signatoriesDiv) {
+            // Show or hide the div based on the role
+            if (role === "employee") {
+                signatoriesDiv.style.display = "block";
+            } else {
+                signatoriesDiv.style.display = "none";
+            }
+            }
+        });
+    </script>
+
+
 
 </body>
 </html>
