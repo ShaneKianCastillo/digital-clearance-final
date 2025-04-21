@@ -1310,7 +1310,7 @@
         return $status;
     }
 
-    function processEmployeeSearch($empID, $facultyData) {
+    /*function processEmployeeSearch($empID, $facultyData) {
         $con = openCon();
         $result = [
             'empID' => $empID,
@@ -1406,6 +1406,56 @@
             'commentAreaValue' => $commentAreaValue ?? '',
             'hasRequested' => $hasRequested ?? false
         ];
+    }*/
+
+    function processEmployeeSearch($empID, $facultyData) {
+        $con = openCon();
+        $result = [
+            'empID' => $empID,
+            'empName' => '',
+            'empDepartment' => '',
+            'employeeFound' => false,
+            'errorMessage' => '',
+            'commentAreaValue' => ''
+        ];
+    
+        // First check employee_info table
+        $sql = "SELECT * FROM employee_info WHERE emp_id = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->bind_param("s", $empID);
+        $stmt->execute();
+        $employee = $stmt->get_result()->fetch_assoc();
+        
+        if (!$employee) {
+            $result['errorMessage'] = "No employee found with ID: " . htmlspecialchars($empID);
+            closeCon($con);
+            return $result;
+        }
+    
+        $result['empName'] = $employee['name'];
+        $result['empDepartment'] = $employee['department'];
+    
+        $hasRequested = hasEmployeeRequested($empID, $facultyData['dept_name']);
+        if (!$hasRequested) {
+            $result['errorMessage'] = "Employee hasn't requested clearance from this department";
+            closeCon($con);
+            return $result;
+        }
+    
+        $result['employeeFound'] = true;
+        
+        // Get existing comment if any
+        $commentSql = "SELECT `".$facultyData['dept_name']."` FROM employee_comment WHERE emp_id = ?";
+        $commentStmt = $con->prepare($commentSql);
+        $commentStmt->bind_param("s", $empID);
+        $commentStmt->execute();
+        $commentStmt->bind_result($comment);
+        $commentStmt->fetch();
+        $result['commentAreaValue'] = $comment ?? '';
+        
+        $commentStmt->close();
+        closeCon($con);
+        return $result;
     }
 
     function addEmployeeClearance($empID) {
@@ -1677,7 +1727,7 @@
         }
     }
 
-    function getEmployeeClearanceData($empID) {
+    /*function getEmployeeClearanceData($empID) {
         $con = openCon();
         $clearanceData = [];
         
@@ -1746,6 +1796,123 @@
                 'date' => $date,
                 'remarks' => $remarks,
                 'status_value' => $statusValue // Add numeric status for easier checking
+            ];
+        }
+        
+        closeCon($con);
+        return $clearanceData;
+    }*/
+
+    /*function getEmployeeClearanceData($empID) {
+        $con = openCon();
+        $clearanceData = [];
+        
+        // Get all departments that handle employee clearance
+        $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred WHERE type = 'Employee' OR type = 'Both'";
+        $resultDept = mysqli_query($con, $queryDept);
+        
+        if (!$resultDept) {
+            die("Error fetching departments: " . mysqli_error($con));
+        }
+        
+        while ($rowDept = mysqli_fetch_assoc($resultDept)) {
+            $deptName = $rowDept['dept_name'];
+            
+            $queryStatus = "SELECT `$deptName` AS status FROM employee_clearance WHERE emp_id = '$empID'";
+            $resultStatus = mysqli_query($con, $queryStatus);
+            $statusRow = mysqli_fetch_assoc($resultStatus);
+            $statusValue = $statusRow['status'] ?? 0;
+            
+            // Convert status value to text
+            $status = '';
+            if ($statusValue == 1) {
+                $status = 'Approved';
+            } elseif ($statusValue == 2) {
+                $status = 'Declined';
+            } elseif ($statusValue == 3) {
+                $status = 'Removed';
+            } else {
+                $status = 'N/A';
+            }
+            
+            $queryDate = "SELECT `$deptName` AS date FROM employee_date WHERE emp_id = '$empID'";
+            $resultDate = mysqli_query($con, $queryDate);
+            $dateRow = mysqli_fetch_assoc($resultDate);
+            $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
+            
+            $queryRemarks = "SELECT `$deptName` AS remarks FROM employee_comment WHERE emp_id = '$empID'";
+            $resultRemarks = mysqli_query($con, $queryRemarks);
+            $remarksRow = mysqli_fetch_assoc($resultRemarks);
+            $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
+            
+            $clearanceData[] = [
+                'dept_name' => $deptName,
+                'signatory' => $rowDept['employee_name'],
+                'status' => $status,
+                'date' => $date,
+                'remarks' => $remarks,
+                'status_value' => $statusValue
+            ];
+        }
+        
+        closeCon($con);
+        return $clearanceData;
+    }*/
+
+    function getEmployeeClearanceData($empID) {
+        $con = openCon();
+        $clearanceData = [];
+        
+        // Get all departments that handle employee clearance
+        $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred 
+                     WHERE (type = 'Employee' OR type = 'Both')";
+        $resultDept = mysqli_query($con, $queryDept);
+        
+        if (!$resultDept) {
+            die("Error fetching departments: " . mysqli_error($con));
+        }
+        
+        while ($rowDept = mysqli_fetch_assoc($resultDept)) {
+            $deptName = $rowDept['dept_name'];
+            
+            // First check if this department is marked as removed (status = 3)
+            $queryStatus = "SELECT `$deptName` AS status FROM employee_clearance WHERE emp_id = '$empID'";
+            $resultStatus = mysqli_query($con, $queryStatus);
+            $statusRow = mysqli_fetch_assoc($resultStatus);
+            $statusValue = $statusRow['status'] ?? 0;
+            
+            // Skip this department if it's removed (status = 3)
+            if ($statusValue == 3) {
+                continue;
+            }
+            
+            // Convert status value to text
+            $status = '';
+            if ($statusValue == 1) {
+                $status = 'Approved';
+            } elseif ($statusValue == 2) {
+                $status = 'Declined';
+            } else {
+                $status = 'N/A';
+            }
+            
+            $queryDate = "SELECT `$deptName` AS date FROM employee_date WHERE emp_id = '$empID'";
+            $resultDate = mysqli_query($con, $queryDate);
+            $dateRow = mysqli_fetch_assoc($resultDate);
+            $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
+            
+            $queryRemarks = "SELECT `$deptName` AS remarks FROM employee_comment WHERE emp_id = '$empID'";
+            $resultRemarks = mysqli_query($con, $queryRemarks);
+            $remarksRow = mysqli_fetch_assoc($resultRemarks);
+            $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
+            
+            $clearanceData[] = [
+                'dept_name' => $deptName,
+                'signatory' => $rowDept['employee_name'],
+                'status' => $status,
+                'date' => $date,
+                'remarks' => $remarks,
+                'status_value' => $statusValue
             ];
         }
         
@@ -2005,7 +2172,7 @@
         return $disable;
     }
 
-    function shouldDisableEmployeeButton($empID, $deptName, $currentStatus) {
+    /*function shouldDisableEmployeeButton($empID, $deptName, $currentStatus) {
         // If status is already approved (1), disable the button
         if ($currentStatus == 'Approved') {
             return true;
@@ -2054,6 +2221,38 @@
         }
         
         return $disable;
+    }*/
+
+    function shouldDisableEmployeeButton($empID, $deptName, $currentStatus) {
+        // If status is already approved (1) or removed (3), disable the button
+        if ($currentStatus == 'Approved' || $currentStatus == 'Removed') {
+            return true;
+        }
+        
+        // Check if this department already has a request
+        $con = openCon();
+        $hasRequest = false;
+        
+        try {
+            $query = "SELECT `$deptName` FROM employee_request WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $empID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $hasRequest = ($row[$deptName] == 1);
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error checking employee request: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $hasRequest;
     }
 
     function shouldEnableNextEmployeeRequestButton($empID, $deptName) {
@@ -2223,6 +2422,89 @@
         
         // Get first 5 departments for non-foreign students
         return array_slice($departments, 0, 5);
+    }
+
+    function updateEmployeeSignatories($empID, $departments, $isRemoval) {
+        $con = openCon();
+        $con->begin_transaction();
+        $success = false;
+        
+        try {
+            foreach ($departments as $dept) {
+                // Set clearance status (3 for removal, 0 for addition)
+                $status = $isRemoval ? 3 : 0;
+                $sql = "UPDATE employee_clearance SET `$dept` = ? WHERE emp_id = ?";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("is", $status, $empID);
+                $stmt->execute();
+                
+                // Reset request status
+                $requestStatus = $isRemoval ? 0 : 0; // Always reset to 0
+                $sql = "UPDATE employee_request SET `$dept` = ? WHERE emp_id = ?";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("is", $requestStatus, $empID);
+                $stmt->execute();
+                
+                // Clear date if removing, leave as is if adding
+                if ($isRemoval) {
+                    $sql = "UPDATE employee_date SET `$dept` = '' WHERE emp_id = ?";
+                    $stmt = $con->prepare($sql);
+                    $stmt->bind_param("s", $empID);
+                    $stmt->execute();
+                }
+                
+                // Clear comments if removing, leave as is if adding
+                if ($isRemoval) {
+                    $sql = "UPDATE employee_comment SET `$dept` = '' WHERE emp_id = ?";
+                    $stmt = $con->prepare($sql);
+                    $stmt->bind_param("s", $empID);
+                    $stmt->execute();
+                }
+            }
+            
+            $con->commit();
+            $success = true;
+        } catch (Exception $e) {
+            $con->rollback();
+            error_log("Error updating signatories: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $success;
+    }
+
+    function getAllEmployeeDepartments($empID) {
+        $con = openCon();
+        $departments = [];
+        
+        // Get all departments that handle employee clearance
+        $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred 
+                     WHERE (type = 'Employee' OR type = 'Both')";
+        $resultDept = mysqli_query($con, $queryDept);
+        
+        if (!$resultDept) {
+            die("Error fetching departments: " . mysqli_error($con));
+        }
+        
+        while ($rowDept = mysqli_fetch_assoc($resultDept)) {
+            $deptName = $rowDept['dept_name'];
+            
+            // Check if this department is removed (status = 3)
+            $queryStatus = "SELECT `$deptName` AS status FROM employee_clearance WHERE emp_id = '$empID'";
+            $resultStatus = mysqli_query($con, $queryStatus);
+            $statusRow = mysqli_fetch_assoc($resultStatus);
+            $statusValue = $statusRow['status'] ?? 0;
+            
+            $departments[] = [
+                'dept_name' => $deptName,
+                'signatory' => $rowDept['employee_name'],
+                'is_removed' => ($statusValue == 3)
+            ];
+        }
+        
+        closeCon($con);
+        return $departments;
     }
  
 ?>
