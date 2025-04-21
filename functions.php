@@ -2036,5 +2036,22 @@
         closeCon($con);
         return $requests;
     }
+
+    function getApprovedStudentCount($deptName) {
+        $con = openCon();
+        $query = "SELECT COUNT(*) as count FROM student_clearance WHERE `$deptName` = 1";
+        $result = mysqli_query($con, $query);
+        closeCon($con);
+        return $result ? (int)mysqli_fetch_assoc($result)['count'] : 0;
+    }
+
+    function getApprovedEmployeeCount($deptName) {
+        $con = openCon();
+        $query = "SELECT COUNT(*) as count FROM employee_clearance WHERE `$deptName` = 1";
+        $result = mysqli_query($con, $query);
+        closeCon($con);
+        return $result ? (int)mysqli_fetch_assoc($result)['count'] : 0;
+    }
+    
  
 ?>
