@@ -618,84 +618,103 @@
             <p class="" style="font-size: 18.5px;">This is to certify that I, _________________________________________________ has no pending accountability with the following offices as of today, __________________.</p>
         </div>
 
-            <table class="table table-striped  container border border-dark">
-                <thead>
-                    <tr class="text-center">
-                        <th>DEPARTMENT/OFFICES</th>
-                        <th>STATUS</th>
-                        <th>NAME OF CLEARING OFFICER/HEAD</th>
-                        <th>DATE SIGNED</th>
-                        <th>REMARKS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php
-                if (!empty($empID)) {
-                    // Define the department order for employees
-                    $orderedDepartments = [
-                        'Grade Level/Strand Coordinators',
-                        'Program Chair',
-                        'Principal',
-                        'Registrar',
-                        'Library',
-                        'ITS',
-                        'PPFO',
-                        'Vice President',
-                        'Human Resources',
-                        'Accounting'
-                    ];
+        <table class="table table-striped container border border-dark">
+    <thead>
+        <tr class="text-center">
+            <th>DEPARTMENT/OFFICES</th>
+            <th>NAME OF CLEARING OFFICER/HEAD</th>
+            <th>STATUS</th>
+            <th>DATE SIGNED</th>
+            <th>REMARKS</th>
+        </tr>
+    </thead>
+    <tbody>
+    <?php
+    if (!empty($empID)) {
+        // Define the department order for employees
+        $orderedDepartments = [
+            'Grade Level/Strand Coordinators',
+            'Program Chair',
+            'Principal',
+            'Registrar',
+            'Library',
+            'ITS',
+            'PPFO',
+            'Vice President',
+            'Human Resources',
+            'Accounting'
+        ];
 
-                    $con = openCon();
-                    
-                    // Get department signatories
-                    $signatories = [];
-                    $deptQuery = "SELECT dept_name, employee_name FROM deptartments_cred WHERE type = 'Employee' OR type = 'Both'";
-                    $deptResult = mysqli_query($con, $deptQuery);
-                    while ($row = mysqli_fetch_assoc($deptResult)) {
-                        $signatories[$row['dept_name']] = $row['employee_name'];
-                    }
+        $con = openCon();
+        
+        // Get department signatories
+        $signatories = [];
+        $deptQuery = "SELECT dept_name, employee_name FROM deptartments_cred WHERE type = 'Employee' OR type = 'Both'";
+        $deptResult = mysqli_query($con, $deptQuery);
+        while ($row = mysqli_fetch_assoc($deptResult)) {
+            $signatories[$row['dept_name']] = $row['employee_name'];
+        }
 
-                    // Get clearance data for each department
-                    foreach ($orderedDepartments as $index => $deptName) {
-                        // Get status
-                        $statusQuery = "SELECT `$deptName` FROM employee_clearance WHERE emp_id = '$empID'";
-                        $statusResult = mysqli_query($con, $statusQuery);
-                        $statusRow = mysqli_fetch_assoc($statusResult);
-                        $status = isset($statusRow[$deptName]) && $statusRow[$deptName] == 1 ? 'Approved' : 'Declined';
-                        $statusColor = $status == 'Approved' ? 'green' : 'red';
+        $counter = 1; // Initialize counter for numbering departments
+        
+        // Get clearance data for each department
+        foreach ($orderedDepartments as $deptName) {
+            // First check if this department is removed (status = 3)
+            $statusQuery = "SELECT `$deptName` FROM employee_clearance WHERE emp_id = '$empID'";
+            $statusResult = mysqli_query($con, $statusQuery);
+            $statusRow = mysqli_fetch_assoc($statusResult);
+            $statusValue = isset($statusRow[$deptName]) ? $statusRow[$deptName] : 0;
+            
+            // Skip this department if it's removed (status = 3)
+            if ($statusValue == 3) {
+                continue;
+            }
 
-                        // Get date
-                        $dateQuery = "SELECT `$deptName` FROM employee_date WHERE emp_id = '$empID'";
-                        $dateResult = mysqli_query($con, $dateQuery);
-                        $dateRow = mysqli_fetch_assoc($dateResult);
-                        $date = isset($dateRow[$deptName]) && !empty($dateRow[$deptName]) ? formatDate($dateRow[$deptName]) : 'N/A';
+            // Get status text and color
+            $status = '';
+            $statusColor = '';
+            if ($statusValue == 1) {
+                $status = 'Approved';
+                $statusColor = 'green';
+            } elseif ($statusValue == 2) {
+                $status = 'Declined';
+                $statusColor = 'red';
+            } else {
+                $status = 'Pending';
+                $statusColor = 'orange';
+            }
 
-                        // Get remarks
-                        $remarksQuery = "SELECT `$deptName` FROM employee_comment WHERE emp_id = '$empID'";
-                        $remarksResult = mysqli_query($con, $remarksQuery);
-                        $remarksRow = mysqli_fetch_assoc($remarksResult);
-                        $remarks = isset($remarksRow[$deptName]) && !empty($remarksRow[$deptName]) ? $remarksRow[$deptName] : 'No Remarks';
+            $dateQuery = "SELECT `$deptName` FROM employee_date WHERE emp_id = '$empID'";
+            $dateResult = mysqli_query($con, $dateQuery);
+            $dateRow = mysqli_fetch_assoc($dateResult);
+            $date = isset($dateRow[$deptName]) && !empty($dateRow[$deptName]) ? formatDate($dateRow[$deptName]) : 'N/A';
 
-                        ?>
-                        <tr>
-                            <td><strong><?php echo ($index + 1) . ". " . strtoupper($deptName); ?></strong></td>
-                            <td class="text-center"><strong><?php echo isset($signatories[$deptName]) ? htmlspecialchars($signatories[$deptName]) : 'N/A'; ?></strong></td>
-                            <td class="text-center"><strong style="color: <?php echo $statusColor; ?>;"><?php echo htmlspecialchars($status); ?></strong></td>
-                            <td class="text-center"><strong><?php echo htmlspecialchars($date); ?></strong></td>
-                            <td class="text-center"><strong><?php echo htmlspecialchars($remarks); ?></strong></td>
-                        </tr>
-                        <?php
-                    }
-                    
-                    closeCon($con);
-                } else {
-                    ?>
-                    <tr><td colspan="5" class="text-center">Search for an employee to display clearance data.</td></tr>
-                    <?php
-                }
-                ?>
-        </tbody>
-            </table> 
+            $remarksQuery = "SELECT `$deptName` FROM employee_comment WHERE emp_id = '$empID'";
+            $remarksResult = mysqli_query($con, $remarksQuery);
+            $remarksRow = mysqli_fetch_assoc($remarksResult);
+            $remarks = isset($remarksRow[$deptName]) && !empty($remarksRow[$deptName]) ? $remarksRow[$deptName] : '';
+
+            ?>
+            <tr>
+                <td><strong><?php echo $counter . ". " . strtoupper($deptName); ?></strong></td>
+                <td class="text-center"><strong><?php echo isset($signatories[$deptName]) ? htmlspecialchars($signatories[$deptName]) : 'N/A'; ?></strong></td>
+                <td class="text-center"><strong style="color: <?php echo $statusColor; ?>;"><?php echo htmlspecialchars($status); ?></strong></td>
+                <td class="text-center"><strong><?php echo htmlspecialchars($date); ?></strong></td>
+                <td class="text-center"><strong><?php echo htmlspecialchars($remarks); ?></strong></td>
+            </tr>
+            <?php
+            $counter++; 
+        }
+        
+        closeCon($con);
+    } else {
+        ?>
+        <tr><td colspan="5" class="text-center">Search for an employee to display clearance data.</td></tr>
+        <?php
+    }
+    ?>
+    </tbody>
+</table>
             
         <div class="container">
             <p class="fw-bold">CLEARED:</p>

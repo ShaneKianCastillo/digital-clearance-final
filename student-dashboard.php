@@ -38,6 +38,33 @@
             }
         }
     }
+
+    // Handle signatory changes
+if ($role === 'employee') {
+    $success = false;
+    
+    // Handle removals
+    if (isset($_POST['removed_departments'])) {
+        $removedDepartments = json_decode($_POST['removed_departments'], true);
+        if (is_array($removedDepartments)) {
+            $success = updateEmployeeSignatories($userID, $removedDepartments, true);
+        }
+    }
+    
+    // Handle additions
+    if (isset($_POST['added_departments'])) {
+        $addedDepartments = json_decode($_POST['added_departments'], true);
+        if (is_array($addedDepartments)) {
+            $success = updateEmployeeSignatories($userID, $addedDepartments, false);
+        }
+    }
+    
+    if ($success) {
+        $_SESSION['signatories_updated'] = true;
+        header("Location: student-dashboard.php");
+        exit();
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -449,8 +476,10 @@
                             echo 'text-success';
                         } elseif ($data['status'] == 'Declined') {
                             echo 'text-danger';
-                        } elseif ($data['status'] == 'N/A') {
-                            echo 'text-secondary'; // This will make N/A appear in black/gray
+                        } elseif ($data['status'] == 'Removed') {
+                            echo 'text-secondary';
+                        } else {
+                            echo 'text-secondary';
                         }
                     ?>">
                         <?php echo htmlspecialchars($data['status']); ?>
@@ -528,6 +557,38 @@
 
 
 
+<!-- Add this style in the head section -->
+<style>
+    .btn-add {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    .btn-add.active {
+        background-color: #198754;
+        border-color: #198754;
+    }
+    .btn-remove {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    .removed-row {
+    background-color: #f8d7da !important;
+    color: #721c24 !important;
+    text-decoration: line-through;
+    }
+    .text-grayed {
+        color: #6c757d !important;
+    }
+    .request-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    }
+    #manageSignatoriesModal .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+
 
         <!-- Manage Signatories Modal -->
 <div class="modal fade" id="manageSignatoriesModal" tabindex="-1" aria-labelledby="manageSignatoriesLabel" aria-hidden="true">
@@ -538,56 +599,42 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <!-- Default Signatories List -->
-       
+        <?php $allDepartments = getAllEmployeeDepartments($userID); ?>
         <table class="table table-striped">
-        <thead>
-            <tr class="table-dark">
-                <th>Office/Dept</th>
-                <th>Signatory Name</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($clearanceData as $data): 
-                $isDisabled = shouldDisableEmployeeButton($userID, $data['dept_name'], $data['status']);
-                $tooltip = '';
-                
-                if ($data['status'] == 'Approved') {
-                    $tooltip = 'title="Already approved"';
-                } else if ($isDisabled) {
-                    // Get department order
-                    $deptOrder = getEmployeeDepartmentOrder();
-                    $currentPos = array_search($data['dept_name'], $deptOrder);
-                    
-                    if ($currentPos > 0) {
-                        $prevDept = $deptOrder[$currentPos - 1];
-                        $tooltip = 'title="Requires approval from '.$prevDept.' first"';
-                    }
-                }
-            ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($data['dept_name']); ?></td>
-                    <td><?php echo htmlspecialchars($data['signatory']); ?></td>
-                    <th>
-                        <button class="btn btn-info">add</button>
-                        <button class="btn btn-danger">remove</button>
-                    </th>
+            <thead>
+                <tr class="table-dark">
+                    <th>Office/Dept</th>
+                    <th>Signatory Name</th>
+                    <th>Action</th>
                 </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-        
-            <div>
-                <button class="btn btn-danger">Cancel</button>
-                <button class="btn btn-success">Save</button>
-            </div>
-
+            </thead>
+            <tbody>
+                <?php foreach ($allDepartments as $dept): ?>
+                    <tr class="<?php echo $dept['is_removed'] ? 'removed-row text-grayed' : ''; ?>">
+                        <td class="dept-name"><?php echo htmlspecialchars($dept['dept_name']); ?></td>
+                        <td class="signatory-name"><?php echo htmlspecialchars($dept['signatory']); ?></td>
+                        <td>
+                            <button type="button" class="btn btn-info add-btn" 
+                                <?php echo $dept['is_removed'] ? '' : 'disabled'; ?>>
+                                Add
+                            </button>
+                            <button type="button" class="btn btn-danger remove-btn" 
+                                <?php echo $dept['is_removed'] ? 'disabled' : ''; ?>>
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="saveSignatoriesBtn" class="btn btn-success">Save</button>
       </div>
     </div>
   </div>
 </div>
-
 
     <script>
         // Get the PHP variable into JavaScript
@@ -608,7 +655,142 @@
         });
     </script>
 
+<script>
+    // Initialize when DOM is loaded
+    document.addEventListener("DOMContentLoaded", function() {
+        // Check clearance status on page load
+        checkClearanceStatus();
+        
+        // Set up modal show event to check clearance status
+        document.getElementById('manageSignatoriesModal')?.addEventListener('shown.bs.modal', function() {
+            checkClearanceStatus();
+        });
 
+        // Button toggle functionality
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const addBtn = row.querySelector('.add-btn');
+                const deptName = row.querySelector('.dept-name');
+                const signatoryName = row.querySelector('.signatory-name');
+                
+                // Toggle button states
+                addBtn.disabled = !addBtn.disabled;
+                this.disabled = !this.disabled;
+                
+                // Toggle gray text
+                deptName.classList.toggle('text-grayed');
+                signatoryName.classList.toggle('text-grayed');
+            });
+        });
+
+        document.querySelectorAll('.add-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const removeBtn = row.querySelector('.remove-btn');
+                const deptName = row.querySelector('.dept-name');
+                const signatoryName = row.querySelector('.signatory-name');
+                
+                // Toggle button states
+                this.disabled = !this.disabled;
+                removeBtn.disabled = !removeBtn.disabled;
+                
+                // Remove gray text
+                deptName.classList.remove('text-grayed');
+                signatoryName.classList.remove('text-grayed');
+            });
+        });
+
+        // Request button click handler
+        document.querySelectorAll('.request-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Disable modal buttons when any request is made
+                disableModalButtons();
+            });
+        });
+
+        // Save button functionality
+        const saveBtn = document.getElementById('saveSignatoriesBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                const removedDepartments = [];
+                const addedDepartments = [];
+                
+                // Collect all departments where Remove button is disabled (marked for removal)
+                document.querySelectorAll('.remove-btn:disabled').forEach(btn => {
+                    const row = btn.closest('tr');
+                    removedDepartments.push(row.querySelector('.dept-name').textContent);
+                });
+                
+                // Collect all departments where Add button is disabled (marked for addition)
+                document.querySelectorAll('.add-btn:disabled').forEach(btn => {
+                    const row = btn.closest('tr');
+                    if (!row.classList.contains('removed-row')) {
+                        addedDepartments.push(row.querySelector('.dept-name').textContent);
+                    }
+                });
+                
+                if (removedDepartments.length === 0 && addedDepartments.length === 0) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No changes to save',
+                        text: 'You haven\'t made any changes'
+                    });
+                    return;
+                }
+                
+                // Create and submit form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'student-dashboard.php';
+                
+                if (removedDepartments.length > 0) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'removed_departments';
+                    input.value = JSON.stringify(removedDepartments);
+                    form.appendChild(input);
+                }
+                
+                if (addedDepartments.length > 0) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'added_departments';
+                    input.value = JSON.stringify(addedDepartments);
+                    form.appendChild(input);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            });
+        }
+    });
+
+    // Disable all modal buttons and mark clearance as started
+    function disableModalButtons() {
+        // Disable all Add and Remove buttons in the modal
+        document.querySelectorAll('#manageSignatoriesModal .add-btn, #manageSignatoriesModal .remove-btn').forEach(btn => {
+            btn.disabled = true;
+        });
+        
+        // Disable the Save button
+        const saveBtn = document.getElementById('saveSignatoriesBtn');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+        }
+        
+        // Store in sessionStorage that clearance has started
+        sessionStorage.setItem('clearanceStarted', 'true');
+    }
+
+    // Check and apply clearance status if needed
+    function checkClearanceStatus() {
+        // Check if clearance has started
+        if (sessionStorage.getItem('clearanceStarted') === 'true') {
+            disableModalButtons();
+        }
+    }
+</script>
 
 </body>
 </html>
