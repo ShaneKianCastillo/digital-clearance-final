@@ -2506,5 +2506,60 @@
         closeCon($con);
         return $departments;
     }
+
+    function getEmployeeDepartmentsForPDF($empID) {
+        $con = openCon();
+        $departments = [];
+        
+        // Get all departments that handle employee clearance
+        $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred 
+                     WHERE (type = 'Employee' OR type = 'Both')";
+        $resultDept = mysqli_query($con, $queryDept);
+        
+        if (!$resultDept) {
+            die("Error fetching departments: " . mysqli_error($con));
+        }
+        
+        while ($rowDept = mysqli_fetch_assoc($resultDept)) {
+            $deptName = $rowDept['dept_name'];
+            
+            // Check if this department is removed (status = 3)
+            $queryStatus = "SELECT `$deptName` AS status FROM employee_clearance WHERE emp_id = '$empID'";
+            $resultStatus = mysqli_query($con, $queryStatus);
+            $statusRow = mysqli_fetch_assoc($resultStatus);
+            $statusValue = $statusRow['status'] ?? 0;
+            
+            // Skip departments with status 3 (removed)
+            if ($statusValue == 3) {
+                continue;
+            }
+            
+            // Get status text
+            $status = '';
+            if ($statusValue == 1) {
+                $status = 'Approved';
+            } elseif ($statusValue == 2) {
+                $status = 'Declined';
+            } else {
+                $status = 'N/A';
+            }
+            
+            // Get date
+            $queryDate = "SELECT `$deptName` AS date FROM employee_date WHERE emp_id = '$empID'";
+            $resultDate = mysqli_query($con, $queryDate);
+            $dateRow = mysqli_fetch_assoc($resultDate);
+            $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
+            
+            $departments[] = [
+                'dept_name' => $deptName,
+                'signatory' => $rowDept['employee_name'],
+                'status' => $status,
+                'date' => $date
+            ];
+        }
+        
+        closeCon($con);
+        return $departments;
+    }
  
 ?>
