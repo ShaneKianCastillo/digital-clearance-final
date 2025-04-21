@@ -281,7 +281,7 @@
         }
     }
     
-    function addStudentInfo($studID, $studName, $course, $contactNumber, $yearLevel) {
+    function addStudentInfo($studID, $studName, $course, $contactNumber, $yearLevel, $foreigner = 0) {
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
@@ -289,9 +289,10 @@
         $course = mysqli_real_escape_string($con, $course);
         $contactNumber = mysqli_real_escape_string($con, $contactNumber);
         $yearLevel = mysqli_real_escape_string($con, $yearLevel);
+        $foreigner = mysqli_real_escape_string($con, $foreigner);
     
-        $sql = "INSERT INTO student_info (stud_id, stud_name, course, contact_number, year_level) 
-                VALUES ('$studID', '$studName', '$course', '$contactNumber', '$yearLevel')";
+        $sql = "INSERT INTO student_info (stud_id, stud_name, course, contact_number, year_level, foreigner) 
+                VALUES ('$studID', '$studName', '$course', '$contactNumber', '$yearLevel', '$foreigner')";
     
         $result = mysqli_query($con, $sql);
     
@@ -299,8 +300,9 @@
             closeCon($con);
             return true; 
         } else {
+            echo "Error: " . mysqli_error($con);
             closeCon($con);
-            return false; 
+            return false;
         }
     }
 
@@ -323,44 +325,11 @@
 
     function addStudentClearance($studID) {
         $con = openCon();
-    
-        $studID = mysqli_real_escape_string($con, $studID);
-        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean'";
-        $result = mysqli_query($con, $deptQuery);
-    
-        if (!$result) {
-            echo "Error fetching departments: " . mysqli_error($con);
-            closeCon($con);
-            return;
-        }
-    
-        $departments = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $departments[] = "`" . mysqli_real_escape_string($con, $row['dept_name']) . "`";
-        }
-    
-        $columns = implode(", ", $departments);
-        $defaultValues = implode(", ", array_fill(0, count($departments), 0));
-    
-        $columns .= ", `Dean`";
-        $defaultValues .= ", 0";
-    
-        $sql = "INSERT INTO student_clearance (stud_id, $columns) 
-                VALUES ('$studID', $defaultValues)";
-    
-        if (mysqli_query($con, $sql)) {
-            echo "New clearance record added successfully for student ID: $studID";
-        } else {
-            echo "Error: " . mysqli_error($con);
-        }
-    
-        closeCon($con);
-    }
-
-    function addStudentRequest($studID) {
-        $con = openCon();
-    
-        $studID = mysqli_real_escape_string($con, $studID);
+        
+        // Fetch student info to check foreigner status
+        $studentInfo = fetchStudentInfo($studID);
+        $isForeigner = isset($studentInfo['foreigner']) && $studentInfo['foreigner'] == 1;
+        
         $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' limit 9";
         $result = mysqli_query($con, $deptQuery);
     
@@ -370,22 +339,83 @@
             return;
         }
     
-        $departments = [];
+        $columns = [];
+        $values = [];
+        
         while ($row = mysqli_fetch_assoc($result)) {
-            $departments[] = "`" . mysqli_real_escape_string($con, $row['dept_name']) . "`";
+            $deptName = $row['dept_name'];
+            $columns[] = "`" . mysqli_real_escape_string($con, $deptName) . "`";
+            
+            // Set Foreign Affairs to 3 if student is foreigner, otherwise 0
+            if ($isForeigner && $deptName == 'Foreign Affairs') {
+                $values[] = 3;
+            } else {
+                $values[] = 0;
+            }
         }
     
-        $columns = implode(", ", $departments);
-        $defaultValues = implode(", ", array_fill(0, count($departments), 0));
+        $columnsStr = implode(", ", $columns);
+        $valuesStr = implode(", ", $values);
+        
+        // Add Dean column
+        $columnsStr .= ", `Dean`";
+        $valuesStr .= ", 0";
     
-        $columns .= ", `Dean`";
-        $defaultValues .= ", 0";
-    
-        $sql = "INSERT INTO student_request (stud_id, $columns) 
-                VALUES ('$studID', $defaultValues)";
+        $sql = "INSERT INTO student_clearance (stud_id, $columnsStr) 
+                VALUES ('$studID', $valuesStr)";
     
         if (mysqli_query($con, $sql)) {
             echo "New clearance record added successfully for student ID: $studID";
+        } else {
+            echo "Error: " . mysqli_error($con);
+        }
+    
+        closeCon($con);
+    }
+    
+    function addStudentRequest($studID) {
+        $con = openCon();
+        
+        // Fetch student info to check foreigner status
+        $studentInfo = fetchStudentInfo($studID);
+        $isForeigner = isset($studentInfo['foreigner']) && $studentInfo['foreigner'] == 1;
+        
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' LIMIT 9";
+        $result = mysqli_query($con, $deptQuery);
+    
+        if (!$result) {
+            echo "Error fetching departments: " . mysqli_error($con);
+            closeCon($con);
+            return;
+        }
+    
+        $columns = [];
+        $values = [];
+        
+        while ($row = mysqli_fetch_assoc($result)) {
+            $deptName = $row['dept_name'];
+            $columns[] = "`" . mysqli_real_escape_string($con, $deptName) . "`";
+            
+            // Set Foreign Affairs to 3 if student is foreigner, otherwise 0
+            if ($isForeigner && $deptName == 'Foreign Affairs') {
+                $values[] = 3;
+            } else {
+                $values[] = 0;
+            }
+        }
+    
+        $columnsStr = implode(", ", $columns);
+        $valuesStr = implode(", ", $values);
+        
+        // Add Dean column
+        $columnsStr .= ", `Dean`";
+        $valuesStr .= ", 0";
+    
+        $sql = "INSERT INTO student_request (stud_id, $columnsStr) 
+                VALUES ('$studID', $valuesStr)";
+    
+        if (mysqli_query($con, $sql)) {
+            echo "New request record added successfully for student ID: $studID";
         } else {
             echo "Error: " . mysqli_error($con);
         }
@@ -397,7 +427,7 @@
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
-        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean'";
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' limit 9";
         $result = mysqli_query($con, $deptQuery);
     
         if (!$result) {
@@ -431,7 +461,7 @@
         $con = openCon();
     
         $studID = mysqli_real_escape_string($con, $studID);
-        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean'";
+        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' limit 9";
         $result = mysqli_query($con, $deptQuery);
     
         if (!$result) {
@@ -461,38 +491,53 @@
     
         closeCon($con);
     }
-    
+
     function getStudentClearanceData($studID) {
         $con = openCon();
-
+    
         $clearanceData = [];
         $queryDept = "SELECT dept_id, dept_name, employee_name FROM deptartments_cred LIMIT 9";
         $resultDept = mysqli_query($con, $queryDept);
-
+    
         if (!$resultDept) {
             die("Error fetching departments: " . mysqli_error($con));
         }
-
+    
         while ($rowDept = mysqli_fetch_assoc($resultDept)) {
             $deptID = $rowDept['dept_id'];
             $deptName = $rowDept['dept_name'];
             $signatory = $rowDept['employee_name'];
-
+    
             $queryStatus = "SELECT `$deptName` AS status FROM student_clearance WHERE stud_id = '$studID'";
             $resultStatus = mysqli_query($con, $queryStatus);
             $statusRow = mysqli_fetch_assoc($resultStatus);
-            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
-
+            
+            $status = '';
+            if (!isset($statusRow['status'])) {
+                $status = 'N/A';
+            } else {
+                switch ($statusRow['status']) {
+                    case 1:
+                        $status = 'Approved';
+                        break;
+                    case 2:
+                        $status = 'Declined';
+                        break;
+                    default:
+                        $status = 'N/A';
+                }
+            }
+    
             $queryDate = "SELECT `$deptName` AS date FROM student_date WHERE stud_id = '$studID'";
             $resultDate = mysqli_query($con, $queryDate);
             $dateRow = mysqli_fetch_assoc($resultDate);
             $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
-
+    
             $queryRemarks = "SELECT `$deptName` AS remarks FROM student_comment WHERE stud_id = '$studID'";
             $resultRemarks = mysqli_query($con, $queryRemarks);
             $remarksRow = mysqli_fetch_assoc($resultRemarks);
             $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
-
+    
             $clearanceData[] = [
                 'dept_name' => $deptName,
                 'signatory' => $signatory,
@@ -501,29 +546,45 @@
                 'remarks' => $remarks
             ];
         }
-
+    
         $queryDean = "SELECT dean_name FROM dean_cred LIMIT 1";
         $resultDean = mysqli_query($con, $queryDean);
-
+    
         if ($resultDean) {
             $rowDean = mysqli_fetch_assoc($resultDean);
             $deanName = $rowDean['dean_name'];
-
+    
             $queryStatus = "SELECT Dean AS status FROM student_clearance WHERE stud_id = '$studID'";
             $resultStatus = mysqli_query($con, $queryStatus);
             $statusRow = mysqli_fetch_assoc($resultStatus);
-            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
-
+            
+            // Apply same logic to Dean status
+            $status = '';
+            if (!isset($statusRow['status'])) {
+                $status = 'N/A';
+            } else {
+                switch ($statusRow['status']) {
+                    case 1:
+                        $status = 'Approved';
+                        break;
+                    case 2:
+                        $status = 'Declined';
+                        break;
+                    default:
+                        $status = 'N/A';
+                }
+            }
+    
             $queryDate = "SELECT Dean AS date FROM student_date WHERE stud_id = '$studID'";
             $resultDate = mysqli_query($con, $queryDate);
             $dateRow = mysqli_fetch_assoc($resultDate);
             $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
-
+    
             $queryRemarks = "SELECT Dean AS remarks FROM student_comment WHERE stud_id = '$studID'";
             $resultRemarks = mysqli_query($con, $queryRemarks);
             $remarksRow = mysqli_fetch_assoc($resultRemarks);
             $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
-
+    
             $clearanceData[] = [
                 'dept_name' => 'Dean',
                 'signatory' => $deanName,
@@ -532,7 +593,7 @@
                 'remarks' => $remarks
             ];
         }
-
+    
         closeCon($con);
         return $clearanceData;
     }
@@ -620,29 +681,39 @@
 
     function storeCommentAndReset($studID, $deptName, $comment) {
         $con = openCon();
-
+    
         $con->begin_transaction();
         try {
+            // Store the comment
             $query1 = "UPDATE student_comment SET `$deptName` = ? WHERE stud_id = ?";
             $stmt1 = $con->prepare($query1);
             $stmt1->bind_param("si", $comment, $studID);
             $stmt1->execute();
-
+    
+            // Reset the date
             $query2 = "UPDATE student_date SET `$deptName` = '' WHERE stud_id = ?";
             $stmt2 = $con->prepare($query2);
             $stmt2->bind_param("i", $studID);
             $stmt2->execute();
     
-            $query3 = "UPDATE student_clearance SET `$deptName` = 0 WHERE stud_id = ?";
+            // Set status to declined (2)
+            $query3 = "UPDATE student_clearance SET `$deptName` = 2 WHERE stud_id = ?";
             $stmt3 = $con->prepare($query3);
             $stmt3->bind_param("i", $studID);
             $stmt3->execute();
+    
+            // Reset the request status so they can request again
+            $query4 = "UPDATE student_request SET `$deptName` = 0 WHERE stud_id = ?";
+            $stmt4 = $con->prepare($query4);
+            $stmt4->bind_param("i", $studID);
+            $stmt4->execute();
     
             $con->commit();
     
             $stmt1->close();
             $stmt2->close();
             $stmt3->close();
+            $stmt4->close();
     
         } catch (Exception $e) {
             $con->rollback();
@@ -650,13 +721,18 @@
         }
         $con->close();
     }
-
+    
     function isStudentEligibleForDepartment($studID, $currentDeptName, $orderedDepartments) {
         $con = openCon();
-    
-        if ($currentDeptName === 'Library') {
-            closeCon($con);
-            return true;
+        $studentInfo = fetchStudentInfo($studID);
+        $isForeigner = isset($studentInfo['foreigner']) && $studentInfo['foreigner'] == 1;
+        
+        // Remove Foreign Affairs from order if student is foreigner
+        if ($isForeigner) {
+            $orderedDepartments = array_filter($orderedDepartments, function($dept) {
+                return $dept != 'Foreign Affairs';
+            });
+            $orderedDepartments = array_values($orderedDepartments); // Reindex array
         }
     
         foreach ($orderedDepartments as $department) {
@@ -710,26 +786,27 @@
 
     function checkIfAllPreviousDepartmentsApproved($studID) {
         $con = openCon();
-
+    
         $query = "SHOW COLUMNS FROM student_clearance";
         $result = mysqli_query($con, $query);
         $departmentColumns = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $column = $row['Field'];
-            if ($column != 'stud_id' && $column != 'Dean') {
+            if ($column != 'stud_id') { // No longer excluding Dean
                 $departmentColumns[] = $column;
             }
         }
-
+    
         $query = "SELECT * FROM student_clearance WHERE stud_id = '$studID'";
         $result = mysqli_query($con, $query);
         $data = mysqli_fetch_assoc($result);
         if (!$data) {
             closeCon($con);
-            return false; 
+            return false;
         }
-    
+        
         closeCon($con);
+        
         $allApproved = true;
         foreach ($departmentColumns as $department) {
             if ($data[$department] != 1) {
@@ -737,10 +814,8 @@
                 break;
             }
         }
-        if ($allApproved || ($data['Dean'] == 0 && count(array_filter($data, fn($value) => $value == 1)) == count($departmentColumns))) {
-            return true;
-        }
-        return false;
+        
+        return $allApproved;
     }
 
     function getSelectedClearanceData($studID) {
@@ -928,11 +1003,19 @@
     }
 
     function getStatusClass($status) {
-        return $status == 1 ? 'text-success' : 'text-danger';
+        switch ($status) {
+            case 1: return 'text-success';
+            case 2: return 'text-danger';
+            default: return 'text-secondary';
+        }
     }
     
     function getStatusText($status) {
-        return $status == 1 ? 'Approved' : 'Declined';
+        switch ($status) {
+            case 1: return 'Approved';
+            case 2: return 'Declined';
+            default: return 'N/A';
+        }
     }
 
     function formatDate($dateString) {
@@ -966,7 +1049,7 @@
         }
     }
 
-    function addEmployeeInfo($empID, $empName, $department, $position, $category, $status) {
+    function addEmployeeInfo($empID, $empName, $department, $position, $category, $status, $gradeLevel = 0) {
         $con = openCon();
     
         $empID = mysqli_real_escape_string($con, $empID);
@@ -975,9 +1058,10 @@
         $position = mysqli_real_escape_string($con, $position);
         $category = mysqli_real_escape_string($con, $category);
         $status = mysqli_real_escape_string($con, $status);
+        $gradeLevel = mysqli_real_escape_string($con, $gradeLevel);
     
-        $sql = "INSERT INTO employee_info (emp_id, name, department, position, category, status) 
-                VALUES ('$empID', '$empName', '$department', '$position', '$category', '$status')";
+        $sql = "INSERT INTO employee_info (emp_id, name, department, position, category, status, gradeLevel) 
+                VALUES ('$empID', '$empName', '$department', '$position', '$category', '$status', '$gradeLevel')";
     
         $result = mysqli_query($con, $sql);
     
@@ -1035,8 +1119,7 @@
         return $isStudent;
     }
 
-    /*function processStudentSearch($studID, $facultyData) {
-        // Initialize result array with default values
+    function processStudentSearch($studID, $facultyData) {
         $result = [
             'studID' => $studID,
             'studName' => '',
@@ -1047,19 +1130,36 @@
             'orderedDepartments' => []
         ];
     
+        // Fetch student information
         $student = fetchStudentInfo($studID);
-    
+        
         if (!$student) {
             $result['errorMessage'] = "No student found with ID: " . htmlspecialchars($studID);
             return $result;
         }
     
-        // Always set the student name and course, even if not approved
+        // Set basic student info
         $result['studName'] = $student['stud_name'];
         $result['studCourse'] = $student['course'];
     
         $con = openCon();
-        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' ORDER BY id ASC LIMIT 9";
+        
+        // Get all departments EXCLUDING Dean
+        $deptQuery = "SELECT dept_name FROM deptartments_cred 
+                     WHERE (type = 'Student' OR type = 'Both') AND dept_name != 'Dean'
+                     ORDER BY 
+                         CASE 
+                             WHEN dept_name = 'Library' THEN 1
+                             WHEN dept_name = 'OSA' THEN 2
+                             WHEN dept_name = 'Guidance' THEN 3
+                             WHEN dept_name = 'Foreign Affairs' THEN 4
+                             WHEN dept_name = 'Computer Lab' THEN 5
+                             WHEN dept_name = 'Program Chair' THEN 6
+                             WHEN dept_name = 'Registrar' THEN 7
+                             WHEN dept_name = 'Vice President' THEN 8
+                             WHEN dept_name = 'Accounting' THEN 9
+                             ELSE 10
+                         END";
         $queryResult = mysqli_query($con, $deptQuery);
     
         if (!$queryResult) {
@@ -1068,24 +1168,37 @@
             return $result;
         }
     
+        // Build department order
         while ($row = mysqli_fetch_assoc($queryResult)) {
             $result['orderedDepartments'][] = $row['dept_name'];
         }
     
-        if (isset($facultyData['dept_name'])) {
-            $deptName = $facultyData['dept_name'];
-        } else {
-            $deptName = 'Dean'; // Or any fallback
+        // Check if student is foreigner and remove Foreign Affairs if needed
+        $isForeigner = isset($student['foreigner']) && $student['foreigner'] == 1;
+        if ($isForeigner) {
+            $result['orderedDepartments'] = array_filter($result['orderedDepartments'], function($dept) {
+                return $dept != 'Foreign Affairs';
+            });
+            $result['orderedDepartments'] = array_values($result['orderedDepartments']); // Reindex array
         }
+    
+        $deptName = $facultyData['dept_name'] ?? '';
         
-        // Special case for Dean - check if all other departments have approved
-        if ($deptName === 'Dean') {
-            $allApproved = true;
-            
-            // Check if all previous departments have approved
-            foreach ($result['orderedDepartments'] as $department) {
-                // Check the approval status of each department
-                $query = "SELECT `$department` FROM student_clearance WHERE stud_id = ?";
+        // Validate department exists in the ordered list
+        if (!in_array($deptName, $result['orderedDepartments'])) {
+            $result['errorMessage'] = "Department configuration error: $deptName not found in clearance flow";
+            closeCon($con);
+            return $result;
+        }
+    
+        // Check if student is eligible for this department
+        $currentPos = array_search($deptName, $result['orderedDepartments']);
+        
+        if ($currentPos !== false) {
+            // Check all previous departments
+            for ($i = 0; $i < $currentPos; $i++) {
+                $prevDept = $result['orderedDepartments'][$i];
+                $query = "SELECT `$prevDept` FROM student_clearance WHERE stud_id = ?";
                 $stmt = $con->prepare($query);
                 $stmt->bind_param("s", $studID);
                 $stmt->execute();
@@ -1093,46 +1206,32 @@
                 $stmt->fetch();
                 $stmt->close();
                 
-                // If any department hasn't approved (status != 1), then the student isn't eligible
                 if ($status != 1) {
-                    $allApproved = false;
-                    break;
+                    $prevDeptName = htmlspecialchars($prevDept);
+                    $result['errorMessage'] = htmlspecialchars($student['stud_name']) . 
+                        " is not yet approved by $prevDeptName department.";
+                    closeCon($con);
+                    return $result;
                 }
-            }
-            
-            // If all departments have approved, grant approval and set the comment area
-            if ($allApproved) {
-                $result['studentFound'] = true;
-                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
-            } else {
-                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by all departments.";
-            }
-        } else {
-            // Existing logic for other departments
-            $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
-            if ($studentApproved) {
-                $result['studentFound'] = true;
-                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
-            } else {
-                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
             }
         }
     
-        // Check if student has requested clearance from this department
-        if ($result['studentFound']) {
-            $hasRequested = hasStudentRequested($studID, $deptName);
-            if (!$hasRequested) {
-                $result['errorMessage'] = "Student hasn't requested clearance from this department";
-                $result['studentFound'] = false;
-            }
+        // Verify the student has requested clearance from this department
+        $hasRequested = hasStudentRequested($studID, $deptName);
+        if (!$hasRequested) {
+            $result['errorMessage'] = "Student hasn't requested clearance from this department";
+            closeCon($con);
+            return $result;
         }
+    
+        $result['studentFound'] = true;
+        $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
     
         closeCon($con);
         return $result;
-    }*/
+    }
 
-    function processStudentSearch($studID, $facultyData) {
-        // Initialize result array with default values
+    function processStudentDeanSearch($studID, $deanData) {
         $result = [
             'studID' => $studID,
             'studName' => '',
@@ -1140,68 +1239,114 @@
             'commentAreaValue' => '',
             'studentFound' => false,
             'errorMessage' => '',
-            'orderedDepartments' => []
+            'requiredDeptsApproved' => false,
+            'orderedDepartments' => getDepartmentOrder()
         ];
     
+        // Fetch student information
         $student = fetchStudentInfo($studID);
-    
+        
         if (!$student) {
             $result['errorMessage'] = "No student found with ID: " . htmlspecialchars($studID);
             return $result;
         }
     
-        // Always set the student name and course, even if not approved
+        // Set basic student info
         $result['studName'] = $student['stud_name'];
         $result['studCourse'] = $student['course'];
     
         $con = openCon();
-        $deptQuery = "SELECT dept_name FROM deptartments_cred WHERE dept_name != 'Dean' ORDER BY id ASC LIMIT 9";
-        $queryResult = mysqli_query($con, $deptQuery);
     
-        if (!$queryResult) {
-            $result['errorMessage'] = "Error fetching departments: " . mysqli_error($con);
-            closeCon($con);
-            return $result;
-        }
-    
-        while ($row = mysqli_fetch_assoc($queryResult)) {
-            $result['orderedDepartments'][] = $row['dept_name'];
-        }
-    
-        if (isset($facultyData['dept_name'])) {
-            $deptName = $facultyData['dept_name'];
-        } else {
-            $deptName = 'Dean'; // Or any fallback
-        }
+        // Get department order and find Dean's position
+        $deptOrder = getDepartmentOrder();
+        $deanPosition = array_search('Dean', $deptOrder);
         
-        // Modified logic for Dean - no longer checks if all departments have approved
-        if ($deptName === 'Dean') {
-            $result['studentFound'] = true;
-            $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
-        } else {
-            // Existing logic for other departments
-            $studentApproved = isStudentEligibleForDepartment($studID, $deptName, $result['orderedDepartments']);
-            if ($studentApproved) {
-                $result['studentFound'] = true;
-                $result['commentAreaValue'] = fetchStudentComment($studID, $deptName);
-            } else {
-                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . " is not yet approved by previous departments.";
+        // Check all departments BEFORE the Dean are approved
+        $allRequiredApproved = true;
+        for ($i = 0; $i < $deanPosition; $i++) {
+            $dept = $deptOrder[$i];
+            
+            // Skip Foreign Affairs for foreign students
+            if (isset($student['foreigner']) && $student['foreigner'] == 1 && $dept == 'Foreign Affairs') {
+                continue;
+            }
+    
+            $status = getDepartmentClearanceStatus($con, $studID, $dept);
+            if ($status != 1) {
+                $allRequiredApproved = false;
+                $result['errorMessage'] = htmlspecialchars($student['stud_name']) . 
+                    " is not yet approved by $dept department.";
+                break;
             }
         }
     
-        // Check if student has requested clearance from this department
-        if ($result['studentFound']) {
-            $hasRequested = hasStudentRequested($studID, $deptName);
-            if (!$hasRequested) {
-                $result['errorMessage'] = "Student hasn't requested clearance from this department";
-                $result['studentFound'] = false;
+        $result['requiredDeptsApproved'] = $allRequiredApproved;
+    
+        // Only proceed if required departments are approved
+        if ($allRequiredApproved) {
+            // Check if student has requested Dean clearance
+            $hasRequested = hasStudentRequested($studID, 'Dean');
+            
+            if ($hasRequested) {
+                $result['studentFound'] = true;
+                $result['commentAreaValue'] = fetchStudentComment($studID, 'Dean');
+            } else {
+                $result['errorMessage'] = "Student hasn't requested Dean clearance";
             }
         }
     
         closeCon($con);
         return $result;
     }
+
+    function getDepartmentClearanceStatus($con, $studID, $deptName) {
+        // Initialize status with a default value
+        $status = null;
+        
+        // Validate inputs
+        if (!$con || empty($studID) || empty($deptName)) {
+            error_log("Invalid parameters provided to getDepartmentClearanceStatus");
+            return $status;
+        }
     
+        try {
+            // Escape the department name
+            $escapedDeptName = mysqli_real_escape_string($con, $deptName);
+            
+            // Prepare the query
+            $query = "SELECT `$escapedDeptName` FROM student_clearance WHERE stud_id = ?";
+            $stmt = $con->prepare($query);
+            
+            if (!$stmt) {
+                error_log("Prepare failed: " . $con->error);
+                return $status;
+            }
+    
+            // Bind parameters and execute
+            $stmt->bind_param("s", $studID);
+            if (!$stmt->execute()) {
+                error_log("Execute failed: " . $stmt->error);
+                $stmt->close();
+                return $status;
+            }
+    
+            // Bind result variable
+            $stmt->bind_result($status);
+            
+            // Fetch the result
+            if (!$stmt->fetch()) {
+                // No rows returned
+                $status = null;
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error in getDepartmentClearanceStatus: " . $e->getMessage());
+            $status = null;
+        }
+        
+        return $status;
+    }
 
     function processEmployeeSearch($empID, $facultyData) {
         $con = openCon();
@@ -1544,11 +1689,17 @@
             $stmt1->bind_param("ss", $comment, $empID);
             $stmt1->execute();
             
-            // Reset approval status
-            $query2 = "UPDATE employee_clearance SET `$deptName` = 0 WHERE emp_id = ?";
+            // Reset approval status to declined (2)
+            $query2 = "UPDATE employee_clearance SET `$deptName` = 2 WHERE emp_id = ?";
             $stmt2 = $con->prepare($query2);
             $stmt2->bind_param("s", $empID);
             $stmt2->execute();
+            
+            // Reset request status so they can request again
+            $query3 = "UPDATE employee_request SET `$deptName` = 0 WHERE emp_id = ?";
+            $stmt3 = $con->prepare($query3);
+            $stmt3->bind_param("s", $empID);
+            $stmt3->execute();
             
             $con->commit();
             return true;
@@ -1559,6 +1710,7 @@
         } finally {
             if (isset($stmt1)) $stmt1->close();
             if (isset($stmt2)) $stmt2->close();
+            if (isset($stmt3)) $stmt3->close();
             closeCon($con);
         }
     }
@@ -1601,21 +1753,36 @@
             $queryStatus = "SELECT `$deptName` AS status FROM employee_clearance WHERE emp_id = '$empID'";
             $resultStatus = mysqli_query($con, $queryStatus);
             $statusRow = mysqli_fetch_assoc($resultStatus);
-            $status = isset($statusRow['status']) && $statusRow['status'] == 1 ? 'Approved' : 'Declined';
+            
+            // Modified status logic
+            $status = '';
+            if (!isset($statusRow['status'])) {
+                $status = 'N/A';
+            } else {
+                switch ($statusRow['status']) {
+                    case 1:
+                        $status = 'Approved';
+                        break;
+                    case 2:
+                        $status = 'Declined';
+                        break;
+                    default:
+                        $status = 'N/A';
+                }
+            }
     
             // Date
             $queryDate = "SELECT `$deptName` AS date FROM employee_date WHERE emp_id = '$empID'";
             $resultDate = mysqli_query($con, $queryDate);
             $dateRow = mysqli_fetch_assoc($resultDate);
-            $date = isset($dateRow['date']) ? $dateRow['date'] : 'No Date';
-
+            $date = isset($dateRow['date']) ? $dateRow['date'] : 'N/A';
+    
             // Remarks
             $queryRemarks = "SELECT `$deptName` AS remarks FROM employee_comment WHERE emp_id = '$empID'";
             $resultRemarks = mysqli_query($con, $queryRemarks);
             $remarksRow = mysqli_fetch_assoc($resultRemarks);
             $remarks = isset($remarksRow['remarks']) ? $remarksRow['remarks'] : 'No Remarks';
     
-            // Final push
             $clearanceData[] = [
                 'dept_name' => $deptName,
                 'signatory' => $signatories[$deptName] ?? 'N/A',
@@ -1770,8 +1937,16 @@
         $con = openCon();
         $enable = false;
         
+        $studentInfo = fetchStudentInfo($studID);
+        $isForeigner = isset($studentInfo['foreigner']) && $studentInfo['foreigner'] == 1;
+        
+        // Skip Foreign Affairs for foreign students
+        if ($isForeigner && $deptName == 'Foreign Affairs') {
+            closeCon($con);
+            return true;
+        }
+        
         try {
-            // Check if the current department is approved in student_clearance
             $query = "SELECT `$deptName` FROM student_clearance WHERE stud_id = ?";
             $stmt = $con->prepare($query);
             $stmt->bind_param("s", $studID);
@@ -1780,7 +1955,7 @@
             
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
-                $enable = ($row[$deptName] == 1); // Enable only if approved (value = 1)
+                $enable = ($row[$deptName] == 1);
             }
             
             $stmt->close();
@@ -1798,24 +1973,32 @@
             'Library',
             'OSA',
             'Guidance',
-            'Foreign Affairs', 
+            'Foreign Affairs', // Will be removed for foreign students
             'Computer Lab',
             'Program Chair',
             'Dean',
             'Registrar',
             'Vice President',
-            'Accounting',
+            'Accounting'
         ];
     }
     
     function shouldDisableStudentButton($studID, $deptName, $currentStatus) {
-        if ($currentStatus == 'Approved') return true; // If already approved, disable the button
-    
+        if ($currentStatus == 'Approved') return true;
+        
+        $studentInfo = fetchStudentInfo($studID);
+        $isForeigner = isset($studentInfo['foreigner']) && $studentInfo['foreigner'] == 1;
+        
+        // Skip Foreign Affairs check for foreign students
+        if ($isForeigner && $deptName == 'Foreign Affairs') {
+            return true;
+        }
+        
         $con = openCon();
         $disable = false;
     
         try {
-            // Check if this department already has a request (value = 1)
+            // Check if this department already has a request
             $query = "SELECT `$deptName` FROM student_request WHERE stud_id = ?";
             $stmt = $con->prepare($query);
             $stmt->bind_param("s", $studID);
@@ -1825,7 +2008,7 @@
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
                 if ($row[$deptName] == 1) {
-                    $disable = true; // Disable if value is already 1
+                    $disable = true;
                 }
             }
     
@@ -1834,6 +2017,15 @@
             // If not already requested, check department order requirements
             if (!$disable) {
                 $deptOrder = getDepartmentOrder();
+                
+                // Remove Foreign Affairs from order if student is foreigner
+                if ($isForeigner) {
+                    $deptOrder = array_filter($deptOrder, function($dept) {
+                        return $dept != 'Foreign Affairs';
+                    });
+                    $deptOrder = array_values($deptOrder); // Reindex array
+                }
+                
                 $currentPos = array_search($deptName, $deptOrder);
     
                 // Check if the previous department is approved
@@ -1857,7 +2049,15 @@
     }
 
     function shouldDisableEmployeeButton($empID, $deptName, $currentStatus) {
-        if ($currentStatus == 'Approved') return true; // If already approved, disable the button
+        // If status is declined (2), enable the button (return false)
+        if ($currentStatus == 'Declined') {
+            return false;
+        }
+    
+        // If already approved, disable the button
+        if ($currentStatus == 'Approved') {
+            return true;
+        }
     
         $con = openCon();
         $disable = false;
@@ -1896,7 +2096,7 @@
                 }
             }
         } catch (Exception $e) {
-            error_log("Error in shouldDisableButton: " . $e->getMessage());
+            error_log("Error in shouldDisableEmployeeButton: " . $e->getMessage());
         } finally {
             closeCon($con);
         }
@@ -1909,7 +2109,6 @@
         $enable = false;
         
         try {
-            // Check if the current department is approved in employee_clearance
             $query = "SELECT `$deptName` FROM employee_clearance WHERE emp_id = ?";
             $stmt = $con->prepare($query);
             $stmt->bind_param("s", $empID);
@@ -1918,7 +2117,7 @@
             
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
-                $enable = ($row[$deptName] == 1); // Enable only if approved (value = 1)
+                $enable = ($row[$deptName] == 1); // Only enable if approved (1)
             }
             
             $stmt->close();
@@ -1987,13 +2186,14 @@
         $con = openCon();
         $requests = [];
         
-        // Get students who have requested but not yet been approved/declined by this department
+        // Get students who have requested but not yet been approved (status != 1)
+        // Also include those who were declined (status = 2) so they can request again
         $sql = "SELECT sr.stud_id, si.stud_name 
                 FROM student_request sr
                 JOIN student_info si ON sr.stud_id = si.stud_id
                 LEFT JOIN student_clearance sc ON sr.stud_id = sc.stud_id
                 WHERE sr.`$deptName` = 1 
-                AND (sc.`$deptName` IS NULL OR sc.`$deptName` = 0)";
+                AND (sc.`$deptName` IS NULL OR sc.`$deptName` = 0 OR sc.`$deptName` = 2)";
         
         $result = mysqli_query($con, $sql);
         
@@ -2014,13 +2214,14 @@
         $con = openCon();
         $requests = [];
         
-        // Get employees who have requested but not yet been approved/declined by this department
+        // Get employees who have requested but not yet been approved (status != 1)
+        // Also include those who were declined (status = 2) so they can request again
         $sql = "SELECT er.emp_id, ei.name 
                 FROM employee_request er
                 JOIN employee_info ei ON er.emp_id = ei.emp_id
                 LEFT JOIN employee_clearance ec ON er.emp_id = ec.emp_id
                 WHERE er.`$deptName` = 1 
-                AND (ec.`$deptName` IS NULL OR ec.`$deptName` = 0)";
+                AND (ec.`$deptName` IS NULL OR ec.`$deptName` = 0 OR ec.`$deptName` = 2)";
         
         $result = mysqli_query($con, $sql);
         
@@ -2053,5 +2254,23 @@
         return $result ? (int)mysqli_fetch_assoc($result)['count'] : 0;
     }
     
+    function getDepartmentsStudentForPDF($studID) {
+        $studentInfo = fetchStudentInfo($studID);
+        $isForeigner = isset($studentInfo['foreigner']) && $studentInfo['foreigner'] == 1;
+        
+        $departments = getStudentClearanceData($studID);
+        
+        // Filter out Foreign Affairs if student is foreigner
+        if ($isForeigner) {
+            $departments = array_filter($departments, function($dept) {
+                return $dept['dept_name'] !== 'Foreign Affairs';
+            });
+            // Get first 4 departments for foreign students
+            return array_slice(array_values($departments), 0, 4);
+        }
+        
+        // Get first 5 departments for non-foreign students
+        return array_slice($departments, 0, 5);
+    }
  
 ?>

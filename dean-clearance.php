@@ -20,7 +20,7 @@
     // Process search button submission
     if (isset($_POST['searchButton'])) {
         $studID = $_POST['userID'];
-        $searchResult = processStudentSearch($studID, $deanData);
+        $searchResult = processStudentDeanSearch($studID, $deanData);
 
         // Assign search results to variables
         $studName = $searchResult['studName'];
