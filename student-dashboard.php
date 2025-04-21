@@ -450,7 +450,7 @@
                         } elseif ($data['status'] == 'Declined') {
                             echo 'text-danger';
                         } elseif ($data['status'] == 'N/A') {
-                            echo 'text-secondary'; // This will make N/A appear in black/gray
+                            echo 'text-secondary'; 
                         }
                     ?>">
                         <?php echo htmlspecialchars($data['status']); ?>
