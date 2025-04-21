@@ -109,14 +109,31 @@
             exit();
         }
     }
+
+    $deptName = $facultyData['dept_name'];
+    $facultyType = $facultyData['type'];
+
+    $studentRequests = [];
+    $studentRequestCount = 0;
+    $employeeRequests = [];
+    $employeeRequestCount = 0;
+    $approvedStudentsCount = 0;
+    $approvedEmployeesCount = 0;
+
+    if ($facultyType === 'Student' || $facultyType === 'Both') {
+        $studentRequests = getPendingStudentRequests($deptName);
+        $studentRequestCount = count($studentRequests);
+        $approvedStudentsCount = getApprovedStudentCount($deptName);
+    }
+
+    if ($facultyType === 'Employee' || $facultyType === 'Both') {
+        $employeeRequests = getPendingEmployeeRequests($deptName);
+        $employeeRequestCount = count($employeeRequests);
+        $approvedEmployeesCount = getApprovedEmployeeCount($deptName);
+    }
          
 ?>
-<?php
-$studentRequestCount = 12;
-$employeeRequestCount = 8;
-$approvedStudentsCount = 7;
-$approvedEmployeesCount = 5;
-?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -203,8 +220,6 @@ $approvedEmployeesCount = 5;
             </div>  
         </div>
 
-
-
         <div class="pt-3 ms-2 d-flex align-items-center">
                 <div class="fs-5">
                     <i class="fa-solid fa-house" style="font-size: 25px;"></i>
@@ -249,17 +264,11 @@ $approvedEmployeesCount = 5;
     <div class="container pt-5">
         <div class="row g-4">
 
+        <?php if ($facultyType === 'Student' || $facultyType === 'Both'): ?>
             <div class="col-md-6 col-lg-3">
                 <div class="card p-3 bg-primary text-white">
                     <h5>Student Requests</h5>
                     <h3><?php echo $studentRequestCount ?? 0; ?></h3>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-3 bg-info text-white">
-                    <h5>Employee Requests</h5>
-                    <h3><?php echo $employeeRequestCount ?? 0; ?></h3>
                 </div>
             </div>
 
@@ -269,6 +278,15 @@ $approvedEmployeesCount = 5;
                     <h3><?php echo $approvedStudentsCount ?? 0; ?></h3>
                 </div>
             </div>
+        <?php endif; ?>
+
+        <?php if ($facultyType === 'Employee' || $facultyType === 'Both'): ?>
+            <div class="col-md-6 col-lg-3">
+                <div class="card p-3 bg-info text-white">
+                    <h5>Employee Requests</h5>
+                    <h3><?php echo $employeeRequestCount ?? 0; ?></h3>
+                </div>
+            </div>
 
             <div class="col-md-6 col-lg-3">
                 <div class="card p-3 bg-success text-white">
@@ -276,6 +294,7 @@ $approvedEmployeesCount = 5;
                     <h3><?php echo $approvedEmployeesCount ?? 0; ?></h3>
                 </div>
             </div>
+        <?php endif; ?>
 
         </div>
     </div>
