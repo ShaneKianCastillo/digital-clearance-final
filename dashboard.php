@@ -207,7 +207,19 @@
                 <a href="request-list.php" style="text-decoration: none;" class="text-dark">
                     <i class="fa-solid fa-list" style="font-size: 25px;"></i>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        5
+
+                    <?php  if ($facultyType === 'Student' ) {                      
+                         echo $studentRequestCount;         
+                    } ?>
+                        
+                    <?php  if ($facultyType === 'Employee' ) {                      
+                         echo $employeeRequestCount;         
+                    } ?>   
+
+                    <?php  if ($facultyType === 'Both' ) {                      
+                         echo ($employeeRequestCount + $studentRequestCount);         
+                    } ?>
+                    
                     </span>
                 </a>
             </div>

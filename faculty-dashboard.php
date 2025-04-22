@@ -109,6 +109,28 @@
             exit();
         }
     }
+
+    $deptName = $facultyData['dept_name'];
+    $facultyType = $facultyData['type'];
+
+    $studentRequests = [];
+    $studentRequestCount = 0;
+    $employeeRequests = [];
+    $employeeRequestCount = 0;
+    $approvedStudentsCount = 0;
+    $approvedEmployeesCount = 0;
+
+    if ($facultyType === 'Student' || $facultyType === 'Both') {
+        $studentRequests = getPendingStudentRequests($deptName);
+        $studentRequestCount = count($studentRequests);
+        $approvedStudentsCount = getApprovedStudentCount($deptName);
+    }
+
+    if ($facultyType === 'Employee' || $facultyType === 'Both') {
+        $employeeRequests = getPendingEmployeeRequests($deptName);
+        $employeeRequestCount = count($employeeRequests);
+        $approvedEmployeesCount = getApprovedEmployeeCount($deptName);
+    }
          
 ?>
 
@@ -167,7 +189,17 @@
                         <a href="request-list.php" style="text-decoration: none;" class="text-dark">
                             <i class="fa-solid fa-list" style="font-size: 25px;"></i>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                5
+                            <?php  if ($facultyType === 'Student' ) {                      
+                                echo $studentRequestCount;         
+                            } ?>
+                                
+                            <?php  if ($facultyType === 'Employee' ) {                      
+                                echo $employeeRequestCount;         
+                            } ?>   
+
+                            <?php  if ($facultyType === 'Both' ) {                      
+                                echo ($employeeRequestCount + $studentRequestCount);         
+                            } ?>
                             </span>
                         </a>
                     </div>

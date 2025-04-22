@@ -2432,29 +2432,39 @@
         try {
             foreach ($departments as $dept) {
                 // Set clearance status (3 for removal, 0 for addition)
-                $status = $isRemoval ? 3 : 0;
+                $status = $isRemoval ? 3 : 0; // This is correct
+                
+                // Update the clearance status
                 $sql = "UPDATE employee_clearance SET `$dept` = ? WHERE emp_id = ?";
                 $stmt = $con->prepare($sql);
                 $stmt->bind_param("is", $status, $empID);
                 $stmt->execute();
                 
-                // Reset request status
-                $requestStatus = $isRemoval ? 0 : 0; // Always reset to 0
+                // Reset request status (set to 0 regardless of add/remove)
+                $requestStatus = 0; // Always reset to 0
                 $sql = "UPDATE employee_request SET `$dept` = ? WHERE emp_id = ?";
                 $stmt = $con->prepare($sql);
                 $stmt->bind_param("is", $requestStatus, $empID);
                 $stmt->execute();
                 
-                // Clear date if removing, leave as is if adding
                 if ($isRemoval) {
+                    // Clear date and comments when removing
                     $sql = "UPDATE employee_date SET `$dept` = '' WHERE emp_id = ?";
                     $stmt = $con->prepare($sql);
                     $stmt->bind_param("s", $empID);
                     $stmt->execute();
-                }
-                
-                // Clear comments if removing, leave as is if adding
-                if ($isRemoval) {
+                    
+                    $sql = "UPDATE employee_comment SET `$dept` = '' WHERE emp_id = ?";
+                    $stmt = $con->prepare($sql);
+                    $stmt->bind_param("s", $empID);
+                    $stmt->execute();
+                } else {
+                    // When adding back, you might want to initialize these to empty values
+                    $sql = "UPDATE employee_date SET `$dept` = '' WHERE emp_id = ?";
+                    $stmt = $con->prepare($sql);
+                    $stmt->bind_param("s", $empID);
+                    $stmt->execute();
+                    
                     $sql = "UPDATE employee_comment SET `$dept` = '' WHERE emp_id = ?";
                     $stmt = $con->prepare($sql);
                     $stmt->bind_param("s", $empID);

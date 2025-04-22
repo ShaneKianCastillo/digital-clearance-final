@@ -40,31 +40,31 @@
     }
 
     // Handle signatory changes
-if ($role === 'employee') {
-    $success = false;
-    
-    // Handle removals
-    if (isset($_POST['removed_departments'])) {
-        $removedDepartments = json_decode($_POST['removed_departments'], true);
-        if (is_array($removedDepartments)) {
-            $success = updateEmployeeSignatories($userID, $removedDepartments, true);
+    if ($role === 'employee') {
+        $success = false;
+        
+        // Handle removals
+        if (isset($_POST['removed_departments'])) {
+            $removedDepartments = json_decode($_POST['removed_departments'], true);
+            if (is_array($removedDepartments)) {
+                $success = updateEmployeeSignatories($userID, $removedDepartments, true);
+            }
+        }
+        
+        // Handle additions
+        if (isset($_POST['added_departments'])) {
+            $addedDepartments = json_decode($_POST['added_departments'], true);
+            if (is_array($addedDepartments)) {
+                $success = updateEmployeeSignatories($userID, $addedDepartments, false);
+            }
+        }
+        
+        if ($success) {
+            $_SESSION['signatories_updated'] = true;
+            header("Location: student-dashboard.php");
+            exit();
         }
     }
-    
-    // Handle additions
-    if (isset($_POST['added_departments'])) {
-        $addedDepartments = json_decode($_POST['added_departments'], true);
-        if (is_array($addedDepartments)) {
-            $success = updateEmployeeSignatories($userID, $addedDepartments, false);
-        }
-    }
-    
-    if ($success) {
-        $_SESSION['signatories_updated'] = true;
-        header("Location: student-dashboard.php");
-        exit();
-    }
-}
 ?>
 
 <!DOCTYPE html>
