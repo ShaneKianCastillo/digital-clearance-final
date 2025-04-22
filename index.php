@@ -56,6 +56,8 @@
                     header('Location: dashboard.php');
                 } elseif ($role === 'dean') {
                     header('Location: dean-dashboard.php'); 
+                } elseif ($role === 'principal') {
+                    header('Location: principal-dashboard.php');
                 }
                 exit();
             } 
