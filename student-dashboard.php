@@ -55,7 +55,7 @@
         if (isset($_POST['added_departments'])) {
             $addedDepartments = json_decode($_POST['added_departments'], true);
             if (is_array($addedDepartments)) {
-                $success = updateEmployeeSignatories($userID, $addedDepartments, false);
+                $success = updateEmployeeSignatories($userID, $addedDepartments, false); // false = adding back
             }
         }
         
@@ -614,15 +614,13 @@
                         <td class="dept-name"><?php echo htmlspecialchars($dept['dept_name']); ?></td>
                         <td class="signatory-name"><?php echo htmlspecialchars($dept['signatory']); ?></td>
                         <td>
-                            <button type="button" class="btn btn-info add-btn" 
-                                <?php echo $dept['is_removed'] ? '' : 'disabled'; ?>>
-                                Add
-                            </button>
-                            <button type="button" class="btn btn-danger remove-btn" 
-                                <?php echo $dept['is_removed'] ? 'disabled' : ''; ?>>
-                                Remove
-                            </button>
-                        </td>
+                        <button type="button" class="btn btn-info add-btn" <?= ($dept['is_removed'] && $employeeInfo['hasRequested'] == 0) ? '' : 'disabled' ?>>
+                            Add
+                        </button>
+                        <button type="button" class="btn btn-danger remove-btn" <?= (!$dept['is_removed'] && $employeeInfo['hasRequested'] == 0) ? '' : 'disabled' ?>>
+                            Remove
+                        </button>
+                    </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -656,16 +654,12 @@
     </script>
 
 <script>
-    // Initialize when DOM is loaded
     document.addEventListener("DOMContentLoaded", function() {
-        // Check clearance status on page load
-        checkClearanceStatus();
-        
-        // Set up modal show event to check clearance status
-        document.getElementById('manageSignatoriesModal')?.addEventListener('shown.bs.modal', function() {
-            checkClearanceStatus();
-        });
-
+    // Get the PHP variable into JavaScript
+    const hasRequested = <?php echo $employeeInfo['hasRequested'] ?? 0; ?>;
+    
+    // Only enable button functionality if no requests are pending
+    if (hasRequested === 0) {
         // Button toggle functionality
         document.querySelectorAll('.remove-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -701,14 +695,6 @@
             });
         });
 
-        // Request button click handler
-        document.querySelectorAll('.request-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Disable modal buttons when any request is made
-                disableModalButtons();
-            });
-        });
-
         // Save button functionality
         const saveBtn = document.getElementById('saveSignatoriesBtn');
         if (saveBtn) {
@@ -725,11 +711,9 @@
                 // Collect all departments where Add button is disabled (marked for addition)
                 document.querySelectorAll('.add-btn:disabled').forEach(btn => {
                     const row = btn.closest('tr');
-                    if (!row.classList.contains('removed-row')) {
-                        addedDepartments.push(row.querySelector('.dept-name').textContent);
-                    }
+                    addedDepartments.push(row.querySelector('.dept-name').textContent);
                 });
-                
+                                
                 if (removedDepartments.length === 0 && addedDepartments.length === 0) {
                     Swal.fire({
                         icon: 'info',
@@ -764,32 +748,21 @@
                 form.submit();
             });
         }
-    });
-
-    // Disable all modal buttons and mark clearance as started
-    function disableModalButtons() {
-        // Disable all Add and Remove buttons in the modal
-        document.querySelectorAll('#manageSignatoriesModal .add-btn, #manageSignatoriesModal .remove-btn').forEach(btn => {
+    } else {
+        // If hasRequested is 1, disable all buttons in the modal
+        document.querySelectorAll('#manageSignatoriesModal .btn').forEach(btn => {
             btn.disabled = true;
         });
-        
-        // Disable the Save button
-        const saveBtn = document.getElementById('saveSignatoriesBtn');
-        if (saveBtn) {
-            saveBtn.disabled = true;
-        }
-        
-        // Store in sessionStorage that clearance has started
-        sessionStorage.setItem('clearanceStarted', 'true');
     }
 
-    // Check and apply clearance status if needed
-    function checkClearanceStatus() {
-        // Check if clearance has started
-        if (sessionStorage.getItem('clearanceStarted') === 'true') {
-            disableModalButtons();
-        }
-    }
+    // Request button click handler
+    document.querySelectorAll('.request-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Store in sessionStorage that clearance has started
+            sessionStorage.setItem('clearanceStarted', 'true');
+        });
+    });
+});
 </script>
 
 </body>
