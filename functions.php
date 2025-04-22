@@ -1403,6 +1403,56 @@
         ];
     }*/
 
+    /*function processEmployeeSearch($empID, $facultyData) {
+        $con = openCon();
+        $result = [
+            'empID' => $empID,
+            'empName' => '',
+            'empDepartment' => '',
+            'employeeFound' => false,
+            'errorMessage' => '',
+            'commentAreaValue' => ''
+        ];
+    
+        // First check employee_info table
+        $sql = "SELECT * FROM employee_info WHERE emp_id = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->bind_param("s", $empID);
+        $stmt->execute();
+        $employee = $stmt->get_result()->fetch_assoc();
+        
+        if (!$employee) {
+            $result['errorMessage'] = "No employee found with ID: " . htmlspecialchars($empID);
+            closeCon($con);
+            return $result;
+        }
+    
+        $result['empName'] = $employee['name'];
+        $result['empDepartment'] = $employee['department'];
+    
+        $hasRequested = hasEmployeeRequested($empID, $facultyData['dept_name']);
+        if (!$hasRequested) {
+            $result['errorMessage'] = "Employee hasn't requested clearance from this department";
+            closeCon($con);
+            return $result;
+        }
+    
+        $result['employeeFound'] = true;
+        
+        // Get existing comment if any
+        $commentSql = "SELECT `".$facultyData['dept_name']."` FROM employee_comment WHERE emp_id = ?";
+        $commentStmt = $con->prepare($commentSql);
+        $commentStmt->bind_param("s", $empID);
+        $commentStmt->execute();
+        $commentStmt->bind_result($comment);
+        $commentStmt->fetch();
+        $result['commentAreaValue'] = $comment ?? '';
+        
+        $commentStmt->close();
+        closeCon($con);
+        return $result;
+    }*/
+
     function processEmployeeSearch($empID, $facultyData) {
         $con = openCon();
         $result = [
