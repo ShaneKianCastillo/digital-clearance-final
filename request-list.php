@@ -97,16 +97,18 @@
         <?php if (!empty($requests)): ?>
             <table class="table table-bordered table-striped table-hover mt-3">
                 <thead>
-                    <tr class="table-dark">
+                    <tr class="table-dark text-center">
                         <th>ID No.</th>
                         <th>Name</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($requests as $request): ?>
-                        <tr>
+                        <tr class="text-center">
                             <td><?php echo htmlspecialchars($request['id']); ?></td>
                             <td><?php echo htmlspecialchars($request['name']); ?></td>
+                            <td><button class="btn btn-info assess-btn" data-id="<?php echo htmlspecialchars($request['id']); ?>">Assess</button></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -117,6 +119,15 @@
             </div>
         <?php endif; ?>
     </div>
+    <script>
+        document.querySelectorAll('.assess-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                // Redirect with ID as query param
+                window.location.href = `faculty-dashboard.php?id=${id}`;
+            });
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

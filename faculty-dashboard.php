@@ -231,8 +231,13 @@
                     </label>
                 </div>
                 <div class="ps-4" style="width: 300px;">
+                    <?php
+                    $preFillID = isset($_GET['id']) ? $_GET['id'] : '';
+                    ?>
+
                     <input type="number" step="1" name="userID" placeholder="" class="form-control" 
-                        value="<?php echo ($userType == 'Student') ? $studID : $empID; ?>" required>
+                        value="<?php echo !empty($preFillID) ? htmlspecialchars($preFillID) : (($userType == 'Student') ? $studID : $empID); ?>" required>
+
                 </div>
                 <div class="ps-4">
                     <button class="btn btn-info fs-5" name="searchButton">Search</button>
