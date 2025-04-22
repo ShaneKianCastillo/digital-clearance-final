@@ -59,9 +59,12 @@
         <ol class="breadcrumb">
 
             <li class="breadcrumb-item">
-                <a href="<?php echo ($_SESSION['role'] === 'dean') ? 'dean-dashboard.php' : 'dashboard.php'; ?>">
-                    Dashboard
-                </a>
+            <a href="<?php 
+                echo ($_SESSION['role'] === 'principal') ? 'principal-dashboard.php' : 
+                    (($_SESSION['role'] === 'dean') ? 'dean-dashboard.php' : 'dashboard.php'); 
+            ?>">
+                Dashboard
+            </a>
             </li>
 
             <li class="breadcrumb-item active" aria-current="page">Request List</li>

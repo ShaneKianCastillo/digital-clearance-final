@@ -4,16 +4,12 @@
 
 
     if (isset($_POST['saveButton'])) {
-
         $semester = $_POST['semester'];
         $school_year = $_POST['school_year'];
-
         saveSemesterAndSchoolYear($semester, $school_year);
-
-        header("Location: dean-dashboard.php");
+        header("Location: principal-dashboard.php");
         exit();
-
-        }
+    }
 
 ?>
 
@@ -60,7 +56,7 @@
         </div>
         
         <div class="pt-4 text-center">
-            <a href="dean-dashboard.php" class="btn btn-danger fs-5">Cancel</a>
+            <a href="principal-dashboard.php" class="btn btn-danger fs-5">Cancel</a>
             <button type="submit" name="saveButton" class="btn btn-success fs-5">Save</button>
         </div>
     </form>

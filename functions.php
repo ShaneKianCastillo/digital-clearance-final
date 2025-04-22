@@ -53,7 +53,7 @@
         return isset($users[$userID]) && $users[$userID]['password'] === md5($password);
     }
     
-    function validateLoginCredentials($userID, $password) {
+    /*function validateLoginCredentials($userID, $password) {
         $con = openCon();
         $hashedPassword = md5($password);
         $errorArray = [];
@@ -96,6 +96,74 @@
         }
 
         // Query dean_cred
+        $sql = "SELECT dean_id AS id, password, 'dean' AS role FROM dean_cred WHERE dean_id = ?";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $userID);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($user = mysqli_fetch_assoc($result)) {
+            if ($user['password'] === $hashedPassword) {
+                $users[$userID] = ['role' => 'dean'];
+            }
+        }
+    
+        // If user is not found
+        if (empty($users)) {
+            $errorArray['credentials'] = 'Incorrect ID or password!';
+        }
+    
+        closeCon($con);
+        return [$errorArray, $users];
+    }*/
+
+    function validateLoginCredentials($userID, $password) {
+        $con = openCon();
+        $hashedPassword = md5($password);
+        $errorArray = [];
+        $users = [];
+    
+        // Check students_cred
+        $sql = "SELECT stud_id AS id, password, 'student' AS role FROM students_cred WHERE stud_id = ?";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $userID);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($user = mysqli_fetch_assoc($result)) {
+            if ($user['password'] === $hashedPassword) {
+                $users[$userID] = ['role' => 'student'];
+            }
+        }
+    
+        // Check employees_cred
+        $sql = "SELECT emp_id AS id, password, 'employee' AS role FROM employees_cred WHERE emp_id = ?";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $userID);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($user = mysqli_fetch_assoc($result)) {
+            if ($user['password'] === $hashedPassword) {
+                $users[$userID] = ['role' => 'employee'];
+            }
+        }
+    
+        // Check deptartments_cred
+        $sql = "SELECT dept_id AS id, password, dept_name, 'department' AS role FROM deptartments_cred WHERE dept_id = ?";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $userID);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($user = mysqli_fetch_assoc($result)) {
+            if ($user['password'] === $hashedPassword) {
+                // Check if this is the Principal
+                if ($user['dept_name'] === 'Principal') {
+                    $users[$userID] = ['role' => 'principal'];
+                } else {
+                    $users[$userID] = ['role' => 'department'];
+                }
+            }
+        }
+    
+        // Check dean_cred
         $sql = "SELECT dean_id AS id, password, 'dean' AS role FROM dean_cred WHERE dean_id = ?";
         $stmt = mysqli_prepare($con, $sql);
         mysqli_stmt_bind_param($stmt, "s", $userID);
