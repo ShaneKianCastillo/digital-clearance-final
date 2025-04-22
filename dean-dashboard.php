@@ -83,10 +83,10 @@
             <div class="pt-3 text-center ps-2">
                 <div class="d-flex gy-1">
                     <div>
-                        <a href="dean-clearance.php" style="text-decoration: none;" class="text-dark"><i class="fa-regular fa-file" style="font-size: 25px;"></i></a>
+                        <a href="dean-clearance.php" style="text-decoration: none;" class="text-dark"><i class="fa-solid fa-user-graduate " style="font-size: 25px;"></i></a>
                     </div>
                     <div class="ps-2">
-                        <a href="dean-clearance.php" style="text-decoration: none;" class="text-dark"><p class="fs-6 fw-medium">Student Clearance</p></a>
+                        <a href="dean-clearance.php" style="text-decoration: none;" class="text-dark"><p class="fs-6 fw-medium"> Clearance</p></a>
                     </div>  
                 </div>  
             </div>   
@@ -104,21 +104,25 @@
                             <i class="fa-solid fa-unlock" style="font-size: 25px;"></i>
                         </a>
                     </div>
-                    <div class="ps-3">
+                    <div class="ps-2">
                         <a href="change-password.php" style="text-decoration: none;" class="text-dark">
                             <p class="fs-6 fw-medium">Change Password</p>
                         </a>
                     </div>  
                 </div>
+                <!-- Request List -->
                 <div class="d-flex gy-1 pt-3 ms-2">
-                    <div>
+                    <div class="position-relative">
                         <a href="request-list.php" style="text-decoration: none;" class="text-dark">
-                        <i class="fa-solid fa-list" style="font-size: 25px;"></i>
+                            <i class="fa-solid fa-list" style="font-size: 25px;"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                5
+                            </span>
                         </a>
                     </div>
-                    <div class="ps-3">
+                    <div class="ps-2">
                         <a href="request-list.php" style="text-decoration: none;" class="text-dark">
-                            <p class="fs-6 fw-medium">Request List</p>
+                            <p class="fs-6 fw-medium mb-0">Request List</p>
                         </a>
                     </div>  
                 </div>  
