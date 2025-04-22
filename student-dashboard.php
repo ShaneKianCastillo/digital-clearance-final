@@ -55,7 +55,7 @@ if ($role === 'employee') {
     if (isset($_POST['added_departments'])) {
         $addedDepartments = json_decode($_POST['added_departments'], true);
         if (is_array($addedDepartments)) {
-            $success = updateEmployeeSignatories($userID, $addedDepartments, false);
+            $success = updateEmployeeSignatories($userID, $addedDepartments, false); // Note the false here
         }
     }
     
