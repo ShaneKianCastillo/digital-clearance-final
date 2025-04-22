@@ -37,6 +37,12 @@
 
     }    
 
+    $deptName = 'Dean'; 
+    $studentRequests = [];
+    $studentRequestCount = 0;
+    $studentRequests = getPendingStudentRequests($deptName);
+    $studentRequestCount = count($studentRequests);
+
 ?>
 
 <!DOCTYPE html>
@@ -116,7 +122,7 @@
                         <a href="request-list.php" style="text-decoration: none;" class="text-dark">
                             <i class="fa-solid fa-list" style="font-size: 25px;"></i>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                5
+                                <?php echo $studentRequestCount ?>
                             </span>
                         </a>
                     </div>
