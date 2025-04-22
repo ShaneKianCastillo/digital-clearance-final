@@ -6,11 +6,11 @@
     $errorArray = [];
     $users = [];
 
-    /*$userID = '200890522';
-    $password = 'Paul';
-    $name = 'Paul';
+    /*$userID = '01235598663';
+    $password = 'Smith01235598663';
+    $name = 'Joe Smith';
     $course = 'BSIT';
-    $contact = '09326614570';
+    $contact = '09663254720';
     $year = '4';
     $foreigner = 1; // 1 for foreigner, 0 for local students
 
