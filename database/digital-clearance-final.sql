@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 21, 2025 at 10:29 PM
+-- Generation Time: Apr 22, 2025 at 10:56 PM
 -- Server version: 8.0.30
 -- PHP Version: 8.1.10
 
@@ -158,7 +158,7 @@ CREATE TABLE `employee_comment` (
 --
 
 INSERT INTO `employee_comment` (`id`, `emp_id`, `Grade Level/Strand Coordinators`, `Program Chair`, `Principal`, `Registrar`, `Library`, `ITS`, `PPFO`, `Vice President`, `Human Resources`, `Accounting`) VALUES
-(2, 1002365985, '', '                                            ', '', '', '                                                          ', '', '', '', '', ''),
+(2, 1002365985, '', '', '', '', '', '', '', '', '', ''),
 (3, 1002365986, '', '', '', '', '', '', '', '', '', ''),
 (4, 1007445568, '', '', '', '', '', '', '', '', '', ''),
 (5, 100254436, '', '', '', '', '', '', '', '', '', '');
@@ -208,18 +208,19 @@ CREATE TABLE `employee_info` (
   `position` varchar(255) NOT NULL,
   `category` varchar(255) NOT NULL,
   `status` varchar(255) NOT NULL,
-  `gradeLevel` int NOT NULL
+  `gradeLevel` int NOT NULL,
+  `hasRequested` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employee_info`
 --
 
-INSERT INTO `employee_info` (`id`, `emp_id`, `name`, `department`, `position`, `category`, `status`, `gradeLevel`) VALUES
-(1, 1002365985, 'John Doe', 'CICS', 'Teacher 3', 'Teaching', 'Regular', 1),
-(2, 1002365986, 'Jane Smith', 'CICS', 'Teacher 1', 'Teaching', 'Regular', 0),
-(3, 1007445568, 'George Granados', 'CICS', 'Teacher', 'Teaching', 'Regular', 0),
-(4, 100254436, 'Lhiz Mananquil', 'CICS', 'Teacher', 'Teaching', 'Regular', 0);
+INSERT INTO `employee_info` (`id`, `emp_id`, `name`, `department`, `position`, `category`, `status`, `gradeLevel`, `hasRequested`) VALUES
+(1, 1002365985, 'John Doe', 'CICS', 'Teacher 3', 'Teaching', 'Regular', 1, 0),
+(2, 1002365986, 'Jane Smith', 'CICS', 'Teacher 1', 'Teaching', 'Regular', 0, 0),
+(3, 1007445568, 'George Granados', 'CICS', 'Teacher', 'Teaching', 'Regular', 0, 0),
+(4, 100254436, 'Lhiz Mananquil', 'CICS', 'Teacher', 'Teaching', 'Regular', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -273,7 +274,8 @@ INSERT INTO `students_cred` (`id`, `stud_id`, `password`, `name`) VALUES
 (1, '0121300331', '86ab38b39c039c74c6547d093ff34b66', 'Ram Yturralde'),
 (3, '0121300314', '47bdef85adbe8fb68bbc809aaf55c8cc', 'Louis Tiomico'),
 (4, '0121302381', 'f4629b0cb658b6157989389213bc6cae', 'Karl John Nucum'),
-(5, '0122303926', '47a7d4c8e93337305ff9017722f8fff3', 'John Andre Beltran');
+(5, '0122303926', '47a7d4c8e93337305ff9017722f8fff3', 'John Andre Beltran'),
+(12, '01235598663', '16a34eda5d3abe41c409dec16f3955f5', 'Joe Smith');
 
 -- --------------------------------------------------------
 
@@ -304,7 +306,8 @@ INSERT INTO `student_clearance` (`id`, `stud_id`, `Library`, `OSA`, `Guidance`, 
 (1, '0121300331', '0', '0', 0, '0', 0, 0, 0, 0, '0', 0),
 (2, '0121300314', '0', '0', 0, '0', 0, 0, 0, 0, '0', 0),
 (4, '0121302381', '0', '0', 0, '0', 0, 0, 0, 0, '0', 0),
-(5, '0122303926', '0', '0', 0, '0', 0, 0, 0, 0, '0', 0);
+(5, '0122303926', '0', '0', 0, '0', 0, 0, 0, 0, '0', 0),
+(13, '01235598663', '0', '0', 0, '0', 0, 0, 0, 0, '0', 0);
 
 -- --------------------------------------------------------
 
@@ -335,7 +338,8 @@ INSERT INTO `student_comment` (`id`, `stud_id`, `Library`, `OSA`, `Guidance`, `F
 (1, '0121300331', '', '', '', '', '', '', '', '', '', '                                    '),
 (2, '0121300314', '                                    ', '', '', '', '', '', '', '', '', ''),
 (4, '0121302381', '', '', '', '', '', '', '', '', '', ''),
-(5, '0122303926', '', '', '', '', '', '', '', '', '', '');
+(5, '0122303926', '', '', '', '', '', '', '', '', '', ''),
+(12, '01235598663', '', '', '', '', '', '', '', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -366,7 +370,8 @@ INSERT INTO `student_date` (`id`, `stud_id`, `Library`, `OSA`, `Guidance`, `Fore
 (1, '0121300331', '', '', '', '', '', '', '', '', '', ''),
 (2, '0121300314', '', '', '', '', '', '', '', '', '', ''),
 (4, '0121302381', '', '', '', '', '', '', '', '', '', ''),
-(5, '0122303926', '', '', '', '', '', '', '', '', '', '');
+(5, '0122303926', '', '', '', '', '', '', '', '', '', ''),
+(12, '01235598663', '', '', '', '', '', '', '', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -392,7 +397,8 @@ INSERT INTO `student_info` (`id`, `stud_id`, `stud_name`, `course`, `contact_num
 (1, '0121300331', 'Ram Yturralde', 'BSIT', '09052564546', 4, 0),
 (2, '0121300314', 'Louis Tiomico', 'BSIT', '09663254187', 4, 0),
 (3, '0122303926', 'John Andre Beltran', 'BSIT', '09663254187', 4, 0),
-(4, '0121302381', 'Karl John Nucum', 'BSIT', '09326614570', 4, 0);
+(4, '0121302381', 'Karl John Nucum', 'BSIT', '09326614570', 4, 0),
+(11, '01235598663', 'Joe Smith', 'BSIT', '09663254720', 4, 1);
 
 -- --------------------------------------------------------
 
@@ -423,7 +429,8 @@ INSERT INTO `student_request` (`id`, `stud_id`, `Library`, `OSA`, `Guidance`, `F
 (6, '0121302381', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 (7, '0121300331', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 (8, '0121300314', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-(9, '0122303926', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+(9, '0122303926', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+(15, '01235598663', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 --
 -- Indexes for dumped tables
@@ -569,37 +576,37 @@ ALTER TABLE `employee_request`
 -- AUTO_INCREMENT for table `students_cred`
 --
 ALTER TABLE `students_cred`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `student_clearance`
 --
 ALTER TABLE `student_clearance`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `student_comment`
 --
 ALTER TABLE `student_comment`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `student_date`
 --
 ALTER TABLE `student_date`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `student_info`
 --
 ALTER TABLE `student_info`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `student_request`
 --
 ALTER TABLE `student_request`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
