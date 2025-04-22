@@ -1074,19 +1074,14 @@
 
     function fetchEmployeeInfo($empID) {
         $con = openCon();
-    
-        $empID = mysqli_real_escape_string($con, $empID);
-        $sql = "SELECT * FROM employee_info WHERE emp_id = '$empID'";
-        $result = mysqli_query($con, $sql);
-    
-        if ($result && mysqli_num_rows($result) > 0) {
-            $employee = mysqli_fetch_assoc($result); 
-            closeCon($con);
-            return $employee; 
-        } else {
-            closeCon($con);
-            return null; 
-        }
+        $sql = "SELECT *, hasRequested FROM employee_info WHERE emp_id = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->bind_param("s", $empID);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $employee = $result->fetch_assoc();
+        closeCon($con);
+        return $employee;
     }
 
     function checkIfStudent($userID) {
@@ -1406,6 +1401,56 @@
             'commentAreaValue' => $commentAreaValue ?? '',
             'hasRequested' => $hasRequested ?? false
         ];
+    }*/
+
+    /*function processEmployeeSearch($empID, $facultyData) {
+        $con = openCon();
+        $result = [
+            'empID' => $empID,
+            'empName' => '',
+            'empDepartment' => '',
+            'employeeFound' => false,
+            'errorMessage' => '',
+            'commentAreaValue' => ''
+        ];
+    
+        // First check employee_info table
+        $sql = "SELECT * FROM employee_info WHERE emp_id = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->bind_param("s", $empID);
+        $stmt->execute();
+        $employee = $stmt->get_result()->fetch_assoc();
+        
+        if (!$employee) {
+            $result['errorMessage'] = "No employee found with ID: " . htmlspecialchars($empID);
+            closeCon($con);
+            return $result;
+        }
+    
+        $result['empName'] = $employee['name'];
+        $result['empDepartment'] = $employee['department'];
+    
+        $hasRequested = hasEmployeeRequested($empID, $facultyData['dept_name']);
+        if (!$hasRequested) {
+            $result['errorMessage'] = "Employee hasn't requested clearance from this department";
+            closeCon($con);
+            return $result;
+        }
+    
+        $result['employeeFound'] = true;
+        
+        // Get existing comment if any
+        $commentSql = "SELECT `".$facultyData['dept_name']."` FROM employee_comment WHERE emp_id = ?";
+        $commentStmt = $con->prepare($commentSql);
+        $commentStmt->bind_param("s", $empID);
+        $commentStmt->execute();
+        $commentStmt->bind_result($comment);
+        $commentStmt->fetch();
+        $result['commentAreaValue'] = $comment ?? '';
+        
+        $commentStmt->close();
+        closeCon($con);
+        return $result;
     }*/
 
     function processEmployeeSearch($empID, $facultyData) {
@@ -1980,7 +2025,7 @@
         return $approved;
     }
 
-    function requestClearanceEmployee($empID, $deptName) {
+    /*function requestClearanceEmployee($empID, $deptName) {
         $con = openCon();
         $con->begin_transaction();
         $success = false;
@@ -2001,6 +2046,36 @@
             if (isset($stmt1)) $stmt1->close();
             closeCon($con);
         }        
+        
+        return $success;
+    }*/
+
+    function requestClearanceEmployee($empID, $deptName) {
+        $con = openCon();
+        $con->begin_transaction();
+        $success = false;
+        
+        try {
+            // 1. Set request status
+            $query = "UPDATE employee_request SET `$deptName` = 1 WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $empID);
+            $stmt->execute();
+            
+            // 2. Set hasRequested flag
+            $query = "UPDATE employee_info SET hasRequested = 1 WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $empID);
+            $stmt->execute();
+            
+            $con->commit();
+            $success = true;
+        } catch (Exception $e) {
+            $con->rollback();
+            error_log("Request error: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
         
         return $success;
     }
@@ -2424,6 +2499,53 @@
         return array_slice($departments, 0, 5);
     }
 
+    /*function updateEmployeeSignatories($empID, $departments, $isRemoval) {
+        $con = openCon();
+        $con->begin_transaction();
+        $success = false;
+        
+        try {
+            foreach ($departments as $dept) {
+                // For removal, set status to 3. For addition, set to 0 (not removed/not approved)
+                $status = $isRemoval ? 3 : 0;
+                
+                // 1. Update clearance status
+                $sql = "UPDATE employee_clearance SET `$dept` = ? WHERE emp_id = ?";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("is", $status, $empID);
+                $stmt->execute();
+                
+                // 2. Reset request status to 0 (not requested)
+                $requestStatus = 0;
+                $sql = "UPDATE employee_request SET `$dept` = ? WHERE emp_id = ?";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("is", $requestStatus, $empID);
+                $stmt->execute();
+                
+                // 3. Clear date and comments
+                $sql = "UPDATE employee_date SET `$dept` = '' WHERE emp_id = ?";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("s", $empID);
+                $stmt->execute();
+                
+                $sql = "UPDATE employee_comment SET `$dept` = '' WHERE emp_id = ?";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("s", $empID);
+                $stmt->execute();
+            }
+            
+            $con->commit();
+            $success = true;
+        } catch (Exception $e) {
+            $con->rollback();
+            error_log("Error updating signatories: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $success;
+    }*/
+
     function updateEmployeeSignatories($empID, $departments, $isRemoval) {
         $con = openCon();
         $con->begin_transaction();
@@ -2431,46 +2553,39 @@
         
         try {
             foreach ($departments as $dept) {
-                // Set clearance status (3 for removal, 0 for addition)
-                $status = $isRemoval ? 3 : 0; // This is correct
+                // For removal, set status to 3. For addition, set to 0 (not removed/not approved)
+                $status = $isRemoval ? 3 : 0;
                 
-                // Update the clearance status
+                // 1. Update clearance status
                 $sql = "UPDATE employee_clearance SET `$dept` = ? WHERE emp_id = ?";
                 $stmt = $con->prepare($sql);
                 $stmt->bind_param("is", $status, $empID);
                 $stmt->execute();
                 
-                // Reset request status (set to 0 regardless of add/remove)
-                $requestStatus = 0; // Always reset to 0
+                // 2. Reset request status to 0 (not requested)
+                $requestStatus = 0;
                 $sql = "UPDATE employee_request SET `$dept` = ? WHERE emp_id = ?";
                 $stmt = $con->prepare($sql);
                 $stmt->bind_param("is", $requestStatus, $empID);
                 $stmt->execute();
                 
-                if ($isRemoval) {
-                    // Clear date and comments when removing
-                    $sql = "UPDATE employee_date SET `$dept` = '' WHERE emp_id = ?";
-                    $stmt = $con->prepare($sql);
-                    $stmt->bind_param("s", $empID);
-                    $stmt->execute();
-                    
-                    $sql = "UPDATE employee_comment SET `$dept` = '' WHERE emp_id = ?";
-                    $stmt = $con->prepare($sql);
-                    $stmt->bind_param("s", $empID);
-                    $stmt->execute();
-                } else {
-                    // When adding back, you might want to initialize these to empty values
-                    $sql = "UPDATE employee_date SET `$dept` = '' WHERE emp_id = ?";
-                    $stmt = $con->prepare($sql);
-                    $stmt->bind_param("s", $empID);
-                    $stmt->execute();
-                    
-                    $sql = "UPDATE employee_comment SET `$dept` = '' WHERE emp_id = ?";
-                    $stmt = $con->prepare($sql);
-                    $stmt->bind_param("s", $empID);
-                    $stmt->execute();
-                }
+                // 3. Clear date and comments
+                $sql = "UPDATE employee_date SET `$dept` = '' WHERE emp_id = ?";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("s", $empID);
+                $stmt->execute();
+                
+                $sql = "UPDATE employee_comment SET `$dept` = '' WHERE emp_id = ?";
+                $stmt = $con->prepare($sql);
+                $stmt->bind_param("s", $empID);
+                $stmt->execute();
             }
+            
+            // Reset hasRequested flag if all departments are removed
+            $query = "UPDATE employee_info SET hasRequested = 0 WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $empID);
+            $stmt->execute();
             
             $con->commit();
             $success = true;
@@ -2570,6 +2685,42 @@
         
         closeCon($con);
         return $departments;
+    }
+
+    function completeEmployeeClearance($empID) {
+        $con = openCon();
+        $success = false;
+        
+        try {
+            $query = "UPDATE employee_info SET hasRequested = 0 WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $empID);
+            $success = $stmt->execute();
+        } catch (Exception $e) {
+            error_log("Error resetting hasRequested: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $success;
+    }
+
+    function resetEmployeeRequestStatus($empID) {
+        $con = openCon();
+        $success = false;
+        
+        try {
+            $query = "UPDATE employee_info SET hasRequested = 0 WHERE emp_id = ?";
+            $stmt = $con->prepare($query);
+            $stmt->bind_param("s", $empID);
+            $success = $stmt->execute();
+        } catch (Exception $e) {
+            error_log("Reset error: " . $e->getMessage());
+        } finally {
+            closeCon($con);
+        }
+        
+        return $success;
     }
  
 ?>
