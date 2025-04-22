@@ -123,13 +123,23 @@
         <?php endif; ?>
     </div>
     <script>
-        document.querySelectorAll('.assess-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                const id = this.getAttribute('data-id');
-                // Redirect with ID as query param
-                window.location.href = `faculty-dashboard.php?id=${id}`;
-            });
+    document.querySelectorAll('.assess-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            // Determine the correct dashboard based on user role
+            let dashboardUrl = 'dashboard.php'; // Default fallback
+            
+            <?php if(isset($_SESSION['role'])): ?>
+                dashboardUrl = '<?php 
+                    echo ($_SESSION['role'] === 'principal') ? 'principal-clearance.php' : 
+                    (($_SESSION['role'] === 'dean') ? 'dean-dashboard.php' : 'faculty-dashboard.php'); 
+                ?>';
+            <?php endif; ?>
+            
+            // Redirect with ID as query param
+            window.location.href = `${dashboardUrl}?id=${id}`;
         });
+    });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

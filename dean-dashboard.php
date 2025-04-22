@@ -108,7 +108,7 @@
 
     <div class="sidebar pt-5">
         <div class="container position-fixed start-0 sidebar-shadow z-1 bg-light" style="height: 100vh; width:250px;">
-            <div class="d-flex gy-1">
+            <div class=" d-flex gy-1 " >
                 <div>
                     <i class="fa-regular fa-user" style="font-size: 50px; color:gray"></i>
                 </div>
@@ -117,60 +117,62 @@
                     <p class="position-absolute" style="top: 35px;">Dean</p>
                 </div>
             </div>
-            
             <div class="d-flex gy-1 pt-5 ms-2">
-                <div>
-                    <a href="change-password.php" style="text-decoration: none;" class="text-dark">
-                        <i class="fa-solid fa-unlock" style="font-size: 25px;"></i>
-                    </a>
+                    <div>
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <i class="fa-solid fa-unlock" style="font-size: 25px;"></i>
+                        </a>
+                    </div>
+                    <div class="ps-3">
+                        <a href="change-password.php" style="text-decoration: none;" class="text-dark">
+                            <p class="fs-6 fw-medium">Change Password</p>
+                        </a>
+                    </div>  
                 </div>
-                <div class="ps-3">
-                    <a href="change-password.php" style="text-decoration: none;" class="text-dark">
-                        <p class="fs-6 fw-medium">Change Password</p>
-                    </a>
-                </div>  
-            </div>
 
-            <div class="d-flex gy-1 pt-1 ms-2">
-                <div class="position-relative">
-                    <a href="request-list.php" style="text-decoration: none;" class="text-dark">
-                        <i class="fa-solid fa-list" style="font-size: 25px;"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            <?php echo $studentRequestCount; ?>
-                        </span>
-                    </a>
-                </div>
-                <div class="ps-3">
-                    <a href="request-list.php" style="text-decoration: none;" class="text-dark">
-                        <p class="fs-6 fw-medium mb-0">Request List</p>
-                    </a>
+                <!-- Request List -->
+                <div class="d-flex gy-1 pt-1 ms-2">
+                    <div class="position-relative">
+                        <a href="request-list.php" style="text-decoration: none;" class="text-dark">
+                            <i class="fa-solid fa-list" style="font-size: 25px;"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">             
+                                <?php echo $studentRequestCount;   ?>      
+                            </span>
+                        </a>
+                    </div>
+                    <div class="ps-3">
+                        <a href="request-list.php" style="text-decoration: none;" class="text-dark">
+                            <p class="fs-6 fw-medium mb-0">Request List</p>
+                        </a>
+                    </div>  
                 </div>  
-            </div>  
 
-            <div class="pt-3 ms-2 d-flex align-items-center">
+                <div class="pt-3 ms-2 d-flex align-items-center">
                 <div class="fs-5">
                     <i class="fa-solid fa-house" style="font-size: 25px;"></i>
                 </div>
                 <div class="ps-3">
-                    <a href="dean-dashboard.php" class="text-decoration-none text-dark fs-6 fw-medium">Dashboard</a>
+                    <a href="dean-count.php" class="text-decoration-none text-dark fs-6 fw-medium">Dashboard</a>
                 </div>
             </div> 
 
-            <!--<div class="pt-4 ms-2 d-flex align-items-center">
+            <div class="pt-4 ms-2 d-flex align-items-center">
                 <div>
-                    <i class="fa-solid fa-user-graduate" style="font-size: 25px;"></i>
+                    <i class="fa-solid fa-user-graduate " style="font-size: 25px;"></i>
                 </div>
                 <div class="ps-3">
-                    <a href="dean-clearance.php" class="text-decoration-none text-dark fs-6 fw-medium">Student Clearance</a>
+                    <a href="dean-dashboard.php" class="text-decoration-none text-dark fs-6 fw-medium">Clearance</a>
                 </div>
-            </div>-->
-            
+            </div>
+                
+            <br>  
             <hr>
             <div class="ps-3 pt-3">
                 <a href="logout.php" class="text-danger">               
-                    <i class="fa-solid fa-right-from-bracket"> Logout</i>               
+                    <i class="fa-solid fa-right-from-bracket">Logout</i>               
                 </a>
             </div>
+        </div>
         </div>
     </div>
     
